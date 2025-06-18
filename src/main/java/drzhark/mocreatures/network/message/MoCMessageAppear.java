@@ -4,10 +4,10 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.passive.MoCEntityHorse;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -15,28 +15,29 @@ public class MoCMessageAppear {
 
     public int entityId;
 
-    public MoCMessageAppear() {
-    }
-
     public MoCMessageAppear(int entityId) {
         this.entityId = entityId;
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeInt(this.entityId);
     }
 
-    public MoCMessageAppear(ByteBuf buffer) {
+    public MoCMessageAppear(FriendlyByteBuf buffer) {
         this.entityId = buffer.readInt();
     }
 
-    public static boolean onMessage(MoCMessageAppear message, Supplier<NetworkEvent.Context> ctx) {
+    public static void onMessage(MoCMessageAppear message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.level != null) {
+                Entity entity = minecraft.level.getEntity(message.entityId);
+                if (entity instanceof MoCEntityHorse) {
+                    ((MoCEntityHorse) entity).MaterializeFX();
+                }
+            }
+        });
         ctx.get().setPacketHandled(true);
-        Entity ent = Minecraft.getInstance().player.world.getEntityByID(message.entityId);
-        if (ent instanceof MoCEntityHorse) {
-            ((MoCEntityHorse) ent).MaterializeFX();
-        }
-        return true;
     }
 
     @Override

@@ -9,7 +9,5 @@ public class MoCConstants {
     public static final String MOD_PREFIX = MOD_ID + ":";
     public static final String MOD_NAME = "Mo' Creatures: Nostalgia Edition";
     public static final String MOD_VERSION = "12.4.0";
-    public static final String MOD_ACCEPTED_VERSIONS = "[" + MOD_VERSION + "]";
-    public static final String MOD_DEPENDENCIES = "after:futuremc;after:thaumcraft;after:thermalexpansion;after:traverse";
     public static final Integer DATAFIXER_VERSION = 1;
 }

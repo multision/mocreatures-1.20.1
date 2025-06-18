@@ -4,12 +4,12 @@
 package drzhark.mocreatures.init;
 
 import drzhark.mocreatures.MoCConstants;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 
-import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class MoCSoundEvents {
     public static final DeferredRegister<SoundEvent> SOUND_DEFERRED = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MoCConstants.MOD_ID);
@@ -204,8 +204,10 @@ public class MoCSoundEvents {
      * @param soundName The SoundEvent's name without the testmod3 prefix
      * @return The SoundEvent
      */
+    @SuppressWarnings("removal")
     private static RegistryObject<SoundEvent> createSoundEvent(final String soundName) {
-        return SOUND_DEFERRED.register(soundName, () -> new SoundEvent(new ResourceLocation(MoCConstants.MOD_ID, soundName)));
+        return SOUND_DEFERRED.register(soundName, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MoCConstants.MOD_ID, soundName))
+        );
     }
 
 }

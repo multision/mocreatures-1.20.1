@@ -4,27 +4,26 @@
 package drzhark.mocreatures.entity.ai;
 
 import drzhark.mocreatures.entity.IMoCEntity;
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
 
 public class EntityAIPanicMoC extends PanicGoal {
 
-    private final CreatureEntity entityCreature;
+    private final PathfinderMob mob;
 
-    public EntityAIPanicMoC(CreatureEntity creature, double speedIn) {
+    public EntityAIPanicMoC(PathfinderMob creature, double speedIn) {
         super(creature, speedIn);
-        this.entityCreature = creature;
+        this.mob = creature;
     }
 
     /**
      * Returns whether the Goal should begin execution.
      */
     @Override
-    public boolean shouldExecute() {
-        if (this.entityCreature instanceof IMoCEntity && ((IMoCEntity) this.entityCreature).isNotScared()) {
+    public boolean canUse() {
+        if (this.mob instanceof IMoCEntity && ((IMoCEntity) this.mob).isNotScared()) {
             return false;
         }
-        return super.shouldExecute();
+        return super.canUse();
     }
-
 }

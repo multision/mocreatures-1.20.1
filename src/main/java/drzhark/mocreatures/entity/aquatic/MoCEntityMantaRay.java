@@ -5,28 +5,27 @@ package drzhark.mocreatures.entity.aquatic;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityMantaRay extends MoCEntityRay {
 
-    public MoCEntityMantaRay(EntityType<? extends MoCEntityMantaRay> type, World world) {
+    public MoCEntityMantaRay(EntityType<? extends MoCEntityMantaRay> type, Level world) {
         super(type, world);
         //setSize(1.4F, 0.4F);
         // TODO: Make hitboxes adjust depending on size
-        //setAge(80 + (this.rand.nextInt(100)));
-        setAge(180);
+        //setAge(80 + (this.random.nextInt(100)));
+        setMoCAge(180);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityRay.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 20.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityRay.createAttributes()
+            .add(Attributes.MAX_HEALTH, 20.0D);
     }
 
     @Override
@@ -39,8 +38,9 @@ public class MoCEntityMantaRay extends MoCEntityRay {
         return MoCreatures.proxy.getModelTexture("ray_manta.png");
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.MANTA_RAY;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.MANTA_RAY;
     }
 
     @Override
@@ -48,7 +48,8 @@ public class MoCEntityMantaRay extends MoCEntityRay {
         return true;
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.5875F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.5875F;
     }
 }

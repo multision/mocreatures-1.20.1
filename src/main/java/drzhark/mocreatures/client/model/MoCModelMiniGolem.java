@@ -3,174 +3,364 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
 import drzhark.mocreatures.entity.hostile.MoCEntityMiniGolem;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * Ported from 1.16.5 → 1.20.1. All ModelRenderer fields are now ModelParts,
+ * built via createBodyLayer(). Animations moved to setupAnim(...), rendering
+ * moved to renderToBuffer(...), and entity flags captured in prepareMobModel(...).
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelMiniGolem<T extends MoCEntityMiniGolem> extends EntityModel<T> {
+        
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "mini_golem"),
+            "main"
+    );
 
-    private final float radianF = 57.29578F;
-    ModelRenderer Head;
-    ModelRenderer HeadRed;
-    ModelRenderer Body;
-    ModelRenderer BodyRed;
-    ModelRenderer LeftShoulder;
-    ModelRenderer LeftArm;
-    ModelRenderer LeftArmRingA;
-    ModelRenderer LeftArmRingB;
-    ModelRenderer RightShoulder;
-    ModelRenderer RightArm;
-    ModelRenderer RightArmRingA;
-    ModelRenderer RightArmRingB;
-    ModelRenderer RightLeg;
-    ModelRenderer RightFoot;
-    ModelRenderer LeftLeg;
-    ModelRenderer LeftFoot;
+    private static final float RADIAN_CONV = 57.29578F;
+    
+    private final ModelPart Head;
+    private final ModelPart HeadRed;
+    private final ModelPart Body;
+    private final ModelPart BodyRed;
+    private final ModelPart LeftShoulder;
+    private final ModelPart LeftArm;
+    private final ModelPart LeftArmRingA;
+    private final ModelPart LeftArmRingB;
+    private final ModelPart RightShoulder;
+    private final ModelPart RightArm;
+    private final ModelPart RightArmRingA;
+    private final ModelPart RightArmRingB;
+    private final ModelPart RightLeg;
+    private final ModelPart RightFoot;
+    private final ModelPart LeftLeg;
+    private final ModelPart LeftFoot;
+
+    // Entity‐state flag from setLivingAnimations(...)
     private boolean angry;
 
-    public MoCModelMiniGolem() {
-        this.textureWidth = 64;
-        this.textureHeight = 64;
-
-        this.Head = new ModelRenderer(this, 30, 0);
-        this.Head.addBox(-3F, -3F, -3F, 6, 3, 6);
-        this.Head.setRotationPoint(0F, 8F, 0F);
-        setRotation(this.Head, 0F, -0.7853982F, 0F);
-
-        this.HeadRed = new ModelRenderer(this, 30, 29);
-        this.HeadRed.addBox(-3F, -3F, -3F, 6, 3, 6);
-        this.HeadRed.setRotationPoint(0F, 8F, 0F);
-        setRotation(this.HeadRed, 0F, -0.7853982F, 0F);
-
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(-5F, -10F, -5F, 10, 10, 10);
-        this.Body.setRotationPoint(0F, 18F, 0F);
-
-        this.BodyRed = new ModelRenderer(this, 0, 28);
-        this.BodyRed.addBox(-5F, -10F, -5F, 10, 10, 10);
-        this.BodyRed.setRotationPoint(0F, 18F, 0F);
-
-        this.LeftShoulder = new ModelRenderer(this, 0, 4);
-        this.LeftShoulder.addBox(0F, -1F, -1F, 1, 2, 2);
-        this.LeftShoulder.setRotationPoint(5F, 11F, 0F);
-
-        this.LeftArm = new ModelRenderer(this, 0, 48);
-        this.LeftArm.addBox(1F, -2F, -2F, 4, 12, 4);
-        this.LeftArm.setRotationPoint(5F, 11F, 0F);
-
-        this.LeftArmRingA = new ModelRenderer(this, 20, 20);
-        this.LeftArmRingA.addBox(0.5F, 1F, -2.5F, 5, 3, 5);
-        this.LeftArmRingA.setRotationPoint(5F, 11F, 0F);
-
-        this.LeftArmRingB = new ModelRenderer(this, 20, 20);
-        this.LeftArmRingB.addBox(0.5F, 5F, -2.5F, 5, 3, 5);
-        this.LeftArmRingB.setRotationPoint(5F, 11F, 0F);
-
-        this.RightShoulder = new ModelRenderer(this, 0, 0);
-        this.RightShoulder.addBox(-1F, -1F, -1F, 1, 2, 2);
-        this.RightShoulder.setRotationPoint(-5F, 11F, 0F);
-
-        this.RightArm = new ModelRenderer(this, 16, 48);
-        this.RightArm.addBox(-5F, -2F, -2F, 4, 12, 4);
-        this.RightArm.setRotationPoint(-5F, 11F, 0F);
-
-        this.RightArmRingA = new ModelRenderer(this, 0, 20);
-        this.RightArmRingA.addBox(-5.5F, 1F, -2.5F, 5, 3, 5);
-        this.RightArmRingA.setRotationPoint(-5F, 11F, 0F);
-
-        this.RightArmRingB = new ModelRenderer(this, 0, 20);
-        this.RightArmRingB.addBox(-5.5F, 5F, -2.5F, 5, 3, 5);
-        this.RightArmRingB.setRotationPoint(-5F, 11F, 0F);
-
-        this.RightLeg = new ModelRenderer(this, 40, 9);
-        this.RightLeg.addBox(-2.5F, 0F, -2F, 4, 6, 4);
-        this.RightLeg.setRotationPoint(-2F, 18F, 0F);
-
-        this.RightFoot = new ModelRenderer(this, 15, 22);
-        this.RightFoot.addBox(-2.5F, 5F, -3F, 4, 1, 1);
-        this.RightFoot.setRotationPoint(-2F, 18F, 0F);
-
-        this.LeftLeg = new ModelRenderer(this, 40, 19);
-        this.LeftLeg.addBox(-1.5F, 0F, -2F, 4, 6, 4);
-        this.LeftLeg.setRotationPoint(2F, 18F, 0F);
-
-        this.LeftFoot = new ModelRenderer(this, 15, 20);
-        this.LeftFoot.addBox(-1.5F, 5F, -3F, 4, 1, 1);
-        this.LeftFoot.setRotationPoint(2F, 18F, 0F);
-
+    public MoCModelMiniGolem(ModelPart root) {
+        this.Head            = root.getChild("Head");
+        this.HeadRed         = root.getChild("HeadRed");
+        this.Body            = root.getChild("Body");
+        this.BodyRed         = root.getChild("BodyRed");
+        this.LeftShoulder    = root.getChild("LeftShoulder");
+        this.LeftArm         = root.getChild("LeftArm");
+        this.LeftArmRingA    = root.getChild("LeftArmRingA");
+        this.LeftArmRingB    = root.getChild("LeftArmRingB");
+        this.RightShoulder   = root.getChild("RightShoulder");
+        this.RightArm        = root.getChild("RightArm");
+        this.RightArmRingA   = root.getChild("RightArmRingA");
+        this.RightArmRingB   = root.getChild("RightArmRingB");
+        this.RightLeg        = root.getChild("RightLeg");
+        this.RightFoot       = root.getChild("RightFoot");
+        this.LeftLeg         = root.getChild("LeftLeg");
+        this.LeftFoot        = root.getChild("LeftFoot");
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.angry = entityIn.isAggressive();
+    /**
+     * Build the LayerDefinition (MeshDefinition → PartDefinition).
+     * Each child here corresponds to one of the old ModelRenderer fields.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        //----------------------------------------------------------------
+        // Head (texture 30,0; box(-3, -3, -3; 6×3×6); pivot(0,8,0); rotateY=-0.7853982)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Head",
+                CubeListBuilder.create()
+                        .texOffs(30, 0)
+                        .addBox(-3.0F, -3.0F, -3.0F, 6, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        0.0F, 8.0F, 0.0F,
+                        0.0F, -0.7853982F, 0.0F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // HeadRed (texture 30,29; same shape; pivot(0,8,0); rotateY=-0.7853982)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "HeadRed",
+                CubeListBuilder.create()
+                        .texOffs(30, 29)
+                        .addBox(-3.0F, -3.0F, -3.0F, 6, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        0.0F, 8.0F, 0.0F,
+                        0.0F, -0.7853982F, 0.0F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // Body (texture 0,0; box(-5, -10, -5; 10×10×10); pivot(0,18,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-5.0F, -10.0F, -5.0F, 10, 10, 10, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 18.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // BodyRed (texture 0,28; same shape; pivot(0,18,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "BodyRed",
+                CubeListBuilder.create()
+                        .texOffs(0, 28)
+                        .addBox(-5.0F, -10.0F, -5.0F, 10, 10, 10, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 18.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // LeftShoulder (texture 0,4; box(0, -1, -1; 1×2×2); pivot(5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftShoulder",
+                CubeListBuilder.create()
+                        .texOffs(0, 4)
+                        .addBox(0.0F, -1.0F, -1.0F, 1, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // LeftArm (texture 0,48; box(1, -2, -2; 4×12×4); pivot(5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftArm",
+                CubeListBuilder.create()
+                        .texOffs(0, 48)
+                        .addBox(1.0F, -2.0F, -2.0F, 4, 12, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // LeftArmRingA (texture 20,20; box(0.5, 1, -2.5; 5×3×5); pivot(5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftArmRingA",
+                CubeListBuilder.create()
+                        .texOffs(20, 20)
+                        .addBox(0.5F, 1.0F, -2.5F, 5, 3, 5, new CubeDeformation(0.0F)),
+                PartPose.offset(5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // LeftArmRingB (texture 20,20; box(0.5, 5, -2.5; 5×3×5); pivot(5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftArmRingB",
+                CubeListBuilder.create()
+                        .texOffs(20, 20)
+                        .addBox(0.5F, 5.0F, -2.5F, 5, 3, 5, new CubeDeformation(0.0F)),
+                PartPose.offset(5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // RightShoulder (texture 0,0; box(-1, -1, -1; 1×2×2); pivot(-5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightShoulder",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1.0F, -1.0F, -1.0F, 1, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(-5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // RightArm (texture 16,48; box(-5, -2, -2; 4×12×4); pivot(-5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightArm",
+                CubeListBuilder.create()
+                        .texOffs(16, 48)
+                        .addBox(-5.0F, -2.0F, -2.0F, 4, 12, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(-5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // RightArmRingA (texture 0,20; box(-5.5, 1, -2.5; 5×3×5); pivot(-5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightArmRingA",
+                CubeListBuilder.create()
+                        .texOffs(0, 20)
+                        .addBox(-5.5F, 1.0F, -2.5F, 5, 3, 5, new CubeDeformation(0.0F)),
+                PartPose.offset(-5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // RightArmRingB (texture 0,20; box(-5.5, 5, -2.5; 5×3×5); pivot(-5,11,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightArmRingB",
+                CubeListBuilder.create()
+                        .texOffs(0, 20)
+                        .addBox(-5.5F, 5.0F, -2.5F, 5, 3, 5, new CubeDeformation(0.0F)),
+                PartPose.offset(-5.0F, 11.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // RightLeg (texture 40,9; box(-2.5, 0, -2; 4×6×4); pivot(-2,18,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightLeg",
+                CubeListBuilder.create()
+                        .texOffs(40, 9)
+                        .addBox(-2.5F, 0.0F, -2.0F, 4, 6, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(-2.0F, 18.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // RightFoot (texture 15,22; box(-2.5, 5, -3; 4×1×1); pivot(-2,18,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightFoot",
+                CubeListBuilder.create()
+                        .texOffs(15, 22)
+                        .addBox(-2.5F, 5.0F, -3.0F, 4, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(-2.0F, 18.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // LeftLeg (texture 40,19; box(-1.5, 0, -2; 4×6×4); pivot(2,18,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftLeg",
+                CubeListBuilder.create()
+                        .texOffs(40, 19)
+                        .addBox(-1.5F, 0.0F, -2.0F, 4, 6, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(2.0F, 18.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // LeftFoot (texture 15,20; box(-1.5, 5, -3; 4×1×1); pivot(2,18,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftFoot",
+                CubeListBuilder.create()
+                        .texOffs(15, 20)
+                        .addBox(-1.5F, 5.0F, -3.0F, 4, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(2.0F, 18.0F, 0.0F)
+        );
+
+        // Return a LayerDefinition with texture size 64×64
+        return LayerDefinition.create(mesh, 64, 64);
     }
 
+    /**
+     * In 1.16.5 this was setLivingAnimations(...).
+     * In 1.20.1, override prepareMobModel(...) instead.
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        if (angry) {
-            this.HeadRed.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BodyRed.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        } else {
-            this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-
-        this.LeftShoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftArmRingA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftArmRingB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightShoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightArmRingA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightArmRingB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void prepareMobModel(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
+        this.angry = entity.isAggressive();
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
+    /**
+     * Copy the old setRotationAngles(...) logic here. Now called setupAnim(...)
+     */
+    @Override
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // Yaw converted to radians
+        float hRotY     = netHeadYaw / RADIAN_CONV;
+        // Leg swings
+        float RLegXRot  = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float LLegXRot  = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float hRotY = netHeadYaw / 57.29578F;
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
+        // Apply to legs & feet
+        this.RightLeg.xRot   = RLegXRot;
+        this.RightFoot.xRot  = RLegXRot;
+        this.LeftLeg.xRot    = LLegXRot;
+        this.LeftFoot.xRot   = LLegXRot;
 
-        this.RightLeg.rotateAngleX = RLegXRot;
-        this.RightFoot.rotateAngleX = RLegXRot;
-        this.LeftLeg.rotateAngleX = LLegXRot;
-        this.LeftFoot.rotateAngleX = LLegXRot;
+        // Head yaw plus offset
+        this.Head.yRot    = -0.7853982F + hRotY;
+        this.HeadRed.yRot = -0.7853982F + hRotY;
 
-        this.Head.rotateAngleY = -0.7853982F + hRotY;
-        this.HeadRed.rotateAngleY = -0.7853982F + hRotY;
-
-        if (entityIn.getHasRock()) {
-            this.LeftShoulder.rotateAngleZ = 0F;
-            this.LeftShoulder.rotateAngleX = -180F / this.radianF;
-            this.RightShoulder.rotateAngleZ = 0F;
-            this.RightShoulder.rotateAngleX = -180F / this.radianF;
+        // Shoulders: if holding rock, arms down; else animate
+        if (entity.getHasRock()) {
+            this.LeftShoulder.zRot  = 0.0F;
+            this.LeftShoulder.xRot  = - (float)Math.PI; // -180° in radians
+            this.RightShoulder.zRot = 0.0F;
+            this.RightShoulder.xRot = - (float)Math.PI;
         } else {
-            this.LeftShoulder.rotateAngleZ = (MathHelper.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
-            this.LeftShoulder.rotateAngleX = RLegXRot;
-            this.RightShoulder.rotateAngleZ = -(MathHelper.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
-            this.RightShoulder.rotateAngleX = LLegXRot;
+            this.LeftShoulder.zRot  = (Mth.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
+            this.LeftShoulder.xRot  = RLegXRot;
+            this.RightShoulder.zRot = - (Mth.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
+            this.RightShoulder.xRot = LLegXRot;
         }
 
-        this.RightArm.rotateAngleX = this.RightArmRingA.rotateAngleX = this.RightArmRingB.rotateAngleX = this.RightShoulder.rotateAngleX;
-        this.RightArm.rotateAngleZ = this.RightArmRingA.rotateAngleZ = this.RightArmRingB.rotateAngleZ = this.RightShoulder.rotateAngleZ;
+        // Copy shoulder rotations into the entire left arm stack
+        this.LeftArm.xRot       = this.LeftArmRingA.xRot       = this.LeftArmRingB.xRot       = this.LeftShoulder.xRot;
+        this.LeftArm.zRot       = this.LeftArmRingA.zRot       = this.LeftArmRingB.zRot       = this.LeftShoulder.zRot;
 
-        this.LeftArm.rotateAngleX = this.LeftArmRingA.rotateAngleX = this.LeftArmRingB.rotateAngleX = this.LeftShoulder.rotateAngleX;
-        this.LeftArm.rotateAngleZ = this.LeftArmRingA.rotateAngleZ = this.LeftArmRingB.rotateAngleZ = this.LeftShoulder.rotateAngleZ;
+        // Copy shoulder rotations into the entire right arm stack
+        this.RightArm.xRot      = this.RightArmRingA.xRot      = this.RightArmRingB.xRot      = this.RightShoulder.xRot;
+        this.RightArm.zRot      = this.RightArmRingA.zRot      = this.RightArmRingB.zRot      = this.RightShoulder.zRot;
+    }
 
-        //super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
+    /**
+     * Render everything, toggling Head/Body vs. HeadRed/BodyRed based on angry flag.
+     */
+    @Override
+    public void renderToBuffer(
+            PoseStack        poseStack,
+            VertexConsumer   buffer,
+            int              packedLight,
+            int              packedOverlay,
+            float            red,
+            float            green,
+            float            blue,
+            float            alpha
+    ) {
+        // First, choose which head/body to render
+        if (this.angry) {
+            this.HeadRed.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.BodyRed.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+
+        // Then all the other parts
+        this.LeftShoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftArmRingA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftArmRingB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightShoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightArmRingA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightArmRingB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

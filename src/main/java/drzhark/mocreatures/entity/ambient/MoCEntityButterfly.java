@@ -6,16 +6,18 @@ package drzhark.mocreatures.entity.ambient;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityInsect;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
@@ -23,19 +25,27 @@ public class MoCEntityButterfly extends MoCEntityInsect {
 
     private int fCounter;
 
-    public MoCEntityButterfly(EntityType<? extends MoCEntityButterfly> type, World world) {
+    public MoCEntityButterfly(EntityType<? extends MoCEntityButterfly> type, Level world) {
         super(type, world);
     }
 
+    /**
+     * Register attributes for this entity
+     */
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityInsect.registerAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.12D);
+    }
+
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(10) + 1);
+            setTypeMoC(this.random.nextInt(10) + 1);
         }
     }
 
@@ -73,7 +83,7 @@ public class MoCEntityButterfly extends MoCEntityInsect {
             this.fCounter = 0;
         }
 
-        return MathHelper.cos((this.fCounter * 0.1F)) * 0.2F;
+        return Mth.cos((this.fCounter * 0.1F)) * 0.2F;
     }
 
     @Override
@@ -86,7 +96,7 @@ public class MoCEntityButterfly extends MoCEntityInsect {
 
     @Override
     public boolean isMyFavoriteFood(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem().isIn(ItemTags.FLOWERS);
+        return !stack.isEmpty() && stack.is(ItemTags.FLOWERS);
     }
 
     @Override
@@ -100,7 +110,7 @@ public class MoCEntityButterfly extends MoCEntityInsect {
     }
 
     @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         if (getIsFlying()) {
             return 0.13F;
         }
@@ -118,11 +128,13 @@ public class MoCEntityButterfly extends MoCEntityInsect {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.BUTTERFLY;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.BUTTERFLY;
     }
 
     @Override
-    public float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
+    public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.1F;
     }
 }

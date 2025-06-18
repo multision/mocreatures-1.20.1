@@ -1,1146 +1,1392 @@
 /*
  * GNU GENERAL PUBLIC LICENSE Version 3
  */
-// TODO
-// move model to the front (done)
-// fix mirror issues (done)
-// fix eye (done)
-// neck point of rotation (done)
-// legs (done)
-// wings (done basic)
-// tail movement
-// flipping wings (done)
-
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.neutral.MoCEntityOstrich;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.*;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * Ported from 1.16.5 to 1.20.1. All ModelRenderer fields are now ModelPart
+ * children of a single root, built via createBodyLayer(). Animations moved to
+ * setupAnim(...), rendering to renderToBuffer(...), and entity data captured
+ * in prepareMobModel(...).
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelOstrich<T extends MoCEntityOstrich> extends EntityModel<T> {
 
-    private final float radianF = 57.29578F;
-    ModelRenderer UBeak;
-    ModelRenderer UBeak2;
-    ModelRenderer UBeakb;
-    ModelRenderer UBeak2b;
-    ModelRenderer LBeak;
-    ModelRenderer LBeakb;
-    ModelRenderer LBeak2;
-    ModelRenderer LBeak2b;
-    ModelRenderer Body;
-    ModelRenderer Tail;
-    ModelRenderer LLegA;
-    ModelRenderer LLegB;
-    ModelRenderer LLegC;
-    ModelRenderer LFoot;
-    ModelRenderer RLegA;
-    ModelRenderer RLegB;
-    ModelRenderer RLegC;
-    ModelRenderer RFoot;
-    ModelRenderer Tail1;
-    ModelRenderer Tail2;
-    ModelRenderer Tail3;
-    ModelRenderer LWingB;
-    ModelRenderer LWingC;
-    ModelRenderer LWingD;
-    ModelRenderer LWingE;
-    ModelRenderer RWingB;
-    ModelRenderer RWingC;
-    ModelRenderer RWingD;
-    ModelRenderer RWingE;
-    ModelRenderer SaddleA;
-    ModelRenderer SaddleB;
-    ModelRenderer SaddleL;
-    ModelRenderer SaddleR;
-    ModelRenderer SaddleL2;
-    ModelRenderer SaddleR2;
-    ModelRenderer SaddleC;
-    ModelRenderer NeckLFeather;
-    ModelRenderer NeckUFeather;
-    ModelRenderer NeckD;
-    ModelRenderer Saddlebag;
-    ModelRenderer Flagpole;
-    ModelRenderer FlagBlack;
-    ModelRenderer FlagDarkGrey;
-    ModelRenderer FlagYellow;
-    ModelRenderer FlagBrown;
-    ModelRenderer FlagGreen;
-    ModelRenderer FlagCyan;
-    ModelRenderer FlagLightBlue;
-    ModelRenderer FlagDarkBlue;
-    ModelRenderer FlagPurple;
-    ModelRenderer FlagDarkPurple;
-    ModelRenderer FlagDarkGreen;
-    ModelRenderer FlagLightRed;
-    ModelRenderer FlagRed;
-    ModelRenderer FlagWhite;
-    ModelRenderer FlagGrey;
-    ModelRenderer FlagOrange;
-    ModelRenderer NeckU;
-    ModelRenderer NeckL;
-    ModelRenderer NeckHarness;
-    ModelRenderer NeckHarness2;
-    ModelRenderer NeckHarnessRight;
-    ModelRenderer NeckHarnessLeft;
-    ModelRenderer Head;
-    ModelRenderer UniHorn;
-    ModelRenderer HelmetLeather;
-    ModelRenderer HelmetIron;
-    ModelRenderer HelmetGold;
-    ModelRenderer HelmetDiamond;
-    ModelRenderer HelmetHide;
-    ModelRenderer HelmetNeckHide;
-    ModelRenderer HelmetHideEar1;
-    ModelRenderer HelmetHideEar2;
-    ModelRenderer HelmetFur;
-    ModelRenderer HelmetNeckFur;
-    ModelRenderer HelmetFurEar1;
-    ModelRenderer HelmetFurEar2;
-    ModelRenderer HelmetReptile;
-    ModelRenderer HelmetReptileEar2;
-    ModelRenderer HelmetReptileEar1;
-    ModelRenderer HelmetGreenChitin;
-    ModelRenderer HelmetYellowChitin;
-    ModelRenderer HelmetBlueChitin;
-    ModelRenderer HelmetBlackChitin;
-    ModelRenderer HelmetRedChitin;
-    ModelRenderer Tailpart1;
-    ModelRenderer Tailpart2;
-    ModelRenderer Tailpart3;
-    ModelRenderer Tailpart4;
-    ModelRenderer Tailpart5;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "ostrich"),
+            "main"
+    );
+
+    private static final float RADIAN_CONV = 57.29578F;
+
+    // --- ModelPart fields (formerly ModelRenderer) ---
+    private final ModelPart UBeak;
+    private final ModelPart UBeak2;
+    private final ModelPart UBeakb;
+    private final ModelPart UBeak2b;
+    private final ModelPart LBeak;
+    private final ModelPart LBeakb;
+    private final ModelPart LBeak2;
+    private final ModelPart LBeak2b;
+    private final ModelPart Body;
+    private final ModelPart Tail;
+    private final ModelPart LLegA;
+    private final ModelPart LLegB;
+    private final ModelPart LLegC;
+    private final ModelPart LFoot;
+    private final ModelPart RLegA;
+    private final ModelPart RLegB;
+    private final ModelPart RLegC;
+    private final ModelPart RFoot;
+    private final ModelPart Tail1;
+    private final ModelPart Tail2;
+    private final ModelPart Tail3;
+    private final ModelPart LWingB;
+    private final ModelPart LWingC;
+    private final ModelPart LWingD;
+    private final ModelPart LWingE;
+    private final ModelPart RWingB;
+    private final ModelPart RWingC;
+    private final ModelPart RWingD;
+    private final ModelPart RWingE;
+    private final ModelPart SaddleA;
+    private final ModelPart SaddleB;
+    private final ModelPart SaddleL;
+    private final ModelPart SaddleR;
+    private final ModelPart SaddleL2;
+    private final ModelPart SaddleR2;
+    private final ModelPart SaddleC;
+    private final ModelPart NeckLFeather;
+    private final ModelPart NeckUFeather;
+    private final ModelPart NeckD;
+    private final ModelPart Saddlebag;
+    private final ModelPart Flagpole;
+    private final ModelPart FlagBlack;
+    private final ModelPart FlagDarkGrey;
+    private final ModelPart FlagYellow;
+    private final ModelPart FlagBrown;
+    private final ModelPart FlagGreen;
+    private final ModelPart FlagCyan;
+    private final ModelPart FlagLightBlue;
+    private final ModelPart FlagDarkBlue;
+    private final ModelPart FlagPurple;
+    private final ModelPart FlagDarkPurple;
+    private final ModelPart FlagDarkGreen;
+    private final ModelPart FlagLightRed;
+    private final ModelPart FlagRed;
+    private final ModelPart FlagWhite;
+    private final ModelPart FlagGrey;
+    private final ModelPart FlagOrange;
+    private final ModelPart NeckU;
+    private final ModelPart NeckL;
+    private final ModelPart NeckHarness;
+    private final ModelPart NeckHarness2;
+    private final ModelPart NeckHarnessRight;
+    private final ModelPart NeckHarnessLeft;
+    private final ModelPart Head;
+    private final ModelPart UniHorn;
+    private final ModelPart HelmetLeather;
+    private final ModelPart HelmetIron;
+    private final ModelPart HelmetGold;
+    private final ModelPart HelmetDiamond;
+    private final ModelPart HelmetHide;
+    private final ModelPart HelmetNeckHide;
+    private final ModelPart HelmetHideEar1;
+    private final ModelPart HelmetHideEar2;
+    private final ModelPart HelmetFur;
+    private final ModelPart HelmetNeckFur;
+    private final ModelPart HelmetFurEar1;
+    private final ModelPart HelmetFurEar2;
+    private final ModelPart HelmetReptile;
+    private final ModelPart HelmetReptileEar1;
+    private final ModelPart HelmetReptileEar2;
+    private final ModelPart HelmetGreenChitin;
+    private final ModelPart HelmetYellowChitin;
+    private final ModelPart HelmetBlueChitin;
+    private final ModelPart HelmetBlackChitin;
+    private final ModelPart HelmetRedChitin;
+    private final ModelPart Tailpart1;
+    private final ModelPart Tailpart2;
+    private final ModelPart Tailpart3;
+    private final ModelPart Tailpart4;
+    private final ModelPart Tailpart5;
+
+    // Entity state captured in prepareMobModel(...)
+    private byte typeI;
     private boolean openMouth;
     private boolean isSaddled;
     private boolean bagged;
     private boolean rider;
     private int helmet;
-    private byte typeI;
     private int flagColor;
 
-    public MoCModelOstrich() {
-        this.textureWidth = 128;
-        this.textureHeight = 128; //64
-
-        this.UBeak = new ModelRenderer(this, 12, 16);
-        this.UBeak.addBox(-1.5F, -15F, -5.5F, 3, 1, 1);
-        this.UBeak.setRotationPoint(0F, 3F, -6F);
-
-        this.UBeak2 = new ModelRenderer(this, 20, 16);
-        this.UBeak2.addBox(-1F, -15F, -7.5F, 2, 1, 2);
-        this.UBeak2.setRotationPoint(0F, 3F, -6F);
-
-        this.UBeakb = new ModelRenderer(this, 12, 16);
-        this.UBeakb.addBox(-1.5F, -15F, -6.5F, 3, 1, 1);
-        this.UBeakb.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.UBeakb, -0.0698132F, 0F, 0F);
-
-        this.UBeak2b = new ModelRenderer(this, 20, 16);
-        this.UBeak2b.addBox(-1F, -15F, -8.5F, 2, 1, 2);
-        this.UBeak2b.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.UBeak2b, -0.0698132F, 0F, 0F);
-
-        this.LBeak = new ModelRenderer(this, 12, 22);
-        this.LBeak.addBox(-1.5F, -14F, -5.5F, 3, 1, 1);
-        this.LBeak.setRotationPoint(0F, 3F, -6F);
-
-        this.LBeakb = new ModelRenderer(this, 12, 22);
-        this.LBeakb.addBox(-1.5F, -14F, -3.9F, 3, 1, 1);
-        this.LBeakb.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.LBeakb, 0.122173F, 0F, 0F);
-
-        this.LBeak2 = new ModelRenderer(this, 20, 22);
-        this.LBeak2.addBox(-1F, -14F, -7.5F, 2, 1, 2);
-        this.LBeak2.setRotationPoint(0F, 3F, -6F);
-
-        this.LBeak2b = new ModelRenderer(this, 20, 22);
-        this.LBeak2b.addBox(-1F, -14F, -5.9F, 2, 1, 2);
-        this.LBeak2b.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.LBeak2b, 0.122173F, 0F, 0F);
-
-        this.Body = new ModelRenderer(this, 0, 38);
-        this.Body.addBox(-4F, 1F, 0F, 8, 10, 16);
-        this.Body.setRotationPoint(0F, 0F, -6F);
-
-        this.LLegA = new ModelRenderer(this, 50, 28);
-        this.LLegA.addBox(-2F, -1F, -2.5F, 4, 6, 5);
-        this.LLegA.setRotationPoint(4F, 5F, 4F);
-        setRotation(this.LLegA, 0.1745329F, 0F, 0F);
-
-        this.LLegB = new ModelRenderer(this, 50, 39);
-        this.LLegB.addBox(-1.5F, 5F, -1.5F, 3, 4, 3);
-        this.LLegB.setRotationPoint(4F, 5F, 4F);
-        setRotation(this.LLegB, 0.1745329F, 0F, 0F);
-
-        this.LLegC = new ModelRenderer(this, 8, 38);
-        this.LLegC.addBox(-1F, 8F, 2.5F, 2, 10, 2);
-        this.LLegC.setRotationPoint(4F, 5F, 4F);
-        setRotation(this.LLegC, -0.2617994F, 0F, 0F);
-
-        this.LFoot = new ModelRenderer(this, 32, 42);
-        this.LFoot.addBox(-1F, 17F, -9F, 2, 1, 5);
-        this.LFoot.setRotationPoint(4F, 5F, 4F);
-        setRotation(this.LFoot, 0.1745329F, 0F, 0F);
-
-        this.RLegA = new ModelRenderer(this, 0, 27);
-        this.RLegA.addBox(-2F, -1F, -2.5F, 4, 6, 5);
-        this.RLegA.setRotationPoint(-4F, 5F, 4F);
-        setRotation(this.RLegA, 0.1745329F, 0F, 0F);
-
-        this.RLegB = new ModelRenderer(this, 18, 27);
-        this.RLegB.addBox(-1.5F, 5F, -1.5F, 3, 4, 3);
-        this.RLegB.setRotationPoint(-4F, 5F, 4F);
-        setRotation(this.RLegB, 0.1745329F, 0F, 0F);
-
-        this.RLegC = new ModelRenderer(this, 0, 38);
-        this.RLegC.addBox(-1F, 8F, 2.5F, 2, 10, 2);
-        this.RLegC.setRotationPoint(-4F, 5F, 4F);
-        setRotation(this.RLegC, -0.2617994F, 0F, 0F);
-
-        this.RFoot = new ModelRenderer(this, 32, 48);
-        this.RFoot.addBox(-1F, 17F, -9F, 2, 1, 5);
-        this.RFoot.setRotationPoint(-4F, 5F, 4F);
-        setRotation(this.RFoot, 0.1745329F, 0F, 0F);
-
-        this.Tail1 = new ModelRenderer(this, 44, 18);
-        this.Tail1.addBox(-0.5F, -2F, -2F, 1, 4, 6);
-        this.Tail1.setRotationPoint(0F, 4F, 15F);
-        setRotation(this.Tail1, 0.3490659F, 0F, 0F);
-
-        this.Tail2 = new ModelRenderer(this, 58, 18);
-        this.Tail2.addBox(-2.6F, -2F, -2F, 1, 4, 6);
-        this.Tail2.setRotationPoint(0F, 4F, 15F);
-        setRotation(this.Tail2, 0.3490659F, -0.2617994F, 0F);
-
-        this.Tail3 = new ModelRenderer(this, 30, 18);
-        this.Tail3.addBox(1.6F, -2F, -2F, 1, 4, 6);
-        this.Tail3.setRotationPoint(0F, 4F, 15F);
-        setRotation(this.Tail3, 0.3490659F, 0.2617994F, 0F);
-
-        this.LWingB = new ModelRenderer(this, 68, 46);
-        this.LWingB.addBox(-0.5F, -3F, 0F, 1, 4, 14);
-        this.LWingB.setRotationPoint(4F, 4F, -3F);
-        setRotation(this.LWingB, 0.0872665F, 0.0872665F, 0F);
-
-        this.LWingC = new ModelRenderer(this, 98, 46);
-        this.LWingC.addBox(-1F, 0F, 0F, 1, 4, 14);
-        this.LWingC.setRotationPoint(4F, 4F, -3F);
-        setRotation(this.LWingC, 0F, 0.0872665F, 0F);
-
-        this.LWingD = new ModelRenderer(this, 26, 84);
-        this.LWingD.addBox(0F, -1F, -1F, 15, 2, 2);
-        this.LWingD.setRotationPoint(4F, 3F, -3F);
-        setRotation(this.LWingD, 0F, 0F, -0.3490659F);
-
-        this.LWingE = new ModelRenderer(this, 0, 103);
-        this.LWingE.addBox(0F, 0F, 1F, 15, 0, 15);
-        this.LWingE.setRotationPoint(4F, 3F, -3F);
-        setRotation(this.LWingE, 0F, 0F, -0.3490659F);
-
-        this.RWingB = new ModelRenderer(this, 68, 0);
-        this.RWingB.addBox(-0.5F, -3F, 0F, 1, 4, 14);
-        this.RWingB.setRotationPoint(-4F, 4F, -3F);
-        setRotation(this.RWingB, 0.0872665F, -0.0872665F, 0F);
-
-        this.RWingC = new ModelRenderer(this, 98, 0);
-        this.RWingC.addBox(0F, 0F, 0F, 1, 4, 14);
-        this.RWingC.setRotationPoint(-4F, 4F, -3F);
-        setRotation(this.RWingC, 0F, -0.0872665F, 0F);
-
-        this.RWingD = new ModelRenderer(this, 26, 80);
-        this.RWingD.addBox(-15F, -1F, -1F, 15, 2, 2);
-        this.RWingD.setRotationPoint(-4F, 3F, -3F);
-        setRotation(this.RWingD, 0F, 0F, 0.3490659F);
-
-        this.RWingE = new ModelRenderer(this, 0, 88);
-        this.RWingE.addBox(-15F, 0F, 1F, 15, 0, 15);
-        this.RWingE.setRotationPoint(-4F, 3F, -3F);
-        setRotation(this.RWingE, 0F, 0F, 0.3490659F);
-
-        this.SaddleA = new ModelRenderer(this, 72, 18);
-        this.SaddleA.addBox(-4F, 0.5F, -3F, 8, 1, 8);
-        this.SaddleA.setRotationPoint(0F, 0F, 0F);
-        this.SaddleB = new ModelRenderer(this, 72, 27);
-
-        this.SaddleB.addBox(-1.5F, 0F, -3F, 3, 1, 2);
-        this.SaddleB.setRotationPoint(0F, 0F, 0F);
-
-        this.SaddleL = new ModelRenderer(this, 72, 30);
-        this.SaddleL.addBox(-0.5F, 0F, -0.5F, 1, 6, 1);
-        this.SaddleL.setRotationPoint(4F, 1F, 0F);
-
-        this.SaddleR = new ModelRenderer(this, 84, 30);
-        this.SaddleR.addBox(-0.5F, 0F, -0.5F, 1, 6, 1);
-        this.SaddleR.setRotationPoint(-4F, 1F, 0F);
-
-        this.SaddleL2 = new ModelRenderer(this, 76, 30);
-        this.SaddleL2.addBox(-0.5F, 6F, -1F, 1, 2, 2);
-        this.SaddleL2.setRotationPoint(4F, 1F, 0F);
-
-        this.SaddleR2 = new ModelRenderer(this, 88, 30);
-        this.SaddleR2.addBox(-0.5F, 6F, -1F, 1, 2, 2);
-        this.SaddleR2.setRotationPoint(-4F, 1F, 0F);
-
-        this.SaddleC = new ModelRenderer(this, 84, 27);
-        this.SaddleC.addBox(-4F, 0F, 3F, 8, 1, 2);
-        this.SaddleC.setRotationPoint(0F, 0F, 0F);
-
-        this.NeckLFeather = new ModelRenderer(this, 8, 73);
-        this.NeckLFeather.addBox(0F, -8F, -0.5F, 0, 7, 4);
-        this.NeckLFeather.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.NeckLFeather, 0.2007129F, 0F, 0F);
-
-        this.NeckUFeather = new ModelRenderer(this, 0, 73);
-        this.NeckUFeather.addBox(0F, -16F, -2F, 0, 9, 4);
-        this.NeckUFeather.setRotationPoint(0F, 3F, -6F);
-
-        this.NeckD = new ModelRenderer(this, 0, 16);
-        this.NeckD.addBox(-1.5F, -4F, -2F, 3, 8, 3);
-        this.NeckD.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.NeckD, 0.4363323F, 0F, 0F);
-
-        this.Saddlebag = new ModelRenderer(this, 32, 7);
-        this.Saddlebag.addBox(-4.5F, -3F, 5F, 9, 4, 7);
-        this.Saddlebag.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.Saddlebag, -0.2602503F, 0F, 0F);
-
-        this.Flagpole = new ModelRenderer(this, 28, 0);
-        this.Flagpole.addBox(-0.5F, -15F, -0.5F, 1, 17, 1);
-        this.Flagpole.setRotationPoint(0F, 0F, 5F);
-        setRotation(this.Flagpole, -0.2602503F, 0F, 0F);
-
-        this.FlagBlack = new ModelRenderer(this, 108, 8);
-        this.FlagBlack.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagBlack.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagBlack, -0.2602503F, 0F, 0F);
-
-        this.FlagDarkGrey = new ModelRenderer(this, 108, 12);
-        this.FlagDarkGrey.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagDarkGrey.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagDarkGrey, -0.2602503F, 0F, 0F);
-
-        this.FlagYellow = new ModelRenderer(this, 48, 46);
-        this.FlagYellow.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagYellow.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagYellow, -0.2602503F, 0F, 0F);
-
-        this.FlagBrown = new ModelRenderer(this, 48, 42);
-        this.FlagBrown.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagBrown.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagBrown, -0.2602503F, 0F, 0F);
-
-        this.FlagGreen = new ModelRenderer(this, 48, 38);
-        this.FlagGreen.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagGreen.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagGreen, -0.2602503F, 0F, 0F);
-
-        /*
-         * FlagCyan = new ModelRenderer(this, 48, 50); FlagCyan.addBox(0F,
-         * -16.5F, 5F, 0, 4, 10); FlagCyan.setRotationPoint(0F, 0F, 0F);
-         * setRotation(FlagCyan, -0.2602503F, 0F, 0F);
-         */
-
-        this.FlagCyan = new ModelRenderer(this, 48, 50);
-        this.FlagCyan.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagCyan.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagCyan, -0.2602503F, 0F, 0F);
-
-        this.FlagLightBlue = new ModelRenderer(this, 68, 32);
-        this.FlagLightBlue.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagLightBlue.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagLightBlue, -0.2602503F, 0F, 0F);
-
-        this.FlagDarkBlue = new ModelRenderer(this, 68, 28);
-        this.FlagDarkBlue.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagDarkBlue.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagDarkBlue, -0.2602503F, 0F, 0F);
-
-        this.FlagPurple = new ModelRenderer(this, 88, 32);
-        this.FlagPurple.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagPurple.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagPurple, -0.2602503F, 0F, 0F);
-
-        this.FlagDarkPurple = new ModelRenderer(this, 88, 28);
-        this.FlagDarkPurple.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagDarkPurple.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagDarkPurple, -0.2602503F, 0F, 0F);
-
-        this.FlagDarkGreen = new ModelRenderer(this, 108, 32);
-        this.FlagDarkGreen.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagDarkGreen.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagDarkGreen, -0.2602503F, 0F, 0F);
-
-        this.FlagLightRed = new ModelRenderer(this, 108, 28);
-        this.FlagLightRed.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagLightRed.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagLightRed, -0.2602503F, 0F, 0F);
-
-        this.FlagRed = new ModelRenderer(this, 108, 24);
-        this.FlagRed.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagRed.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagRed, -0.2602503F, 0F, 0F);
-
-        this.FlagWhite = new ModelRenderer(this, 108, 20);
-        this.FlagWhite.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagWhite.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagWhite, -0.2602503F, 0F, 0F);
-
-        this.FlagGrey = new ModelRenderer(this, 108, 16);
-        this.FlagGrey.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagGrey.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagGrey, -0.2602503F, 0F, 0F);
-
-        this.FlagOrange = new ModelRenderer(this, 88, 24);
-        this.FlagOrange.addBox(0F, -2.1F, 0F, 0, 4, 10);
-        this.FlagOrange.setRotationPoint(0F, -12F, 8F);
-        setRotation(this.FlagOrange, -0.2602503F, 0F, 0F);
-
-        this.NeckU = new ModelRenderer(this, 20, 0);
-        this.NeckU.addBox(-1F, -12F, -4F, 2, 5, 2);
-        this.NeckU.setRotationPoint(0F, 3F, -6F);
-
-        this.NeckL = new ModelRenderer(this, 20, 7);
-        this.NeckL.addBox(-1F, -8F, -2.5F, 2, 5, 2);
-        this.NeckL.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.NeckL, 0.2007129F, 0F, 0F);
-
-        this.NeckHarness = new ModelRenderer(this, 0, 11);
-        this.NeckHarness.addBox(-2F, -3F, -2.5F, 4, 1, 4);
-        this.NeckHarness.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.NeckHarness, 0.4363323F, 0F, 0F);
-
-        this.NeckHarness2 = new ModelRenderer(this, 84, 55);
-        this.NeckHarness2.addBox(-3F, -2.5F, -2F, 6, 1, 1);
-        this.NeckHarness2.setRotationPoint(0F, 3F, -6F);
-
-        this.NeckHarnessRight = new ModelRenderer(this, 84, 45);
-        this.NeckHarnessRight.addBox(-2.3F, -3.5F, -0.5F, 0, 3, 12);
-        this.NeckHarnessRight.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.NeckHarnessRight, 0.8983798F, 0F, 0F);
-
-        this.NeckHarnessLeft = new ModelRenderer(this, 84, 45);
-        this.NeckHarnessLeft.addBox(2.3F, -3.5F, -0.5F, 0, 3, 12);
-        this.NeckHarnessLeft.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.NeckHarnessLeft, 0.8983798F, 0F, 0F);
-
-        this.Head = new ModelRenderer(this, 0, 0);
-        this.Head.addBox(-1.5F, -16F, -4.5F, 3, 4, 3);
-        this.Head.setRotationPoint(0F, 3F, -6F);
-
-        this.UniHorn = new ModelRenderer(this, 0, 8);
-        this.UniHorn.addBox(-0.5F, -21F, 0.5F, 1, 6, 1);
-        this.UniHorn.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.UniHorn, 0.3171542F, 0F, 0F);
-
-        this.HelmetLeather = new ModelRenderer(this, 66, 0);
-        this.HelmetLeather.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetLeather.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetIron = new ModelRenderer(this, 84, 46);
-        this.HelmetIron.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetIron.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetGold = new ModelRenderer(this, 112, 64);
-        this.HelmetGold.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetGold.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetDiamond = new ModelRenderer(this, 96, 64);
-        this.HelmetDiamond.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetDiamond.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetHide = new ModelRenderer(this, 96, 5);
-        this.HelmetHide.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetHide.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetNeckHide = new ModelRenderer(this, 58, 0);
-        this.HelmetNeckHide.addBox(-1.5F, -12F, -4.5F, 3, 1, 3);
-        this.HelmetNeckHide.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetHideEar1 = new ModelRenderer(this, 84, 9);
-        this.HelmetHideEar1.addBox(-2.5F, -18F, -3F, 2, 2, 1);
-        this.HelmetHideEar1.setRotationPoint(0F, 3F, -6F);
-        //setRotation(HelmetHideEar1, 0F, 0F, 0.4363323F);
-
-        this.HelmetHideEar2 = new ModelRenderer(this, 90, 9);
-        this.HelmetHideEar2.addBox(0.5F, -18F, -3F, 2, 2, 1);
-        this.HelmetHideEar2.setRotationPoint(0F, 3F, -6F);
-        //setRotation(HelmetHideEar2, 0F, 0F, -0.4363323F);
-
-        this.HelmetFur = new ModelRenderer(this, 84, 0);
-        this.HelmetFur.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetFur.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetNeckFur = new ModelRenderer(this, 96, 0);
-        this.HelmetNeckFur.addBox(-1.5F, -12F, -4.5F, 3, 1, 3);
-        this.HelmetNeckFur.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetFurEar1 = new ModelRenderer(this, 66, 9);
-        this.HelmetFurEar1.addBox(-2.5F, -18F, -3F, 2, 2, 1);
-        this.HelmetFurEar1.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetFurEar2 = new ModelRenderer(this, 76, 9);
-        this.HelmetFurEar2.addBox(0.5F, -18F, -3F, 2, 2, 1);
-        this.HelmetFurEar2.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetReptile = new ModelRenderer(this, 64, 64);
-        this.HelmetReptile.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetReptile.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetReptileEar2 = new ModelRenderer(this, 114, 45);
-        this.HelmetReptileEar2.addBox(2.5F, -16.5F, -2F, 0, 5, 5);
-        this.HelmetReptileEar2.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.HelmetReptileEar2, 0F, 0.6108652F, 0F);
-
-        this.HelmetReptileEar1 = new ModelRenderer(this, 114, 50);
-        this.HelmetReptileEar1.addBox(-2.5F, -16.5F, -2F, 0, 5, 5);
-        this.HelmetReptileEar1.setRotationPoint(0F, 3F, -6F);
-        setRotation(this.HelmetReptileEar1, 0F, -0.6108652F, 0F);
-
-        this.HelmetGreenChitin = new ModelRenderer(this, 80, 64);
-        this.HelmetGreenChitin.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetGreenChitin.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetYellowChitin = new ModelRenderer(this, 0, 64);
-        this.HelmetYellowChitin.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetYellowChitin.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetBlueChitin = new ModelRenderer(this, 16, 64);
-        this.HelmetBlueChitin.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetBlueChitin.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetBlackChitin = new ModelRenderer(this, 32, 64);
-        this.HelmetBlackChitin.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetBlackChitin.setRotationPoint(0F, 3F, -6F);
-
-        this.HelmetRedChitin = new ModelRenderer(this, 48, 64);
-        this.HelmetRedChitin.addBox(-2F, -16.5F, -5F, 4, 5, 4);
-        this.HelmetRedChitin.setRotationPoint(0F, 3F, -6F);
-
-        /*
-         * Tail = new ModelRenderer(this, 30, 28); Tail.addBox(-2.5F, 3F, 16F,
-         * 5, 5, 5); Tail.setRotationPoint(0F, 0F, -6F); Tailpart1 = new
-         * ModelRenderer(this, 30, 28); Tailpart1.addBox(-2.5F, -3.2F, 21F, 5,
-         * 5, 5); Tailpart1.setRotationPoint(0F, 0F, -6F);
-         * setRotation(Tailpart1, -0.2974289F, 0F, 0F); Tailpart2 = new
-         * ModelRenderer(this, 60, 73); Tailpart2.addBox(-2.5F, -8.8F, 24.6F, 5,
-         * 5, 8); Tailpart2.setRotationPoint(0F, 0F, -6F);
-         * setRotation(Tailpart2, -0.5205006F, 0F, 0F); Tailpart3 = new
-         * ModelRenderer(this, 60, 86); Tailpart3.addBox(-2F, 1.5F, 32.6F, 4, 4,
-         * 7); Tailpart3.setRotationPoint(0F, 0F, -6F); setRotation(Tailpart3,
-         * -0.2230717F, 0F, 0F); Tailpart4 = new ModelRenderer(this, 60, 97);
-         * Tailpart4.addBox(-1.5F, 13F, 36.6F, 3, 3, 7);
-         * Tailpart4.setRotationPoint(0F, 0F, -6F); setRotation(Tailpart4,
-         * 0.0743572F, 0F, 0F); Tailpart5 = new ModelRenderer(this, 60, 107);
-         * Tailpart5.addBox(-1F, 26.5F, 35.9F, 2, 2, 5);
-         * Tailpart5.setRotationPoint(0F, 0F, -6F); setRotation(Tailpart5,
-         * 0.4089647F, 0F, 0F);
-         */
-
-        this.Tail = new ModelRenderer(this, 30, 28);
-        this.Tail.addBox(-2.5F, -1F, 0F, 5, 5, 5);
-        this.Tail.setRotationPoint(0F, 4F, 10F);
-
-        this.Tailpart1 = new ModelRenderer(this, 30, 28);
-        this.Tailpart1.addBox(-2.5F, -2.2F, 5F, 5, 5, 5);
-        this.Tailpart1.setRotationPoint(0F, 4F, 10F);
-        setRotation(this.Tailpart1, -0.2974289F, 0F, 0F);
-
-        this.Tailpart2 = new ModelRenderer(this, 60, 73);
-        this.Tailpart2.addBox(-2.5F, -4.3F, 9F, 5, 5, 8);
-        this.Tailpart2.setRotationPoint(0F, 4F, 10F);
-        setRotation(this.Tailpart2, -0.5205006F, 0F, 0F);
-
-        this.Tailpart3 = new ModelRenderer(this, 60, 86);
-        this.Tailpart3.addBox(-2F, 1F, 16F, 4, 4, 7);
-        this.Tailpart3.setRotationPoint(0F, 4F, 10F);
-        setRotation(this.Tailpart3, -0.2230717F, 0F, 0F);
-
-        this.Tailpart4 = new ModelRenderer(this, 60, 97);
-        this.Tailpart4.addBox(-1.5F, 8F, 20.6F, 3, 3, 7);
-        this.Tailpart4.setRotationPoint(0F, 4F, 10F);
-        setRotation(this.Tailpart4, 0.0743572F, 0F, 0F);
-
-        this.Tailpart5 = new ModelRenderer(this, 60, 107);
-        this.Tailpart5.addBox(-1F, 16.5F, 22.9F, 2, 2, 5);
-        this.Tailpart5.setRotationPoint(0F, 4F, 10F);
-        setRotation(this.Tailpart5, 0.4089647F, 0F, 0F);
+    public MoCModelOstrich(ModelPart root) {
+        // Bind each ModelPart by name:
+        this.UBeak           = root.getChild("UBeak");
+        this.UBeak2          = root.getChild("UBeak2");
+        this.UBeakb          = root.getChild("UBeakb");
+        this.UBeak2b         = root.getChild("UBeak2b");
+        this.LBeak           = root.getChild("LBeak");
+        this.LBeakb          = root.getChild("LBeakb");
+        this.LBeak2          = root.getChild("LBeak2");
+        this.LBeak2b         = root.getChild("LBeak2b");
+        this.Body            = root.getChild("Body");
+        this.Tail            = root.getChild("Tail");
+        this.LLegA           = root.getChild("LLegA");
+        this.LLegB           = root.getChild("LLegB");
+        this.LLegC           = root.getChild("LLegC");
+        this.LFoot           = root.getChild("LFoot");
+        this.RLegA           = root.getChild("RLegA");
+        this.RLegB           = root.getChild("RLegB");
+        this.RLegC           = root.getChild("RLegC");
+        this.RFoot           = root.getChild("RFoot");
+        this.Tail1           = root.getChild("Tail1");
+        this.Tail2           = root.getChild("Tail2");
+        this.Tail3           = root.getChild("Tail3");
+        this.LWingB          = root.getChild("LWingB");
+        this.LWingC          = root.getChild("LWingC");
+        this.LWingD          = root.getChild("LWingD");
+        this.LWingE          = root.getChild("LWingE");
+        this.RWingB          = root.getChild("RWingB");
+        this.RWingC          = root.getChild("RWingC");
+        this.RWingD          = root.getChild("RWingD");
+        this.RWingE          = root.getChild("RWingE");
+        this.SaddleA         = root.getChild("SaddleA");
+        this.SaddleB         = root.getChild("SaddleB");
+        this.SaddleL         = root.getChild("SaddleL");
+        this.SaddleR         = root.getChild("SaddleR");
+        this.SaddleL2        = root.getChild("SaddleL2");
+        this.SaddleR2        = root.getChild("SaddleR2");
+        this.SaddleC         = root.getChild("SaddleC");
+        this.NeckLFeather    = root.getChild("NeckLFeather");
+        this.NeckUFeather    = root.getChild("NeckUFeather");
+        this.NeckD           = root.getChild("NeckD");
+        this.Saddlebag       = root.getChild("Saddlebag");
+        this.Flagpole        = root.getChild("Flagpole");
+        this.FlagBlack       = root.getChild("FlagBlack");
+        this.FlagDarkGrey    = root.getChild("FlagDarkGrey");
+        this.FlagYellow      = root.getChild("FlagYellow");
+        this.FlagBrown       = root.getChild("FlagBrown");
+        this.FlagGreen       = root.getChild("FlagGreen");
+        this.FlagCyan        = root.getChild("FlagCyan");
+        this.FlagLightBlue   = root.getChild("FlagLightBlue");
+        this.FlagDarkBlue    = root.getChild("FlagDarkBlue");
+        this.FlagPurple      = root.getChild("FlagPurple");
+        this.FlagDarkPurple  = root.getChild("FlagDarkPurple");
+        this.FlagDarkGreen   = root.getChild("FlagDarkGreen");
+        this.FlagLightRed    = root.getChild("FlagLightRed");
+        this.FlagRed         = root.getChild("FlagRed");
+        this.FlagWhite       = root.getChild("FlagWhite");
+        this.FlagGrey        = root.getChild("FlagGrey");
+        this.FlagOrange      = root.getChild("FlagOrange");
+        this.NeckU           = root.getChild("NeckU");
+        this.NeckL           = root.getChild("NeckL");
+        this.NeckHarness     = root.getChild("NeckHarness");
+        this.NeckHarness2    = root.getChild("NeckHarness2");
+        this.NeckHarnessRight= root.getChild("NeckHarnessRight");
+        this.NeckHarnessLeft = root.getChild("NeckHarnessLeft");
+        this.Head            = root.getChild("Head");
+        this.UniHorn         = root.getChild("UniHorn");
+        this.HelmetLeather   = root.getChild("HelmetLeather");
+        this.HelmetIron      = root.getChild("HelmetIron");
+        this.HelmetGold      = root.getChild("HelmetGold");
+        this.HelmetDiamond   = root.getChild("HelmetDiamond");
+        this.HelmetHide      = root.getChild("HelmetHide");
+        this.HelmetNeckHide  = root.getChild("HelmetNeckHide");
+        this.HelmetHideEar1  = root.getChild("HelmetHideEar1");
+        this.HelmetHideEar2  = root.getChild("HelmetHideEar2");
+        this.HelmetFur       = root.getChild("HelmetFur");
+        this.HelmetNeckFur   = root.getChild("HelmetNeckFur");
+        this.HelmetFurEar1   = root.getChild("HelmetFurEar1");
+        this.HelmetFurEar2   = root.getChild("HelmetFurEar2");
+        this.HelmetReptile   = root.getChild("HelmetReptile");
+        this.HelmetReptileEar1 = root.getChild("HelmetReptileEar1");
+        this.HelmetReptileEar2 = root.getChild("HelmetReptileEar2");
+        this.HelmetGreenChitin = root.getChild("HelmetGreenChitin");
+        this.HelmetYellowChitin= root.getChild("HelmetYellowChitin");
+        this.HelmetBlueChitin  = root.getChild("HelmetBlueChitin");
+        this.HelmetBlackChitin = root.getChild("HelmetBlackChitin");
+        this.HelmetRedChitin   = root.getChild("HelmetRedChitin");
+        this.Tailpart1        = root.getChild("Tailpart1");
+        this.Tailpart2        = root.getChild("Tailpart2");
+        this.Tailpart3        = root.getChild("Tailpart3");
+        this.Tailpart4        = root.getChild("Tailpart4");
+        this.Tailpart5        = root.getChild("Tailpart5");
     }
 
     /**
-     * Used for easily adding entity-dependent animations. The second and third
-     * float params here are the same second and third as in the
-     * setRotationAngles method.
+     * Build the LayerDefinition: all ModelPart children with correct positions,
+     * rotations, and texture offsets. Corresponds line-by-line to the old
+     * ModelRenderer.addBox(...) and setRotation(...) calls.
      */
-    /*
-     * public void setLivingAnimations(MobEntity entityliving, float par2,
-     * float par3, float par4) { super.setLivingAnimations(entityliving, par2,
-     * par3, par4); this.Head.rotationPointY = 6.0F +
-     * ((EntitySheep)entityliving).func_44003_c(par4) * 9.0F; this.field_44016_o
-     * = ((EntitySheep)entityliving).func_44002_d(par4); }
-     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.typeI = (byte) entityIn.getTypeMoC();
-        this.openMouth = (entityIn.mouthCounter != 0);
-        this.isSaddled = entityIn.getIsRideable();
-        this.bagged = entityIn.getIsChested();
-        this.rider = (entityIn.isBeingRidden());
-        this.helmet = entityIn.getHelmet();
-        this.flagColor = entityIn.getFlagColorRaw();
+        // UBeak
+        root.addOrReplaceChild("UBeak",
+                CubeListBuilder.create()
+                        .texOffs(12, 16)
+                        .addBox(-1.5F, -15.0F, -5.5F, 3, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // UBeak2
+        root.addOrReplaceChild("UBeak2",
+                CubeListBuilder.create()
+                        .texOffs(20, 16)
+                        .addBox(-1.0F, -15.0F, -7.5F, 2, 1, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // UBeakb (lower rotation angle)
+        root.addOrReplaceChild("UBeakb",
+                CubeListBuilder.create()
+                        .texOffs(12, 16)
+                        .addBox(-1.5F, -15.0F, -6.5F, 3, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, -0.0698132F, 0.0F, 0.0F)
+        );
+
+        // UBeak2b
+        root.addOrReplaceChild("UBeak2b",
+                CubeListBuilder.create()
+                        .texOffs(20, 16)
+                        .addBox(-1.0F, -15.0F, -8.5F, 2, 1, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, -0.0698132F, 0.0F, 0.0F)
+        );
+
+        // LBeak
+        root.addOrReplaceChild("LBeak",
+                CubeListBuilder.create()
+                        .texOffs(12, 22)
+                        .addBox(-1.5F, -14.0F, -5.5F, 3, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // LBeakb
+        root.addOrReplaceChild("LBeakb",
+                CubeListBuilder.create()
+                        .texOffs(12, 22)
+                        .addBox(-1.5F, -14.0F, -3.9F, 3, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.122173F, 0.0F, 0.0F)
+        );
+
+        // LBeak2
+        root.addOrReplaceChild("LBeak2",
+                CubeListBuilder.create()
+                        .texOffs(20, 22)
+                        .addBox(-1.0F, -14.0F, -7.5F, 2, 1, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // LBeak2b
+        root.addOrReplaceChild("LBeak2b",
+                CubeListBuilder.create()
+                        .texOffs(20, 22)
+                        .addBox(-1.0F, -14.0F, -5.9F, 2, 1, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.122173F, 0.0F, 0.0F)
+        );
+
+        // Body
+        root.addOrReplaceChild("Body",
+                CubeListBuilder.create()
+                        .texOffs(0, 38)
+                        .addBox(-4.0F, 1.0F, 0.0F, 8, 10, 16, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 0.0F, -6.0F)
+        );
+
+        // Left Leg A
+        root.addOrReplaceChild("LLegA",
+                CubeListBuilder.create()
+                        .texOffs(50, 28)
+                        .addBox(-2.0F, -1.0F, -2.5F, 4, 6, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 5.0F, 4.0F, 0.1745329F, 0.0F, 0.0F)
+        );
+
+        // Left Leg B
+        root.addOrReplaceChild("LLegB",
+                CubeListBuilder.create()
+                        .texOffs(50, 39)
+                        .addBox(-1.5F, 5.0F, -1.5F, 3, 4, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 5.0F, 4.0F, 0.1745329F, 0.0F, 0.0F)
+        );
+
+        // Left Leg C
+        root.addOrReplaceChild("LLegC",
+                CubeListBuilder.create()
+                        .texOffs(8, 38)
+                        .addBox(-1.0F, 8.0F, 2.5F, 2, 10, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 5.0F, 4.0F, -0.2617994F, 0.0F, 0.0F)
+        );
+
+        // Left Foot
+        root.addOrReplaceChild("LFoot",
+                CubeListBuilder.create()
+                        .texOffs(32, 42)
+                        .addBox(-1.0F, 17.0F, -9.0F, 2, 1, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 5.0F, 4.0F, 0.1745329F, 0.0F, 0.0F)
+        );
+
+        // Right Leg A
+        root.addOrReplaceChild("RLegA",
+                CubeListBuilder.create()
+                        .texOffs(0, 27)
+                        .addBox(-2.0F, -1.0F, -2.5F, 4, 6, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 5.0F, 4.0F, 0.1745329F, 0.0F, 0.0F)
+        );
+
+        // Right Leg B
+        root.addOrReplaceChild("RLegB",
+                CubeListBuilder.create()
+                        .texOffs(18, 27)
+                        .addBox(-1.5F, 5.0F, -1.5F, 3, 4, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 5.0F, 4.0F, 0.1745329F, 0.0F, 0.0F)
+        );
+
+        // Right Leg C
+        root.addOrReplaceChild("RLegC",
+                CubeListBuilder.create()
+                        .texOffs(0, 38)
+                        .addBox(-1.0F, 8.0F, 2.5F, 2, 10, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 5.0F, 4.0F, -0.2617994F, 0.0F, 0.0F)
+        );
+
+        // Right Foot
+        root.addOrReplaceChild("RFoot",
+                CubeListBuilder.create()
+                        .texOffs(32, 48)
+                        .addBox(-1.0F, 17.0F, -9.0F, 2, 1, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 5.0F, 4.0F, 0.1745329F, 0.0F, 0.0F)
+        );
+
+        // Tail1
+        root.addOrReplaceChild("Tail1",
+                CubeListBuilder.create()
+                        .texOffs(44, 18)
+                        .addBox(-0.5F, -2.0F, -2.0F, 1, 4, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 15.0F, 0.3490659F, 0.0F, 0.0F)
+        );
+
+        // Tail2
+        root.addOrReplaceChild("Tail2",
+                CubeListBuilder.create()
+                        .texOffs(58, 18)
+                        .addBox(-2.6F, -2.0F, -2.0F, 1, 4, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 15.0F, 0.3490659F, -0.2617994F, 0.0F)
+        );
+
+        // Tail3
+        root.addOrReplaceChild("Tail3",
+                CubeListBuilder.create()
+                        .texOffs(30, 18)
+                        .addBox(1.6F, -2.0F, -2.0F, 1, 4, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 15.0F, 0.3490659F, 0.2617994F, 0.0F)
+        );
+
+        // Left Wing B
+        root.addOrReplaceChild("LWingB",
+                CubeListBuilder.create()
+                        .texOffs(68, 46)
+                        .addBox(-0.5F, -3.0F, 0.0F, 1, 4, 14, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 4.0F, -3.0F, 0.0872665F, 0.0872665F, 0.0F)
+        );
+
+        // Left Wing C
+        root.addOrReplaceChild("LWingC",
+                CubeListBuilder.create()
+                        .texOffs(98, 46)
+                        .addBox(-1.0F, 0.0F, 0.0F, 1, 4, 14, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 4.0F, -3.0F, 0.0F, 0.0872665F, 0.0F)
+        );
+
+        // Left Wing D
+        root.addOrReplaceChild("LWingD",
+                CubeListBuilder.create()
+                        .texOffs(26, 84)
+                        .addBox(0.0F, -1.0F, -1.0F, 15, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 3.0F, -3.0F, 0.0F, 0.0F, -0.3490659F)
+        );
+
+        // Left Wing E
+        root.addOrReplaceChild("LWingE",
+                CubeListBuilder.create()
+                        .texOffs(0, 103)
+                        .addBox(0.0F, 0.0F, 1.0F, 15, 0, 15, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(4.0F, 3.0F, -3.0F, 0.0F, 0.0F, -0.3490659F)
+        );
+
+        // Right Wing B
+        root.addOrReplaceChild("RWingB",
+                CubeListBuilder.create()
+                        .texOffs(68, 0)
+                        .addBox(-0.5F, -3.0F, 0.0F, 1, 4, 14, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 4.0F, -3.0F, 0.0872665F, -0.0872665F, 0.0F)
+        );
+
+        // Right Wing C
+        root.addOrReplaceChild("RWingC",
+                CubeListBuilder.create()
+                        .texOffs(98, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 1, 4, 14, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 4.0F, -3.0F, 0.0F, -0.0872665F, 0.0F)
+        );
+
+        // Right Wing D
+        root.addOrReplaceChild("RWingD",
+                CubeListBuilder.create()
+                        .texOffs(26, 80)
+                        .addBox(-15.0F, -1.0F, -1.0F, 15, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 3.0F, -3.0F, 0.0F, 0.0F, 0.3490659F)
+        );
+
+        // Right Wing E
+        root.addOrReplaceChild("RWingE",
+                CubeListBuilder.create()
+                        .texOffs(0, 88)
+                        .addBox(-15.0F, 0.0F, 1.0F, 15, 0, 15, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(-4.0F, 3.0F, -3.0F, 0.0F, 0.0F, 0.3490659F)
+        );
+
+        // Saddle A
+        root.addOrReplaceChild("SaddleA",
+                CubeListBuilder.create()
+                        .texOffs(72, 18)
+                        .addBox(-4.0F, 0.5F, -3.0F, 8, 1, 8, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 0.0F, 0.0F)
+        );
+
+        // Saddle B
+        root.addOrReplaceChild("SaddleB",
+                CubeListBuilder.create()
+                        .texOffs(72, 27)
+                        .addBox(-1.5F, 0.0F, -3.0F, 3, 1, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 0.0F, 0.0F)
+        );
+
+        // Saddle L
+        root.addOrReplaceChild("SaddleL",
+                CubeListBuilder.create()
+                        .texOffs(72, 30)
+                        .addBox(-0.5F, 0.0F, -0.5F, 1, 6, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(4.0F, 1.0F, 0.0F)
+        );
+
+        // Saddle R
+        root.addOrReplaceChild("SaddleR",
+                CubeListBuilder.create()
+                        .texOffs(84, 30)
+                        .addBox(-0.5F, 0.0F, -0.5F, 1, 6, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(-4.0F, 1.0F, 0.0F)
+        );
+
+        // Saddle L2
+        root.addOrReplaceChild("SaddleL2",
+                CubeListBuilder.create()
+                        .texOffs(76, 30)
+                        .addBox(-0.5F, 6.0F, -1.0F, 1, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(4.0F, 1.0F, 0.0F)
+        );
+
+        // Saddle R2
+        root.addOrReplaceChild("SaddleR2",
+                CubeListBuilder.create()
+                        .texOffs(88, 30)
+                        .addBox(-0.5F, 6.0F, -1.0F, 1, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(-4.0F, 1.0F, 0.0F)
+        );
+
+        // Saddle C
+        root.addOrReplaceChild("SaddleC",
+                CubeListBuilder.create()
+                        .texOffs(84, 27)
+                        .addBox(-4.0F, 0.0F, 3.0F, 8, 1, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 0.0F, 0.0F)
+        );
+
+        // Neck Left Feather
+        root.addOrReplaceChild("NeckLFeather",
+                CubeListBuilder.create()
+                        .texOffs(8, 73)
+                        .addBox(0.0F, -8.0F, -0.5F, 0, 7, 4, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.2007129F, 0.0F, 0.0F)
+        );
+
+        // Neck Upper Feather
+        root.addOrReplaceChild("NeckUFeather",
+                CubeListBuilder.create()
+                        .texOffs(0, 73)
+                        .addBox(0.0F, -16.0F, -2.0F, 0, 9, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // Neck D
+        root.addOrReplaceChild("NeckD",
+                CubeListBuilder.create()
+                        .texOffs(0, 16)
+                        .addBox(-1.5F, -4.0F, -2.0F, 3, 8, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.4363323F, 0.0F, 0.0F)
+        );
+
+        // Saddlebag
+        root.addOrReplaceChild("Saddlebag",
+                CubeListBuilder.create()
+                        .texOffs(32, 7)
+                        .addBox(-4.5F, -3.0F, 5.0F, 9, 4, 7, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+
+        // Flagpole
+        root.addOrReplaceChild("Flagpole",
+                CubeListBuilder.create()
+                        .texOffs(28, 0)
+                        .addBox(-0.5F, -15.0F, -0.5F, 1, 17, 1, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 0.0F, 5.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+
+        // Flag variants: Black
+        root.addOrReplaceChild("FlagBlack",
+                CubeListBuilder.create()
+                        .texOffs(108, 8)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Dark Grey
+        root.addOrReplaceChild("FlagDarkGrey",
+                CubeListBuilder.create()
+                        .texOffs(108, 12)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Yellow
+        root.addOrReplaceChild("FlagYellow",
+                CubeListBuilder.create()
+                        .texOffs(48, 46)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Brown
+        root.addOrReplaceChild("FlagBrown",
+                CubeListBuilder.create()
+                        .texOffs(48, 42)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Green
+        root.addOrReplaceChild("FlagGreen",
+                CubeListBuilder.create()
+                        .texOffs(48, 38)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Cyan
+        root.addOrReplaceChild("FlagCyan",
+                CubeListBuilder.create()
+                        .texOffs(48, 50)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Light Blue
+        root.addOrReplaceChild("FlagLightBlue",
+                CubeListBuilder.create()
+                        .texOffs(68, 32)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Dark Blue
+        root.addOrReplaceChild("FlagDarkBlue",
+                CubeListBuilder.create()
+                        .texOffs(68, 28)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Purple
+        root.addOrReplaceChild("FlagPurple",
+                CubeListBuilder.create()
+                        .texOffs(88, 32)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Dark Purple
+        root.addOrReplaceChild("FlagDarkPurple",
+                CubeListBuilder.create()
+                        .texOffs(88, 28)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Dark Green
+        root.addOrReplaceChild("FlagDarkGreen",
+                CubeListBuilder.create()
+                        .texOffs(108, 32)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Light Red
+        root.addOrReplaceChild("FlagLightRed",
+                CubeListBuilder.create()
+                        .texOffs(108, 28)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Red
+        root.addOrReplaceChild("FlagRed",
+                CubeListBuilder.create()
+                        .texOffs(108, 24)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // White
+        root.addOrReplaceChild("FlagWhite",
+                CubeListBuilder.create()
+                        .texOffs(108, 20)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Grey
+        root.addOrReplaceChild("FlagGrey",
+                CubeListBuilder.create()
+                        .texOffs(108, 16)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+        // Orange
+        root.addOrReplaceChild("FlagOrange",
+                CubeListBuilder.create()
+                        .texOffs(88, 24)
+                        .addBox(0.0F, -2.1F, 0.0F, 0, 4, 10, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, -12.0F, 8.0F, -0.2602503F, 0.0F, 0.0F)
+        );
+
+        // NeckU
+        root.addOrReplaceChild("NeckU",
+                CubeListBuilder.create()
+                        .texOffs(20, 0)
+                        .addBox(-1.0F, -12.0F, -4.0F, 2, 5, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // NeckL
+        root.addOrReplaceChild("NeckL",
+                CubeListBuilder.create()
+                        .texOffs(20, 7)
+                        .addBox(-1.0F, -8.0F, -2.5F, 2, 5, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.2007129F, 0.0F, 0.0F)
+        );
+
+        // Neck Harness top strap
+        root.addOrReplaceChild("NeckHarness",
+                CubeListBuilder.create()
+                        .texOffs(0, 11)
+                        .addBox(-2.0F, -3.0F, -2.5F, 4, 1, 4, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.4363323F, 0.0F, 0.0F)
+        );
+
+        // Neck Harness horizontal bar
+        root.addOrReplaceChild("NeckHarness2",
+                CubeListBuilder.create()
+                        .texOffs(84, 55)
+                        .addBox(-3.0F, -2.5F, -2.0F, 6, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // Neck Harness Right Strap
+        root.addOrReplaceChild("NeckHarnessRight",
+                CubeListBuilder.create()
+                        .texOffs(84, 45)
+                        .addBox(-2.3F, -3.5F, -0.5F, 0, 3, 12, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.8983798F, 0.0F, 0.0F)
+        );
+
+        // Neck Harness Left Strap
+        root.addOrReplaceChild("NeckHarnessLeft",
+                CubeListBuilder.create()
+                        .texOffs(84, 45)
+                        .addBox(2.3F, -3.5F, -0.5F, 0, 3, 12, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.8983798F, 0.0F, 0.0F)
+        );
+
+        // Head
+        root.addOrReplaceChild("Head",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1.5F, -16.0F, -4.5F, 3, 4, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // UniHorn
+        root.addOrReplaceChild("UniHorn",
+                CubeListBuilder.create()
+                        .texOffs(0, 8)
+                        .addBox(-0.5F, -21.0F, 0.5F, 1, 6, 1, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.3171542F, 0.0F, 0.0F)
+        );
+
+        // Helmets
+        root.addOrReplaceChild("HelmetLeather",
+                CubeListBuilder.create()
+                        .texOffs(66, 0)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetIron",
+                CubeListBuilder.create()
+                        .texOffs(84, 46)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetGold",
+                CubeListBuilder.create()
+                        .texOffs(112, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetDiamond",
+                CubeListBuilder.create()
+                        .texOffs(96, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetHide",
+                CubeListBuilder.create()
+                        .texOffs(96, 5)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetNeckHide",
+                CubeListBuilder.create()
+                        .texOffs(58, 0)
+                        .addBox(-1.5F, -12.0F, -4.5F, 3, 1, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetHideEar1",
+                CubeListBuilder.create()
+                        .texOffs(84, 9)
+                        .addBox(-2.5F, -18.0F, -3.0F, 2, 2, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetHideEar2",
+                CubeListBuilder.create()
+                        .texOffs(90, 9)
+                        .addBox(0.5F, -18.0F, -3.0F, 2, 2, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetFur",
+                CubeListBuilder.create()
+                        .texOffs(84, 0)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetNeckFur",
+                CubeListBuilder.create()
+                        .texOffs(96, 0)
+                        .addBox(-1.5F, -12.0F, -4.5F, 3, 1, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetFurEar1",
+                CubeListBuilder.create()
+                        .texOffs(66, 9)
+                        .addBox(-2.5F, -18.0F, -3.0F, 2, 2, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetFurEar2",
+                CubeListBuilder.create()
+                        .texOffs(76, 9)
+                        .addBox(0.5F, -17.0F, -3.0F, 2, 2, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetReptile",
+                CubeListBuilder.create()
+                        .texOffs(64, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetReptileEar2",
+                CubeListBuilder.create()
+                        .texOffs(114, 45)
+                        .addBox(2.5F, -16.5F, -2.0F, 0, 5, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.0F, 0.6108652F, 0.0F)
+        );
+        root.addOrReplaceChild("HelmetReptileEar1",
+                CubeListBuilder.create()
+                        .texOffs(114, 50)
+                        .addBox(-2.5F, -16.5F, -2.0F, 0, 5, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 3.0F, -6.0F, 0.0F, -0.6108652F, 0.0F)
+        );
+        root.addOrReplaceChild("HelmetGreenChitin",
+                CubeListBuilder.create()
+                        .texOffs(80, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetYellowChitin",
+                CubeListBuilder.create()
+                        .texOffs(0, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetBlueChitin",
+                CubeListBuilder.create()
+                        .texOffs(16, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetBlackChitin",
+                CubeListBuilder.create()
+                        .texOffs(32, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+        root.addOrReplaceChild("HelmetRedChitin",
+                CubeListBuilder.create()
+                        .texOffs(48, 64)
+                        .addBox(-2.0F, -16.5F, -5.0F, 4, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 3.0F, -6.0F)
+        );
+
+        // Tail (main)
+        root.addOrReplaceChild("Tail",
+                CubeListBuilder.create()
+                        .texOffs(30, 28)
+                        .addBox(-2.5F, -1.0F, 0.0F, 5, 5, 5, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 4.0F, 10.0F)
+        );
+
+        // Tailpart1
+        root.addOrReplaceChild("Tailpart1",
+                CubeListBuilder.create()
+                        .texOffs(30, 28)
+                        .addBox(-2.5F, -2.2F, 5.0F, 5, 5, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 10.0F, -0.2974289F, 0.0F, 0.0F)
+        );
+
+        // Tailpart2
+        root.addOrReplaceChild("Tailpart2",
+                CubeListBuilder.create()
+                        .texOffs(60, 73)
+                        .addBox(-2.5F, -4.3F, 9.0F, 5, 5, 8, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 10.0F, -0.5205006F, 0.0F, 0.0F)
+        );
+
+        // Tailpart3
+        root.addOrReplaceChild("Tailpart3",
+                CubeListBuilder.create()
+                        .texOffs(60, 86)
+                        .addBox(-2.0F, 1.0F, 16.0F, 4, 4, 7, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 10.0F, -0.2230717F, 0.0F, 0.0F)
+        );
+
+        // Tailpart4
+        root.addOrReplaceChild("Tailpart4",
+                CubeListBuilder.create()
+                        .texOffs(60, 97)
+                        .addBox(-1.5F, 8.0F, 20.6F, 3, 3, 7, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 10.0F, 0.0743572F, 0.0F, 0.0F)
+        );
+
+        // Tailpart5
+        root.addOrReplaceChild("Tailpart5",
+                CubeListBuilder.create()
+                        .texOffs(60, 107)
+                        .addBox(-1.0F, 16.5F, 22.9F, 2, 2, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0.0F, 4.0F, 10.0F, 0.4089647F, 0.0F, 0.0F)
+        );
+
+        return LayerDefinition.create(mesh, 128, 128);
     }
+
+    /**
+     * Capture entity state for animation use.
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-        this.NeckU.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.NeckD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.NeckL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLegA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLegB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLegC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLegA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLegB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLegC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-        if (this.typeI == 8) {
-            this.UniHorn.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-
-        if (this.typeI == 5 || this.typeI == 6) //demon and darkness ostriches
-        {
-            this.LWingD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LWingE.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RWingD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RWingE.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.NeckUFeather.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.NeckLFeather.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        } else {
-            this.LWingB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LWingC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RWingB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RWingC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-
-        if (this.typeI == 6) //darkness ostrich
-        {
-
-            this.Tailpart1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tailpart2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tailpart3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tailpart4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tailpart5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        } else {
-            this.Tail1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tail2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tail3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-
-        if (openMouth) {
-            this.UBeakb.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.UBeak2b.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LBeakb.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LBeak2b.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        } else {
-            this.UBeak.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.UBeak2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LBeak.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LBeak2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-
-        if (isSaddled) {
-            this.SaddleA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.SaddleB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.SaddleC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.SaddleL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.SaddleR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.SaddleL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.SaddleR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.NeckHarness.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.NeckHarness2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            if (rider) {
-                this.NeckHarnessLeft.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.NeckHarnessRight.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            }
-
-        }
-
-        if (bagged) {
-            this.Saddlebag.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Flagpole.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            switch (this.flagColor) {
-                case 0:
-                    FlagWhite.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 1:
-                    this.FlagOrange.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 2:
-                    this.FlagPurple.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 3:
-                    this.FlagLightBlue.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 4:
-                    this.FlagYellow.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 5:
-                    this.FlagGreen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 6:
-                    this.FlagLightRed.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 7:
-                    this.FlagDarkGrey.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 8:
-                    this.FlagGrey.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 9:
-                    this.FlagCyan.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 10:
-                    this.FlagDarkPurple.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 11:
-                    this.FlagDarkBlue.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 12:
-                    this.FlagBrown.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 13:
-                    this.FlagDarkGreen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 14:
-                    this.FlagRed.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-                case 15:
-                    this.FlagBlack.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    break;
-            }
-        }
-
-        switch (this.helmet) {
-            case 1:
-                this.HelmetLeather.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 2:
-                this.HelmetIron.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 3:
-                this.HelmetGold.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 4:
-                this.HelmetDiamond.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 5:
-                this.HelmetHide.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetNeckHide.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetHideEar1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetHideEar2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 6:
-                this.HelmetFur.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetNeckFur.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetFurEar1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetFurEar2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 7:
-                this.HelmetReptile.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetReptileEar1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.HelmetReptileEar2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 8:
-                this.HelmetGreenChitin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 9:
-                this.HelmetYellowChitin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 10:
-                this.HelmetBlueChitin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 11:
-                this.HelmetBlackChitin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-            case 12:
-                this.HelmetRedChitin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                break;
-
-        }
-
+    public void prepareMobModel(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
+        this.typeI       = (byte) entity.getTypeMoC();
+        this.openMouth   = entity.mouthCounter != 0;
+        this.isSaddled   = entity.getIsRideable();
+        this.bagged      = entity.getIsChested();
+        this.rider       = entity.isPassenger();
+        this.helmet      = entity.getHelmet();
+        this.flagColor   = entity.getFlagColorRaw();
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
+    /**
+     * Copy original setRotationAngles(...) logic here in setupAnim(...).
+     */
+    @Override
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        boolean isHiding    = entity.getHiding();
+        boolean wingFlap    = entity.wingCounter != 0;
+        int jumpCounter     = entity.jumpCounter;
+        boolean floating    = entity.isFlyer() && entity.isOnAir();
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        boolean isHiding = entityIn.getHiding();
-        boolean wingFlap = (entityIn.wingCounter != 0);
-        int jumpCounter = entityIn.jumpCounter;
-        boolean floating = (entityIn.isFlyer() && entityIn.isOnAir());
-        float LLegXRot = MathHelper.cos(limbSwing * 0.4F) * 1.1F * limbSwingAmount;
-        float RLegXRot = MathHelper.cos((limbSwing * 0.4F) + 3.141593F) * 1.1F * limbSwingAmount;
+        float LLegXRot = Mth.cos(limbSwing * 0.4F) * 1.1F * limbSwingAmount;
+        float RLegXRot = Mth.cos((limbSwing * 0.4F) + (float)Math.PI) * 1.1F * limbSwingAmount;
 
+        // HEAD ROTATION
         if (isHiding) {
-            this.Head.rotationPointY = 9.0F;
-            this.Head.rotateAngleX = 2.61799F;
-            this.Head.rotateAngleY = 0.0F;
-
+            this.Head.y = 9.0F;
+            this.Head.xRot = 2.61799F;
+            this.Head.yRot = 0.0F;
         } else {
-            this.Head.rotationPointY = 3.0F;
-            this.Head.rotateAngleX = (RLegXRot / 20F) + (-headPitch / (180F / (float) Math.PI));
-            this.Head.rotateAngleY = netHeadYaw / (180F / (float) Math.PI);
+            this.Head.y = 3.0F;
+            this.Head.xRot = (RLegXRot / 20F) + (-headPitch / (180F / (float)Math.PI));
+            this.Head.yRot = netHeadYaw / (180F / (float)Math.PI);
         }
-
         if (rider) {
             if (floating) {
-                this.Head.rotateAngleX = 0F;
+                this.Head.xRot = 0.0F;
             } else {
-                this.Head.rotateAngleX = (RLegXRot / 20F);
+                this.Head.xRot = (RLegXRot / 20F);
             }
         }
 
-        this.UBeak.rotationPointY = this.Head.rotationPointY;
-        this.UBeakb.rotationPointY = this.Head.rotationPointY;
-        this.UBeak2.rotationPointY = this.Head.rotationPointY;
-        this.UBeak2b.rotationPointY = this.Head.rotationPointY;
-        this.LBeak.rotationPointY = this.Head.rotationPointY;
-        this.LBeakb.rotationPointY = this.Head.rotationPointY;
-        this.LBeak2.rotationPointY = this.Head.rotationPointY;
-        this.LBeak2b.rotationPointY = this.Head.rotationPointY;
-        this.NeckU.rotationPointY = this.Head.rotationPointY;
-        this.NeckD.rotationPointY = this.Head.rotationPointY;
-        this.NeckL.rotationPointY = this.Head.rotationPointY;
+        // Sync beak and neck parts to head's position/rotation
+        this.UBeak.y = this.Head.y;
+        this.UBeakb.y = this.Head.y;
+        this.UBeak2.y = this.Head.y;
+        this.UBeak2b.y = this.Head.y;
+        this.LBeak.y = this.Head.y;
+        this.LBeakb.y = this.Head.y;
+        this.LBeak2.y = this.Head.y;
+        this.LBeak2b.y = this.Head.y;
+        this.NeckU.y = this.Head.y;
+        this.NeckD.y = this.Head.y;
+        this.NeckL.y = this.Head.y;
+        this.UniHorn.y = this.Head.y;
 
-        this.UBeak.rotateAngleX = this.Head.rotateAngleX;
-        this.UBeak.rotateAngleY = this.Head.rotateAngleY;
-        this.UBeak2.rotateAngleX = this.Head.rotateAngleX;
-        this.UBeak2.rotateAngleY = this.Head.rotateAngleY;
-        this.LBeak.rotateAngleX = this.Head.rotateAngleX;
-        this.LBeak.rotateAngleY = this.Head.rotateAngleY;
-        this.LBeak2.rotateAngleX = this.Head.rotateAngleX;
-        this.LBeak2.rotateAngleY = this.Head.rotateAngleY;
-        this.NeckU.rotateAngleX = this.Head.rotateAngleX;
-        this.NeckU.rotateAngleY = this.Head.rotateAngleY;
-        this.NeckD.rotateAngleX = 0.4363323F + this.Head.rotateAngleX;
-        this.NeckD.rotateAngleY = this.Head.rotateAngleY;
-        this.NeckL.rotateAngleX = (11.5F / this.radianF) + this.Head.rotateAngleX;
-        this.NeckL.rotateAngleY = this.Head.rotateAngleY;
+        // HEAD rotation sync
+        this.UBeak.xRot    = this.Head.xRot;
+        this.UBeak.yRot    = this.Head.yRot;
+        this.UBeak2.xRot   = this.Head.xRot;
+        this.UBeak2.yRot   = this.Head.yRot;
+        this.LBeak.xRot    = this.Head.xRot;
+        this.LBeak.yRot    = this.Head.yRot;
+        this.LBeak2.xRot   = this.Head.xRot;
+        this.LBeak2.yRot   = this.Head.yRot;
+        this.NeckU.xRot    = this.Head.xRot;
+        this.NeckU.yRot    = this.Head.yRot;
+        this.NeckD.xRot    = 0.4363323F + this.Head.xRot;
+        this.NeckD.yRot    = this.Head.yRot;
+        this.NeckL.xRot    = (11.5F / RADIAN_CONV) + this.Head.xRot;
+        this.NeckL.yRot    = this.Head.yRot;
 
-        this.UBeakb.rotateAngleX = -0.0698132F + this.Head.rotateAngleX;
-        this.UBeakb.rotateAngleY = this.Head.rotateAngleY;
-        this.UBeak2b.rotateAngleX = -0.0698132F + this.Head.rotateAngleX;
-        this.UBeak2b.rotateAngleY = this.Head.rotateAngleY;
+        // OPEN vs CLOSED beak rotation offsets
+        this.UBeakb.xRot   = -0.0698132F + this.Head.xRot;
+        this.UBeakb.yRot   = this.Head.yRot;
+        this.UBeak2b.xRot  = -0.0698132F + this.Head.xRot;
+        this.UBeak2b.yRot  = this.Head.yRot;
+        this.LBeakb.xRot   = (7F / RADIAN_CONV) + this.Head.xRot;
+        this.LBeakb.yRot   = this.Head.yRot;
+        this.LBeak2b.xRot  = (7F / RADIAN_CONV) + this.Head.xRot;
+        this.LBeak2b.yRot  = this.Head.yRot;
 
-        this.LBeakb.rotateAngleX = (7F / this.radianF) + this.Head.rotateAngleX;
-        this.LBeakb.rotateAngleY = this.Head.rotateAngleY;
-        this.LBeak2b.rotateAngleX = (7F / this.radianF) + this.Head.rotateAngleX;
-        this.LBeak2b.rotateAngleY = this.Head.rotateAngleY;
+        // Neck feathers and horn sync
+        this.NeckUFeather.y   = this.Head.y;
+        this.NeckLFeather.y   = this.Head.y;
+        this.UniHorn.y        = this.Head.y;
+        this.NeckUFeather.xRot= this.Head.xRot;
+        this.NeckUFeather.yRot= this.Head.yRot;
+        this.NeckLFeather.xRot= (11.5F / RADIAN_CONV) + this.Head.xRot;
+        this.NeckLFeather.yRot= this.Head.yRot;
+        this.UniHorn.xRot     = (18F / RADIAN_CONV) + this.Head.xRot;
+        this.UniHorn.yRot     = this.Head.yRot;
 
-        this.NeckUFeather.rotationPointY = this.Head.rotationPointY;
-        this.NeckLFeather.rotationPointY = this.Head.rotationPointY;
-        this.UniHorn.rotationPointY = this.Head.rotationPointY;
+        // Neck harness sync
+        this.NeckHarness.y       = this.Head.y;
+        this.NeckHarness2.y      = this.Head.y;
+        this.NeckHarnessLeft.y   = this.Head.y;
+        this.NeckHarnessRight.y  = this.Head.y;
+        this.NeckHarness.xRot    = (25F / RADIAN_CONV) + this.Head.xRot;
+        this.NeckHarness.yRot    = this.Head.yRot;
+        this.NeckHarness2.xRot   = this.Head.xRot;
+        this.NeckHarness2.yRot   = this.Head.yRot;
+        this.NeckHarnessLeft.xRot= (50F / RADIAN_CONV) + this.Head.xRot;
+        this.NeckHarnessLeft.yRot= this.Head.yRot;
+        this.NeckHarnessRight.xRot= (50F / RADIAN_CONV) + this.Head.xRot;
+        this.NeckHarnessRight.yRot= this.Head.yRot;
 
-        this.NeckUFeather.rotateAngleX = this.Head.rotateAngleX;
-        this.NeckUFeather.rotateAngleY = this.Head.rotateAngleY;
-        this.NeckLFeather.rotateAngleX = (11.5F / this.radianF) + this.Head.rotateAngleX;
-        this.NeckLFeather.rotateAngleY = this.Head.rotateAngleY;
-        this.UniHorn.rotateAngleX = (18F / this.radianF) + this.Head.rotateAngleX;
-        this.UniHorn.rotateAngleY = this.Head.rotateAngleY;
-
-        this.NeckHarness.rotationPointY = this.Head.rotationPointY;
-        this.NeckHarness2.rotationPointY = this.Head.rotationPointY;
-        this.NeckHarnessLeft.rotationPointY = this.Head.rotationPointY;
-        this.NeckHarnessRight.rotationPointY = this.Head.rotationPointY;
-
-        this.NeckHarness.rotateAngleX = (25F / this.radianF) + this.Head.rotateAngleX;
-        this.NeckHarness.rotateAngleY = this.Head.rotateAngleY;
-        this.NeckHarness2.rotateAngleX = this.Head.rotateAngleX;
-        this.NeckHarness2.rotateAngleY = this.Head.rotateAngleY;
-        this.NeckHarnessLeft.rotateAngleX = (50F / this.radianF) + this.Head.rotateAngleX;
-        this.NeckHarnessLeft.rotateAngleY = this.Head.rotateAngleY;
-        this.NeckHarnessRight.rotateAngleX = (50F / this.radianF) + this.Head.rotateAngleX;
-        this.NeckHarnessRight.rotateAngleY = this.Head.rotateAngleY;
-
-        //helmets
-
+        // Helmets sync to head
         switch (this.helmet) {
-            case 1:
-
-                this.HelmetLeather.rotationPointY = this.Head.rotationPointY;
-                this.HelmetLeather.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetLeather.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 2:
-
-                this.HelmetIron.rotationPointY = this.Head.rotationPointY;
-                this.HelmetIron.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetIron.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 3:
-
-                this.HelmetGold.rotationPointY = this.Head.rotationPointY;
-                this.HelmetGold.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetGold.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 4:
-                this.HelmetDiamond.rotationPointY = this.Head.rotationPointY;
-                this.HelmetDiamond.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetDiamond.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 5:
-                this.HelmetHide.rotationPointY = this.Head.rotationPointY;
-                this.HelmetHide.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetHide.rotateAngleY = this.Head.rotateAngleY;
-                this.HelmetNeckHide.rotationPointY = this.Head.rotationPointY;
-                this.HelmetNeckHide.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetNeckHide.rotateAngleY = this.Head.rotateAngleY;
-                this.HelmetHideEar1.rotationPointY = this.Head.rotationPointY;
-                this.HelmetHideEar1.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetHideEar1.rotateAngleY = this.Head.rotateAngleY;
-                this.HelmetHideEar2.rotationPointY = this.Head.rotationPointY;
-                this.HelmetHideEar2.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetHideEar2.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 6:
-                this.HelmetFur.rotationPointY = this.Head.rotationPointY;
-                this.HelmetFur.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetFur.rotateAngleY = this.Head.rotateAngleY;
-                this.HelmetNeckFur.rotationPointY = this.Head.rotationPointY;
-                this.HelmetNeckFur.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetNeckFur.rotateAngleY = this.Head.rotateAngleY;
-                this.HelmetFurEar1.rotationPointY = this.Head.rotationPointY;
-                this.HelmetFurEar1.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetFurEar1.rotateAngleY = this.Head.rotateAngleY;
-                this.HelmetFurEar2.rotationPointY = this.Head.rotationPointY;
-                this.HelmetFurEar2.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetFurEar2.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 7:
-                this.HelmetReptile.rotationPointY = this.Head.rotationPointY;
-                this.HelmetReptile.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetReptile.rotateAngleY = this.Head.rotateAngleY;
-                this.HelmetReptileEar1.rotationPointY = this.Head.rotationPointY;
-                this.HelmetReptileEar1.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetReptileEar1.rotateAngleY = (-35F / this.radianF) + this.Head.rotateAngleY;
-                this.HelmetReptileEar2.rotationPointY = this.Head.rotationPointY;
-                this.HelmetReptileEar2.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetReptileEar2.rotateAngleY = (35F / this.radianF) + this.Head.rotateAngleY;
-                break;
-            case 8:
-                this.HelmetGreenChitin.rotationPointY = this.Head.rotationPointY;
-                this.HelmetGreenChitin.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetGreenChitin.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 9:
-                this.HelmetYellowChitin.rotationPointY = this.Head.rotationPointY;
-                this.HelmetYellowChitin.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetYellowChitin.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 10:
-                this.HelmetBlueChitin.rotationPointY = this.Head.rotationPointY;
-                this.HelmetBlueChitin.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetBlueChitin.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 11:
-                this.HelmetBlackChitin.rotationPointY = this.Head.rotationPointY;
-                this.HelmetBlackChitin.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetBlackChitin.rotateAngleY = this.Head.rotateAngleY;
-                break;
-            case 12:
-                this.HelmetRedChitin.rotationPointY = this.Head.rotationPointY;
-                this.HelmetRedChitin.rotateAngleX = this.Head.rotateAngleX;
-                this.HelmetRedChitin.rotateAngleY = this.Head.rotateAngleY;
-                break;
-
+            case 1 -> {
+                this.HelmetLeather.y    = this.Head.y;
+                this.HelmetLeather.xRot = this.Head.xRot;
+                this.HelmetLeather.yRot = this.Head.yRot;
+            }
+            case 2 -> {
+                this.HelmetIron.y       = this.Head.y;
+                this.HelmetIron.xRot    = this.Head.xRot;
+                this.HelmetIron.yRot    = this.Head.yRot;
+            }
+            case 3 -> {
+                this.HelmetGold.y       = this.Head.y;
+                this.HelmetGold.xRot    = this.Head.xRot;
+                this.HelmetGold.yRot    = this.Head.yRot;
+            }
+            case 4 -> {
+                this.HelmetDiamond.y    = this.Head.y;
+                this.HelmetDiamond.xRot = this.Head.xRot;
+                this.HelmetDiamond.yRot = this.Head.yRot;
+            }
+            case 5 -> {
+                this.HelmetHide.y      = this.Head.y;
+                this.HelmetHide.xRot   = this.Head.xRot;
+                this.HelmetHide.yRot   = this.Head.yRot;
+                this.HelmetNeckHide.y  = this.Head.y;
+                this.HelmetNeckHide.xRot = this.Head.xRot;
+                this.HelmetNeckHide.yRot = this.Head.yRot;
+                this.HelmetHideEar1.y  = this.Head.y;
+                this.HelmetHideEar1.xRot = this.Head.xRot;
+                this.HelmetHideEar1.yRot = this.Head.yRot;
+                this.HelmetHideEar2.y  = this.Head.y;
+                this.HelmetHideEar2.xRot = this.Head.xRot;
+                this.HelmetHideEar2.yRot = this.Head.yRot;
+            }
+            case 6 -> {
+                this.HelmetFur.y        = this.Head.y;
+                this.HelmetFur.xRot     = this.Head.xRot;
+                this.HelmetFur.yRot     = this.Head.yRot;
+                this.HelmetNeckFur.y    = this.Head.y;
+                this.HelmetNeckFur.xRot = this.Head.xRot;
+                this.HelmetNeckFur.yRot = this.Head.yRot;
+                this.HelmetFurEar1.y    = this.Head.y;
+                this.HelmetFurEar1.xRot = this.Head.xRot;
+                this.HelmetFurEar1.yRot = this.Head.yRot;
+                this.HelmetFurEar2.y    = this.Head.y;
+                this.HelmetFurEar2.xRot = this.Head.xRot;
+                this.HelmetFurEar2.yRot = this.Head.yRot;
+            }
+            case 7 -> {
+                this.HelmetReptile.y      = this.Head.y;
+                this.HelmetReptile.xRot   = this.Head.xRot;
+                this.HelmetReptile.yRot   = this.Head.yRot;
+                this.HelmetReptileEar1.y  = this.Head.y;
+                this.HelmetReptileEar1.xRot = this.Head.xRot;
+                this.HelmetReptileEar1.yRot = (-35F / RADIAN_CONV) + this.Head.yRot;
+                this.HelmetReptileEar2.y  = this.Head.y;
+                this.HelmetReptileEar2.xRot = this.Head.xRot;
+                this.HelmetReptileEar2.yRot = (35F / RADIAN_CONV) + this.Head.yRot;
+            }
+            case 8 -> {
+                this.HelmetGreenChitin.y  = this.Head.y;
+                this.HelmetGreenChitin.xRot= this.Head.xRot;
+                this.HelmetGreenChitin.yRot= this.Head.yRot;
+            }
+            case 9 -> {
+                this.HelmetYellowChitin.y   = this.Head.y;
+                this.HelmetYellowChitin.xRot= this.Head.xRot;
+                this.HelmetYellowChitin.yRot= this.Head.yRot;
+            }
+            case 10 -> {
+                this.HelmetBlueChitin.y    = this.Head.y;
+                this.HelmetBlueChitin.xRot = this.Head.xRot;
+                this.HelmetBlueChitin.yRot = this.Head.yRot;
+            }
+            case 11 -> {
+                this.HelmetBlackChitin.y    = this.Head.y;
+                this.HelmetBlackChitin.xRot = this.Head.xRot;
+                this.HelmetBlackChitin.yRot = this.Head.yRot;
+            }
+            case 12 -> {
+                this.HelmetRedChitin.y      = this.Head.y;
+                this.HelmetRedChitin.xRot   = this.Head.xRot;
+                this.HelmetRedChitin.yRot   = this.Head.yRot;
+            }
         }
 
-        //flag
-        float flagF = MathHelper.cos(limbSwing * 0.8F) * 0.1F * limbSwingAmount;
-
+        // FLAG sway
+        float flagF = Mth.cos(limbSwing * 0.8F) * 0.1F * limbSwingAmount;
         switch (this.flagColor) {
-            case 0:
-                this.FlagWhite.rotateAngleY = flagF;
-                break;
-            case 1:
-                this.FlagOrange.rotateAngleY = flagF;
-                break;
-            case 2:
-                this.FlagPurple.rotateAngleY = flagF;
-                break;
-            case 3:
-                this.FlagLightBlue.rotateAngleY = flagF;
-                break;
-            case 4:
-                this.FlagYellow.rotateAngleY = flagF;
-                break;
-            case 5:
-                this.FlagGreen.rotateAngleY = flagF;
-                break;
-            case 6:
-                this.FlagLightRed.rotateAngleY = flagF;
-                break;
-            case 7:
-                this.FlagDarkGrey.rotateAngleY = flagF;
-                break;
-            case 8:
-                this.FlagGrey.rotateAngleY = flagF;
-                break;
-            case 9:
-                this.FlagCyan.rotateAngleY = flagF;
-                break;
-            case 10:
-                this.FlagDarkPurple.rotateAngleY = flagF;
-                break;
-            case 11:
-                this.FlagDarkBlue.rotateAngleY = flagF;
-                break;
-            case 12:
-                this.FlagBrown.rotateAngleY = flagF;
-                break;
-            case 13:
-                this.FlagDarkGreen.rotateAngleY = flagF;
-                break;
-            case 14:
-                this.FlagRed.rotateAngleY = flagF;
-                break;
-            case 15:
-                this.FlagBlack.rotateAngleY = flagF;
-                break;
+            case 0 -> this.FlagWhite.yRot     = flagF;
+            case 1 -> this.FlagOrange.yRot    = flagF;
+            case 2 -> this.FlagPurple.yRot    = flagF;
+            case 3 -> this.FlagLightBlue.yRot = flagF;
+            case 4 -> this.FlagYellow.yRot    = flagF;
+            case 5 -> this.FlagGreen.yRot     = flagF;
+            case 6 -> this.FlagLightRed.yRot  = flagF;
+            case 7 -> this.FlagDarkGrey.yRot  = flagF;
+            case 8 -> this.FlagGrey.yRot      = flagF;
+            case 9 -> this.FlagCyan.yRot      = flagF;
+            case 10-> this.FlagDarkPurple.yRot= flagF;
+            case 11-> this.FlagDarkBlue.yRot  = flagF;
+            case 12-> this.FlagBrown.yRot     = flagF;
+            case 13-> this.FlagDarkGreen.yRot = flagF;
+            case 14-> this.FlagRed.yRot       = flagF;
+            case 15-> this.FlagBlack.yRot     = flagF;
         }
 
-        //legs
-
+        // LEG animation
         if ((this.typeI == 5 || this.typeI == 6) && floating) {
-            this.LLegC.rotationPointY = 8F;
-            this.LLegC.rotationPointZ = 17F;
-            this.RLegC.rotationPointY = 8F;
-            this.RLegC.rotationPointZ = 17F;
-            this.LFoot.rotationPointY = -5F;
-            this.LFoot.rotationPointZ = -3F;
-            this.RFoot.rotationPointY = -5F;
-            this.RFoot.rotationPointZ = -3F;
+            // Flying posture
+            this.LLegC.y = 8.0F;
+            this.LLegC.z = 17.0F;
+            this.RLegC.y = 8.0F;
+            this.RLegC.z = 17.0F;
+            this.LFoot.y = -5.0F;
+            this.LFoot.z = -3.0F;
+            this.RFoot.y = -5.0F;
+            this.RFoot.z = -3.0F;
 
-            this.LLegA.rotateAngleX = 40F / this.radianF;
-            this.LLegB.rotateAngleX = this.LLegA.rotateAngleX;
-            this.LLegC.rotateAngleX = -85F / this.radianF;
-            this.LFoot.rotateAngleX = 25F / this.radianF;
+            this.LLegA.xRot = 40.0F / RADIAN_CONV;
+            this.LLegB.xRot = this.LLegA.xRot;
+            this.LLegC.xRot = -85.0F / RADIAN_CONV;
+            this.LFoot.xRot = 25.0F / RADIAN_CONV;
 
-            this.RLegA.rotateAngleX = 40F / this.radianF;
-            this.RLegB.rotateAngleX = this.RLegA.rotateAngleX;
-            this.RLegC.rotateAngleX = -85F / this.radianF;
-            this.RFoot.rotateAngleX = 25F / this.radianF;
+            this.RLegA.xRot = 40.0F / RADIAN_CONV;
+            this.RLegB.xRot = this.RLegA.xRot;
+            this.RLegC.xRot = -85.0F / RADIAN_CONV;
+            this.RFoot.xRot = 25.0F / RADIAN_CONV;
         } else {
+            // Walking posture
+            this.LLegC.y = 5.0F;
+            this.LLegC.z = 4.0F;
+            this.RLegC.y = 5.0F;
+            this.RLegC.z = 4.0F;
+            this.LFoot.y = 5.0F;
+            this.LFoot.z = 4.0F;
+            this.RFoot.y = 5.0F;
+            this.RFoot.z = 4.0F;
 
-            this.LLegC.rotationPointY = 5F;
-            this.LLegC.rotationPointZ = 4F;
-            this.RLegC.rotationPointY = 5F;
-            this.RLegC.rotationPointZ = 4F;
-            this.LFoot.rotationPointY = 5F;
-            this.LFoot.rotationPointZ = 4F;
-            this.RFoot.rotationPointY = 5F;
-            this.RFoot.rotationPointZ = 4F;
+            this.LLegA.xRot = 0.1745329F + LLegXRot;
+            this.LLegB.xRot = this.LLegA.xRot;
+            this.LLegC.xRot = -0.2617994F + LLegXRot;
+            this.LFoot.xRot = this.LLegA.xRot;
 
-            this.LLegA.rotateAngleX = 0.1745329F + LLegXRot;
-            this.LLegB.rotateAngleX = this.LLegA.rotateAngleX;
-            this.LLegC.rotateAngleX = -0.2617994F + LLegXRot;
-            this.LFoot.rotateAngleX = this.LLegA.rotateAngleX;
-            this.RLegA.rotateAngleX = 0.1745329F + RLegXRot;
-            this.RLegB.rotateAngleX = this.RLegA.rotateAngleX;
-            this.RLegC.rotateAngleX = -0.2617994F + RLegXRot;
-            this.RFoot.rotateAngleX = this.RLegA.rotateAngleX;
+            this.RLegA.xRot = 0.1745329F + RLegXRot;
+            this.RLegB.xRot = this.RLegA.xRot;
+            this.RLegC.xRot = -0.2617994F + RLegXRot;
+            this.RFoot.xRot = this.RLegA.xRot;
         }
 
-        //wings
+        // WING animation
         float wingF;
-        /*
-         * limbSwing = distance walked limbSwingAmount = speed 0 - 1 ageInTicks = timer
-         */
         if (this.typeI == 5 || this.typeI == 6) {
-
             if (jumpCounter != 0) {
-                wingF = (-40F / this.radianF) + MathHelper.cos(jumpCounter * 0.3F) * 1.3F;
+                wingF = (-40.0F / RADIAN_CONV) + Mth.cos(jumpCounter * 0.3F) * 1.3F;
             } else if (rider && floating) {
-                wingF = MathHelper.cos(ageInTicks * 0.8F) * 0.2F;
+                wingF = Mth.cos(ageInTicks * 0.8F) * 0.2F;
             } else {
-                wingF = MathHelper.cos(limbSwing * 0.3F) * limbSwingAmount;
+                wingF = Mth.cos(limbSwing * 0.3F) * limbSwingAmount;
             }
-
-            this.LWingD.rotateAngleZ = (-20F / this.radianF) - wingF;
-            this.LWingE.rotateAngleZ = (-20F / this.radianF) - wingF;
-
-            this.RWingD.rotateAngleZ = (20F / this.radianF) + wingF;
-            this.RWingE.rotateAngleZ = (20F / this.radianF) + wingF;
-
+            this.LWingD.zRot = (-20.0F / RADIAN_CONV) - wingF;
+            this.LWingE.zRot = (-20.0F / RADIAN_CONV) - wingF;
+            this.RWingD.zRot = (20.0F / RADIAN_CONV) + wingF;
+            this.RWingE.zRot = (20.0F / RADIAN_CONV) + wingF;
         } else {
-            wingF = (10F / this.radianF) + MathHelper.cos(limbSwing * 0.6F) * 0.2F * limbSwingAmount;
+            wingF = (10.0F / RADIAN_CONV) + Mth.cos(limbSwing * 0.6F) * 0.2F * limbSwingAmount;
             if (wingFlap) {
-                wingF += (50 / 57.29578F);
+                wingF += (50.0F / RADIAN_CONV);
             }
-            this.LWingB.rotateAngleY = 0.0872665F + wingF;
-            this.LWingC.rotateAngleY = 0.0872665F + wingF;
+            this.LWingB.yRot = 0.0872665F + wingF;
+            this.LWingC.yRot = 0.0872665F + wingF;
+            this.RWingB.yRot = -0.0872665F - wingF;
+            this.RWingC.yRot = -0.0872665F - wingF;
 
-            this.RWingB.rotateAngleY = -0.0872665F - wingF;
-            this.RWingC.rotateAngleY = -0.0872665F - wingF;
-
-            this.LWingB.rotateAngleX = 0.0872665F + (RLegXRot / 10F);
-            this.LWingC.rotateAngleX = (RLegXRot / 10F);
-
-            this.RWingB.rotateAngleX = 0.0872665F + (RLegXRot / 10F);
-            this.RWingC.rotateAngleX = (RLegXRot / 10F);
-
+            this.LWingB.xRot = 0.0872665F + (RLegXRot / 10F);
+            this.LWingC.xRot = (RLegXRot / 10F);
+            this.RWingB.xRot = 0.0872665F + (RLegXRot / 10F);
+            this.RWingC.xRot = (RLegXRot / 10F);
         }
 
+        // SADDLE adjustment
         if (rider) {
-            this.SaddleL.rotateAngleX = -60F / this.radianF;
-            this.SaddleL2.rotateAngleX = this.SaddleL.rotateAngleX;
-            this.SaddleR.rotateAngleX = -60F / this.radianF;
-            this.SaddleR2.rotateAngleX = this.SaddleR.rotateAngleX;
-
-            this.SaddleL.rotateAngleZ = -40F / this.radianF;
-            this.SaddleL2.rotateAngleZ = this.SaddleL.rotateAngleZ;
-            this.SaddleR.rotateAngleZ = 40F / this.radianF;
-            this.SaddleR2.rotateAngleZ = this.SaddleR.rotateAngleZ;
+            this.SaddleL.xRot = -60.0F / RADIAN_CONV;
+            this.SaddleL2.xRot= this.SaddleL.xRot;
+            this.SaddleR.xRot = -60.0F / RADIAN_CONV;
+            this.SaddleR2.xRot= this.SaddleR.xRot;
+            this.SaddleL.zRot = -40.0F / RADIAN_CONV;
+            this.SaddleL2.zRot= this.SaddleL.zRot;
+            this.SaddleR.zRot = 40.0F / RADIAN_CONV;
+            this.SaddleR2.zRot= this.SaddleR.zRot;
         } else {
-            this.SaddleL.rotateAngleX = RLegXRot / 3F;
-            this.SaddleL2.rotateAngleX = RLegXRot / 3F;
-            this.SaddleR.rotateAngleX = RLegXRot / 3F;
-            this.SaddleR2.rotateAngleX = RLegXRot / 3F;
-
-            this.SaddleL.rotateAngleZ = RLegXRot / 5F;
-            this.SaddleL2.rotateAngleZ = RLegXRot / 5F;
-            this.SaddleR.rotateAngleZ = -RLegXRot / 5F;
-            this.SaddleR2.rotateAngleZ = -RLegXRot / 5F;
+            this.SaddleL.xRot = RLegXRot / 3F;
+            this.SaddleL2.xRot= RLegXRot / 3F;
+            this.SaddleR.xRot = RLegXRot / 3F;
+            this.SaddleR2.xRot= RLegXRot / 3F;
+            this.SaddleL.zRot = RLegXRot / 5F;
+            this.SaddleL2.zRot= RLegXRot / 5F;
+            this.SaddleR.zRot = -RLegXRot / 5F;
+            this.SaddleR2.zRot= -RLegXRot / 5F;
         }
 
+        // DARKNESS OSTRICH tail wave (typeI == 6)
         if (this.typeI == 6) {
-            float f6 = 15F;
-            float rotF = MathHelper.cos(limbSwing * 0.5F) * 0.3F * limbSwingAmount;
-            this.Tail.rotateAngleY = rotF;
+            float f6 = 15.0F;
+            float rotF = Mth.cos(limbSwing * 0.5F) * 0.3F * limbSwingAmount;
+            this.Tail.yRot = rotF;
             rotF += (rotF / f6);
-            this.Tailpart1.rotateAngleY = rotF;//MathHelper.cos(limbSwing * 0.6662F) * 0.7F * limbSwingAmount;
+            this.Tailpart1.yRot = rotF;
             rotF += (rotF / f6);
-            this.Tailpart1.rotateAngleY = rotF;
+            this.Tailpart2.yRot = rotF;
             rotF += (rotF / f6);
-            this.Tailpart2.rotateAngleY = rotF;
+            this.Tailpart3.yRot = rotF;
             rotF += (rotF / f6);
-            this.Tailpart3.rotateAngleY = rotF;
+            this.Tailpart4.yRot = rotF;
             rotF += (rotF / f6);
-            this.Tailpart4.rotateAngleY = rotF;
-            rotF += (rotF / f6);
-            this.Tailpart5.rotateAngleY = rotF;
+            this.Tailpart5.yRot = rotF;
+        }
+    }
+
+    /**
+     * Render all parts. Toggle visibility based on type, openMouth, saddled, bagged, helmet.
+     */
+    @Override
+    public void renderToBuffer(
+            PoseStack        poseStack,
+            VertexConsumer   buffer,
+            int              packedLight,
+            int              packedOverlay,
+            float            red,
+            float            green,
+            float            blue,
+            float            alpha
+    ) {
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.NeckU.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.NeckD.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.NeckL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LLegA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LLegB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LLegC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RLegA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RLegB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RLegC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // UniHorn for type 8
+        if (this.typeI == 8) {
+            this.UniHorn.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+
+        // Wings
+        if (this.typeI == 5 || this.typeI == 6) {
+            this.LWingD.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.LWingE.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.RWingD.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.RWingE.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.NeckUFeather.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.NeckLFeather.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            this.LWingB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.LWingC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.RWingB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.RWingC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+
+        // Tail segments for darkness ostrich
+        if (this.typeI == 6) {
+            this.Tailpart1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Tailpart2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Tailpart3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Tailpart4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Tailpart5.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            this.Tail1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Tail2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Tail3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+
+        // Beak open/closed
+        if (openMouth) {
+            this.UBeakb.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.UBeak2b.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.LBeakb.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.LBeak2b.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            this.UBeak.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.UBeak2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.LBeak.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.LBeak2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+
+        // Saddle elements
+        if (isSaddled) {
+            this.SaddleA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.SaddleB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.SaddleC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.SaddleL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.SaddleR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.SaddleL2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.SaddleR2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.NeckHarness.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.NeckHarness2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            if (rider) {
+                this.NeckHarnessLeft.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.NeckHarnessRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            }
+        }
+
+        // Saddlebag and flag
+        if (bagged) {
+            this.Saddlebag.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.Flagpole.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            switch (this.flagColor) {
+                case 0 -> this.FlagWhite.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 1 -> this.FlagOrange.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 2 -> this.FlagPurple.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 3 -> this.FlagLightBlue.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 4 -> this.FlagYellow.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 5 -> this.FlagGreen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 6 -> this.FlagLightRed.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 7 -> this.FlagDarkGrey.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 8 -> this.FlagGrey.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 9 -> this.FlagCyan.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 10-> this.FlagDarkPurple.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 11-> this.FlagDarkBlue.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 12-> this.FlagBrown.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 13-> this.FlagDarkGreen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 14-> this.FlagRed.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                case 15-> this.FlagBlack.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            }
+        }
+
+        // Render selected helmet
+        switch (this.helmet) {
+            case 1 -> this.HelmetLeather.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 2 -> this.HelmetIron.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 3 -> this.HelmetGold.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 4 -> this.HelmetDiamond.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 5 -> {
+                this.HelmetHide.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetNeckHide.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetHideEar1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetHideEar2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            }
+            case 6 -> {
+                this.HelmetFur.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetNeckFur.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetFurEar1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetFurEar2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            }
+            case 7 -> {
+                this.HelmetReptile.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetReptileEar1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.HelmetReptileEar2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            }
+            case 8 -> this.HelmetGreenChitin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 9 -> this.HelmetYellowChitin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 10-> this.HelmetBlueChitin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 11-> this.HelmetBlackChitin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            case 12-> this.HelmetRedChitin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
     }
 }

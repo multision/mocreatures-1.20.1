@@ -3,29 +3,27 @@
  */
 package drzhark.mocreatures.client.renderer.fx.impl;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.particles.BasicParticleType;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Random;
-
 @OnlyIn(Dist.CLIENT)
-public class MoCEntityFXUndead extends SpriteTexturedParticle {
+public class MoCEntityFXUndead extends TextureSheetParticle {
     private final TextureAtlasSprite spriteAir;
     private final TextureAtlasSprite spriteGround;
 
-    public MoCEntityFXUndead(ClientWorld world, double x, double y, double z, IAnimatedSprite spriteSet) {
+    public MoCEntityFXUndead(ClientLevel world, double x, double y, double z, SpriteSet spriteSet) {
         super(world, x, y, z, 0, 0, 0);
 
-        this.particleGravity = 0.06F;
-        this.maxAge = (int)(32.0D / (Math.random() * 0.8D + 0.2D));
-        this.particleScale *= 0.8F;
+        this.gravity = 0.06F;
+        this.lifetime = (int)(32.0D / (Math.random() * 0.8D + 0.2D));
+        this.quadSize *= 0.8F;
 
-        this.spriteGround = spriteSet.get(new Random()); // fx_undead1
-        this.spriteAir = spriteSet.get(new Random());    // fx_undead2
+        this.spriteGround = spriteSet.get(this.random); // fx_undead1
+        this.spriteAir = spriteSet.get(this.random);    // fx_undead2
 
         this.setSprite(spriteAir);
     }
@@ -37,19 +35,19 @@ public class MoCEntityFXUndead extends SpriteTexturedParticle {
     }
 
     @Override
-    public IParticleRenderType getRenderType() {
-        return IParticleRenderType.PARTICLE_SHEET_LIT;
+    public ParticleRenderType getRenderType() {
+        return ParticleRenderType.PARTICLE_SHEET_LIT;
     }
 
-    public static class Factory implements IParticleFactory<BasicParticleType> {
-        private final IAnimatedSprite spriteSet;
+    public static class Factory implements ParticleProvider<SimpleParticleType> {
+        private final SpriteSet spriteSet;
 
-        public Factory(IAnimatedSprite spriteSet) {
+        public Factory(SpriteSet spriteSet) {
             this.spriteSet = spriteSet;
         }
 
         @Override
-        public Particle makeParticle(BasicParticleType type, ClientWorld world, double x, double y, double z,
+        public Particle createParticle(SimpleParticleType type, ClientLevel world, double x, double y, double z,
                                      double xSpeed, double ySpeed, double zSpeed) {
             return new MoCEntityFXUndead(world, x, y, z, spriteSet);
         }

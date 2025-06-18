@@ -1,0 +1,10 @@
+{
+    "processors": [
+      {
+        "processor_type": "minecraft:structure_spawn_override",
+        "entity": "mocreatures:kitty",
+        "bounding_box": "full"
+      }
+    ]
+  }
+  

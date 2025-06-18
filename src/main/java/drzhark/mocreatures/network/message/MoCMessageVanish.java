@@ -4,10 +4,10 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.passive.MoCEntityHorse;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -22,21 +22,22 @@ public class MoCMessageVanish {
         this.entityId = entityId;
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeInt(this.entityId);
     }
 
-    public MoCMessageVanish(ByteBuf buffer) {
+    public MoCMessageVanish(FriendlyByteBuf buffer) {
         this.entityId = buffer.readInt();
     }
 
-    public static boolean onMessage(MoCMessageVanish message, Supplier<NetworkEvent.Context> ctx) {
+    public static void onMessage(MoCMessageVanish message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Entity ent = Minecraft.getInstance().player.level().getEntity(message.entityId);
+            if (ent instanceof MoCEntityHorse) {
+                ((MoCEntityHorse) ent).setVanishC((byte) 1);
+            }
+        });
         ctx.get().setPacketHandled(true);
-        Entity ent = Minecraft.getInstance().player.world.getEntityByID(message.entityId);
-        if (ent instanceof MoCEntityHorse) {
-            ((MoCEntityHorse) ent).setVanishC((byte) 1);
-        }
-        return true;
     }
 
     @Override

@@ -1,6 +1,6 @@
 {
   "parent": "item/handheld",
   "textures": {
-    "layer0": "mocreatures:items/builder_hammer"
+    "layer0": "mocreatures:item/builder_hammer"
   }
 }

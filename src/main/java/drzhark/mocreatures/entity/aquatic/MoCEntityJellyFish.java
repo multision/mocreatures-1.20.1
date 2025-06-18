@@ -8,34 +8,32 @@ import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.entity.tameable.MoCEntityTameableAquatic;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
 
-    private static final DataParameter<Boolean> GLOWS = EntityDataManager.createKey(MoCEntityJellyFish.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> GLOWS = SynchedEntityData.defineId(MoCEntityJellyFish.class, EntityDataSerializers.BOOLEAN);
     private int poisoncounter;
 
-    public MoCEntityJellyFish(EntityType<? extends MoCEntityJellyFish> type, World world) {
+    public MoCEntityJellyFish(EntityType<? extends MoCEntityJellyFish> type, Level world) {
         super(type, world);
         //setSize(0.45F, 0.575F);
         // TODO: Make hitboxes adjust depending on size
-        //setAge(50 + (this.rand.nextInt(50)));
-        setAge(100);
+        //setAge(50 + (this.random.nextInt(50)));
+        setMoCAge(100);
     }
 
     @Override
@@ -43,33 +41,35 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
         this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 0.5D, 120));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityTameableAquatic.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 6.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.15D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityTameableAquatic.createMobAttributes()
+            .add(Attributes.MAX_HEALTH, 6.0D)
+            .add(Attributes.MOVEMENT_SPEED, 0.15D);
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(5) + 1);
+            setTypeMoC(this.random.nextInt(5) + 1);
         }
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(GLOWS, Boolean.FALSE);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(GLOWS, Boolean.FALSE);
     }
 
     public boolean isGlowing() {
-        return (this.dataManager.get(GLOWS));
+        return (this.entityData.get(GLOWS));
     }
 
     public void setGlowing(boolean flag) {
-        this.dataManager.set(GLOWS, flag);
+        this.entityData.set(GLOWS, flag);
     }
 
     @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         return 0.02F;
     }
 
@@ -104,15 +104,15 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
-        if (!this.world.isRemote) {
+    public void aiStep() {
+        super.aiStep();
 
-            if (this.rand.nextInt(200) == 0) {
-                setGlowing(!this.world.isDaytime());
+        if (!this.level().isClientSide()) {
+            if (this.random.nextInt(200) == 0) {
+                setGlowing(!this.level().isDay());
             }
 
-            if (!getIsTamed() && ++this.poisoncounter > 250 && (this.shouldAttackPlayers()) && this.rand.nextInt(30) == 0) {
+            if (!getIsTamed() && ++this.poisoncounter > 250 && (this.shouldAttackPlayers()) && this.random.nextInt(30) == 0) {
                 if (MoCTools.findNearPlayerAndPoison(this, true)) {
                     this.poisoncounter = 0;
                 }
@@ -122,16 +122,17 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_SLIME_ATTACK;
+        return SoundEvents.SLIME_ATTACK;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.ENTITY_SLIME_ATTACK;
+        return SoundEvents.SLIME_ATTACK;
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.JELLYFISH;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.JELLYFISH;
     }
 
     @Override
@@ -144,7 +145,7 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
 
     @Override
     public int nameYOffset() {
-        return (int) (getAge() * -1 / 2.3);
+        return (int) (getMoCAge() * -1 / 2.3);
     }
 
     @Override
@@ -153,8 +154,8 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
         float pulseSpeed = 0.08F;
         if (myMoveSpeed > 0F)
             pulseSpeed = 0.5F;
-        float pulseSize = MathHelper.cos(this.ticksExisted * pulseSpeed) * 0.2F;
-        return getAge() * 0.01F + (pulseSize / 5);
+        float pulseSize = Mth.cos(this.tickCount * pulseSpeed) * 0.2F;
+        return getMoCAge() * 0.01F + (pulseSize / 5);
     }
 
     @Override
@@ -162,7 +163,8 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
         return true;
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.85F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.85F;
     }
 }

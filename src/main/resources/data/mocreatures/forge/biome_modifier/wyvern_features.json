@@ -1,0 +1,13 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#mocreatures:is_wyvern_lair",
+  "features": [
+    "mocreatures:wyvern_iron_ore",
+    "mocreatures:wyvern_gold_ore",
+    "mocreatures:wyvern_lapis_ore",
+    "mocreatures:wyvern_emerald_ore",
+    "mocreatures:wyvern_diamond_ore",
+    "mocreatures:ancient_ore"
+  ],
+  "step": "underground_ores"
+} 

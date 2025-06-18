@@ -8,15 +8,15 @@ import drzhark.mocreatures.entity.MoCEntityAmbient;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
@@ -25,7 +25,7 @@ public class MoCEntityCricket extends MoCEntityAmbient {
     private int jumpCounter;
     private int soundCounter;
 
-    public MoCEntityCricket(EntityType<? extends MoCEntityCricket> type, World world) {
+    public MoCEntityCricket(EntityType<? extends MoCEntityCricket> type, Level world) {
         super(type, world);
         //setSize(0.4F, 0.3F);
     }
@@ -35,14 +35,17 @@ public class MoCEntityCricket extends MoCEntityAmbient {
         this.goalSelector.addGoal(1, new EntityAIWanderMoC2(this, 1.2D));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityAmbient.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 4.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D).createMutableAttribute(Attributes.ARMOR, 1.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityAmbient.createAttributes()
+                .add(Attributes.MAX_HEALTH, 4.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.ARMOR, 1.0D);
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            int i = this.rand.nextInt(100);
+            int i = this.random.nextInt(100);
             if (i <= 50) {
                 setTypeMoC(1);
             } else {
@@ -61,14 +64,14 @@ public class MoCEntityCricket extends MoCEntityAmbient {
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
-
+    public void aiStep() {
+        super.aiStep();
+        
         if (this.isInWater()) {
-            this.setMotion(this.getMotion().mul(1.0D, 0.6D, 1.0D));
+            this.setDeltaMovement(this.getDeltaMovement().multiply(1.0D, 0.6D, 1.0D));
         }
 
-        if (!this.world.isRemote) {
+        if (!this.level().isClientSide()) {
             if (this.jumpCounter > 0 && ++this.jumpCounter > 30) {
                 this.jumpCounter = 0;
             }
@@ -76,11 +79,24 @@ public class MoCEntityCricket extends MoCEntityAmbient {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+    
+        if (!this.level().isClientSide()) {
+            if (onGround() && ((getDeltaMovement().x > 0.05D) || (getDeltaMovement().z > 0.05D) || (getDeltaMovement().x < -0.05D) || (getDeltaMovement().z < -0.05D)))
+                if (this.jumpCounter == 0) {
+                    this.setDeltaMovement(this.getDeltaMovement().x * 5D, 0.45D, this.getDeltaMovement().z * 5D);
+                    this.jumpCounter = 1;
+                }
+        }
+    }
+
+    @Override
     protected SoundEvent getAmbientSound() {
-        if (!world.isDaytime()) {
-            return world.rand.nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_CRICKET_AMBIENT.get() : null;
+        if (!level().isDay()) {
+            return level().getRandom().nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_CRICKET_AMBIENT.get() : null;
         } else {
-            return world.rand.nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_CRICKET_CHIRP.get() : null;
+            return level().getRandom().nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_CRICKET_CHIRP.get() : null;
         }
     }
 
@@ -95,23 +111,13 @@ public class MoCEntityCricket extends MoCEntityAmbient {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.CRICKET;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.CRICKET;
     }
 
     @Override
-    public void tick() {
-        super.tick();
-        if (!this.world.isRemote) {
-            if (onGround && ((getMotion().getX() > 0.05D) || (getMotion().getZ() > 0.05D) || (getMotion().getX() < -0.05D) || (getMotion().getZ() < -0.05D)))
-                if (this.jumpCounter == 0) {
-                    this.setMotion(this.getMotion().getX() * 5D, 0.45D, this.getMotion().getZ() * 5D);
-                    this.jumpCounter = 1;
-                }
-        }
-    }
-
-    @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         if (getIsFlying()) {
             return 0.12F;
         }
@@ -119,7 +125,7 @@ public class MoCEntityCricket extends MoCEntityAmbient {
     }
 
     @Override
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.15F;
     }
 }

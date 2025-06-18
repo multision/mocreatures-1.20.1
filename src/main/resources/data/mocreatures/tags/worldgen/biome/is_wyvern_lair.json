@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "mocreatures:wyvernlairlands",
+    "mocreatures:wyvernlairlandsforest",
+    "mocreatures:wyvernlair_mountains",
+    "mocreatures:wyvernlair_desertlands"
+  ]
+} 

@@ -3,15 +3,20 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.client.model.MoCModelKittyBed;
 import drzhark.mocreatures.client.model.MoCModelKittyBed2;
 import drzhark.mocreatures.entity.item.MoCEntityKittyBed;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -19,20 +24,17 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderKittyBed extends MobRenderer<MoCEntityKittyBed, MoCModelKittyBed<MoCEntityKittyBed>> {
 
-    public static float[][] fleeceColorTable = {{1.0F, 1.0F, 1.0F}, {0.95F, 0.7F, 0.2F}, {0.9F, 0.5F, 0.85F}, {0.6F, 0.7F, 0.95F},
-            {0.9F, 0.9F, 0.2F}, {0.5F, 0.8F, 0.1F}, {0.95F, 0.7F, 0.8F}, {0.3F, 0.3F, 0.3F}, {0.6F, 0.6F, 0.6F}, {0.3F, 0.6F, 0.7F},
-            {0.7F, 0.4F, 0.9F}, {0.2F, 0.4F, 0.8F}, {0.5F, 0.4F, 0.3F}, {0.4F, 0.5F, 0.2F}, {0.8F, 0.3F, 0.3F}, {0.1F, 0.1F, 0.1F}};
     public MoCModelKittyBed kittybed;
     private int mycolor;
 
-    public MoCRenderKittyBed(EntityRendererManager renderManagerIn, MoCModelKittyBed modelkittybed, MoCModelKittyBed2 modelkittybed2, float f) {
+    public MoCRenderKittyBed(EntityRendererProvider.Context renderManagerIn, MoCModelKittyBed modelkittybed, MoCModelKittyBed2 modelkittybed2, float f) {
         super(renderManagerIn, modelkittybed, f);
         this.kittybed = modelkittybed;
-        this.addLayer(new LayerMoCKittyBed(this));
+        this.addLayer(new LayerMoCKittyBed(this, modelkittybed2));
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityKittyBed entitykittybed, MatrixStack matrixStackIn, float f) {
+    protected void scale(MoCEntityKittyBed entitykittybed, PoseStack poseStack, float f) {
         this.mycolor = entitykittybed.getSheetColor();
         this.kittybed.hasMilk = entitykittybed.getHasMilk();
         this.kittybed.hasFood = entitykittybed.getHasFood();
@@ -41,24 +43,31 @@ public class MoCRenderKittyBed extends MobRenderer<MoCEntityKittyBed, MoCModelKi
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityKittyBed entitykittybed) {
+    public ResourceLocation getTextureLocation(MoCEntityKittyBed entitykittybed) {
         return entitykittybed.getTexture();
     }
 
-    private static class LayerMoCKittyBed extends LayerRenderer<MoCEntityKittyBed, MoCModelKittyBed<MoCEntityKittyBed>> {
+    private static class LayerMoCKittyBed extends RenderLayer<MoCEntityKittyBed, MoCModelKittyBed<MoCEntityKittyBed>> {
 
         private final MoCRenderKittyBed mocRenderer;
-        private final MoCModelKittyBed2 mocModel = new MoCModelKittyBed2();
+        private final MoCModelKittyBed2 mocModel;
 
-        public LayerMoCKittyBed(MoCRenderKittyBed render) {
+        public LayerMoCKittyBed(MoCRenderKittyBed render, MoCModelKittyBed2 model) {
             super(render);
             this.mocRenderer = render;
+            this.mocModel = model;
         }
 
-        public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, MoCEntityKittyBed entitykittybed, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-            float f8 = 0.35F;
+        public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLightIn, MoCEntityKittyBed entitykittybed, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
             int j = this.mocRenderer.mycolor;
-            renderCopyCutoutModel(this.getEntityModel(), this.mocModel, this.getEntityTexture(entitykittybed), matrixStackIn, bufferIn, packedLightIn, entitykittybed, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, partialTicks, f8 * fleeceColorTable[j][0], f8 * fleeceColorTable[j][1], f8 * fleeceColorTable[j][2]);
+            
+            float[] rgb = DyeColor.byId(j).getTextureDiffuseColors();
+            
+            // Render colored overlay model
+            this.getParentModel().copyPropertiesTo(this.mocModel);
+            this.mocModel.renderToBuffer(poseStack, buffer.getBuffer(
+                    RenderType.entityCutoutNoCull(this.getTextureLocation(entitykittybed))),
+                    packedLightIn, OverlayTexture.NO_OVERLAY, rgb[0], rgb[1], rgb[2], 1.0F);
         }
     }
 }

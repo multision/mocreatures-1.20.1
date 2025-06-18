@@ -3,50 +3,47 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.client.model.MoCModelBunny;
 import drzhark.mocreatures.entity.passive.MoCEntityBunny;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
+import com.mojang.math.Axis;
 
-@OnlyIn(Dist.CLIENT)
 public class MoCRenderBunny extends MoCRenderMoC<MoCEntityBunny, MoCModelBunny<MoCEntityBunny>> {
 
-    public MoCRenderBunny(EntityRendererManager renderManagerIn, MoCModelBunny modelbase, float f) {
-        super(renderManagerIn, modelbase, f);
+    public MoCRenderBunny(EntityRendererProvider.Context context, MoCModelBunny modelbase, float f) {
+        super(context, modelbase, f);
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityBunny entitybunny) {
+    public ResourceLocation getTextureLocation(MoCEntityBunny entitybunny) {
         return entitybunny.getTexture();
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityBunny entitybunny, MatrixStack matrixStackIn, float f) {
+    protected void scale(MoCEntityBunny entitybunny, PoseStack poseStack, float f) {
         if (!entitybunny.getIsAdult()) {
-            stretch(entitybunny, matrixStackIn);
+            stretch(entitybunny, poseStack);
         }
-        rotBunny(entitybunny, matrixStackIn);
-        adjustOffsets(entitybunny.getAdjustedXOffset(), entitybunny.getAdjustedYOffset(), entitybunny.getAdjustedZOffset(), matrixStackIn);
+        rotBunny(entitybunny, poseStack);
+        adjustOffsets(entitybunny.getAdjustedXOffset(), entitybunny.getAdjustedYOffset(), entitybunny.getAdjustedZOffset(), poseStack);
     }
 
-    protected void rotBunny(MoCEntityBunny entitybunny, MatrixStack matrixStackIn) {
-        if (!entitybunny.isOnGround() && (entitybunny.getRidingEntity() == null)) {
-            if (entitybunny.getMotion().getY() > 0.5D) {
-                matrixStackIn.rotate(Vector3f.XN.rotationDegrees(35F));
-            } else if (entitybunny.getMotion().getY() < -0.5D) {
-                matrixStackIn.rotate(Vector3f.XN.rotationDegrees(-35F));
+    protected void rotBunny(MoCEntityBunny entitybunny, PoseStack poseStack) {
+        if (!entitybunny.onGround() && (entitybunny.getVehicle() == null)) {
+            if (entitybunny.getDeltaMovement().y > 0.5D) {
+                poseStack.mulPose(Axis.XN.rotationDegrees(35F));
+            } else if (entitybunny.getDeltaMovement().y < -0.5D) {
+                poseStack.mulPose(Axis.XN.rotationDegrees(-35F));
             } else {
-                matrixStackIn.rotate(Vector3f.XN.rotationDegrees((float) (entitybunny.getMotion().getY() * 70D)));
+                poseStack.mulPose(Axis.XN.rotationDegrees((float) (entitybunny.getDeltaMovement().y * 70D)));
             }
         }
     }
 
-    protected void stretch(MoCEntityBunny entitybunny, MatrixStack matrixStackIn) {
-        float f = entitybunny.getAge() * 0.01F;
-        matrixStackIn.scale(f, f, f);
+    protected void stretch(MoCEntityBunny entitybunny, PoseStack poseStack) {
+        float f = entitybunny.getMoCAge() * 0.01F;
+        poseStack.scale(f, f, f);
     }
 }

@@ -3,163 +3,315 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.neutral.MoCEntityKitty;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
 
-    private final ModelRenderer body;
+    private ModelPart body;
     public boolean isSitting;
     public boolean isSwinging;
     public float swingProgress;
     public int kittystate;
-    public ModelRenderer[] headParts;
-    public ModelRenderer tail;
-    public ModelRenderer rightArm;
-    public ModelRenderer leftArm;
-    public ModelRenderer rightLeg;
-    public ModelRenderer leftLeg;
+    public ModelPart[] headParts;
+    public ModelPart tail;
+    public ModelPart rightArm;
+    public ModelPart leftArm;
+    public ModelPart rightLeg;
+    public ModelPart leftLeg;
+    
+    // Store constructor params to pass to factory
+    private float inflation;
+    private float yOffset;
 
+    public static final ModelLayerLocation LAYER_LOCATION = 
+        new ModelLayerLocation(new ResourceLocation("mocreatures", "kitty"), "main");
+
+    /**
+     * Constructor matching original, delegates to createLayerDefinition
+     */
     public MoCModelKitty() {
         this(0.0F);
     }
 
-    public MoCModelKitty(float limbSwing) {
-        this(limbSwing, 0.0F);
+    /**
+     * Constructor matching original, delegates to createLayerDefinition
+     */
+    public MoCModelKitty(float inflation) {
+        this(inflation, 0.0F);
     }
 
-    public MoCModelKitty(float limbSwing, float limbSwingAmount) {
-        this.headParts = new ModelRenderer[10];
-        this.headParts[0] = new ModelRenderer(this, 16, 0);
-        this.headParts[0].addBox(-2F, -5F, -3F, 1, 1, 1, limbSwing);
-        this.headParts[0].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[1] = new ModelRenderer(this, 16, 0);
-        this.headParts[1].mirror = true;
-        this.headParts[1].addBox(1.0F, -5F, -3F, 1, 1, 1, limbSwing);
-        this.headParts[1].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[2] = new ModelRenderer(this, 20, 0);
-        this.headParts[2].addBox(-2.5F, -4F, -3F, 2, 1, 1, limbSwing);
-        this.headParts[2].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[3] = new ModelRenderer(this, 20, 0);
-        this.headParts[3].mirror = true;
-        this.headParts[3].addBox(0.5F, -4F, -3F, 2, 1, 1, limbSwing);
-        this.headParts[3].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[4] = new ModelRenderer(this, 40, 0);
-        this.headParts[4].addBox(-4F, -1.5F, -5F, 3, 3, 1, limbSwing);
-        this.headParts[4].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[5] = new ModelRenderer(this, 40, 0);
-        this.headParts[5].mirror = true;
-        this.headParts[5].addBox(1.0F, -1.5F, -5F, 3, 3, 1, limbSwing);
-        this.headParts[5].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[6] = new ModelRenderer(this, 21, 6);
-        this.headParts[6].addBox(-1F, -1F, -5F, 2, 2, 1, limbSwing);
-        this.headParts[6].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[7] = new ModelRenderer(this, 50, 0);
-        this.headParts[7].addBox(-2.5F, 0.5F, -1F, 5, 4, 1, limbSwing);
-        this.headParts[7].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[8] = new ModelRenderer(this, 60, 0);
-        this.headParts[8].addBox(-1.5F, -2F, -4.1F, 3, 1, 1, limbSwing);
-        this.headParts[8].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.headParts[9] = new ModelRenderer(this, 1, 1);
-        this.headParts[9].addBox(-2.5F, -3F, -4F, 5, 4, 4, limbSwing);
-        this.headParts[9].setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.body = new ModelRenderer(this, 20, 0);
-        this.body.addBox(-2.5F, -2F, -0F, 5, 5, 10, limbSwing);
-        this.body.setRotationPoint(0.0F, 0.0F + limbSwingAmount, -2F);
-        this.rightArm = new ModelRenderer(this, 0, 9);
-        this.rightArm.addBox(-1F, 0.0F, -1F, 2, 6, 2, limbSwing);
-        this.rightArm.setRotationPoint(-1.5F, 3F + limbSwingAmount, -1F);
-        this.leftArm = new ModelRenderer(this, 0, 9);
-        this.leftArm.mirror = true;
-        this.leftArm.addBox(-1F, 0.0F, -1F, 2, 6, 2, limbSwing);
-        this.leftArm.setRotationPoint(1.5F, 3F + limbSwingAmount, -1F);
-        this.rightLeg = new ModelRenderer(this, 8, 9);
-        this.rightLeg.addBox(-1F, 0.0F, -1F, 2, 6, 2, limbSwing);
-        this.rightLeg.setRotationPoint(-1.5F, 3F + limbSwingAmount, 7F);
-        this.leftLeg = new ModelRenderer(this, 8, 9);
-        this.leftLeg.mirror = true;
-        this.leftLeg.addBox(-1F, 0.0F, -1F, 2, 6, 2, limbSwing);
-        this.leftLeg.setRotationPoint(1.5F, 3F + limbSwingAmount, 7F);
-        this.tail = new ModelRenderer(this, 16, 9);
-        this.tail.mirror = true;
-        this.tail.addBox(-0.5F, -8F, -1F, 1, 8, 1, limbSwing);
-        this.tail.setRotationPoint(0.0F, -0.5F + limbSwingAmount, 7.5F);
+    /**
+     * Constructor matching original, stores parameters and loads model from ModelLayerLocation
+     */
+    public MoCModelKitty(float inflation, float yOffset) {
+        this.inflation = inflation;
+        this.yOffset = yOffset;
+        
+        // In a real implementation, this would be done via EntityRenderers.register
+        // For now, we directly create the parts
+        ModelPart root = createBodyLayer(inflation, yOffset).bakeRoot();
+        setupParts(root);
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
+    public MoCModelKitty(ModelPart root, float inflation, float yOffset) {
+        this.inflation = inflation;
+        this.yOffset = yOffset;
+        
+        setupParts(root);
+    }
+    
+    /**
+     * Constructor for use with EntityRendererProvider, loads from baked model
+     */
+    public MoCModelKitty(ModelPart root) {
+        setupParts(root);
+    }
+    
+    /**
+     * Setup parts from root model part
+     */
+    private void setupParts(ModelPart root) {
+        this.headParts = new ModelPart[10];
+        
+        this.body = root.getChild("body");
+        this.headParts[0] = root.getChild("head_0");
+        this.headParts[1] = root.getChild("head_1");
+        this.headParts[2] = root.getChild("head_2");
+        this.headParts[3] = root.getChild("head_3");
+        this.headParts[4] = root.getChild("head_4");
+        this.headParts[5] = root.getChild("head_5");
+        this.headParts[6] = root.getChild("head_6");
+        this.headParts[7] = root.getChild("head_7");
+        this.headParts[8] = root.getChild("head_8");
+        this.headParts[9] = root.getChild("head_9");
+        this.tail = root.getChild("tail");
+        this.rightArm = root.getChild("right_arm");
+        this.leftArm = root.getChild("left_arm");
+        this.rightLeg = root.getChild("right_leg");
+        this.leftLeg = root.getChild("left_leg");
+    }
+
+    /**
+     * Static factory method for creating layer definition
+     */
+    public static LayerDefinition createBodyLayer() {
+        return createBodyLayer(0.0F, 0.0F);
+    }
+    
+    /**
+     * Creates model definition with inflation and yOffset matching the original constructor
+     */
+    public static LayerDefinition createBodyLayer(float inflation, float yOffset) {
+        MeshDefinition meshdefinition = new MeshDefinition();
+        PartDefinition partdefinition = meshdefinition.getRoot();
+        
+        // Head parts
+        partdefinition.addOrReplaceChild("head_0", 
+            CubeListBuilder.create()
+                .texOffs(16, 0)
+                .addBox(-2F, -5F, -3F, 1, 1, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_1", 
+            CubeListBuilder.create()
+                .texOffs(16, 0)
+                .mirror(true)
+                .addBox(1.0F, -5F, -3F, 1, 1, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_2", 
+            CubeListBuilder.create()
+                .texOffs(20, 0)
+                .addBox(-2.5F, -4F, -3F, 2, 1, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_3", 
+            CubeListBuilder.create()
+                .texOffs(20, 0)
+                .mirror(true)
+                .addBox(0.5F, -4F, -3F, 2, 1, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_4", 
+            CubeListBuilder.create()
+                .texOffs(40, 0)
+                .addBox(-4F, -1.5F, -5F, 3, 3, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_5", 
+            CubeListBuilder.create()
+                .texOffs(40, 0)
+                .mirror(true)
+                .addBox(1.0F, -1.5F, -5F, 3, 3, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_6", 
+            CubeListBuilder.create()
+                .texOffs(21, 6)
+                .addBox(-1F, -1F, -5F, 2, 2, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_7", 
+            CubeListBuilder.create()
+                .texOffs(50, 0)
+                .addBox(-2.5F, 0.5F, -1F, 5, 4, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_8", 
+            CubeListBuilder.create()
+                .texOffs(60, 0)
+                .addBox(-1.5F, -2F, -4.1F, 3, 1, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        partdefinition.addOrReplaceChild("head_9", 
+            CubeListBuilder.create()
+                .texOffs(1, 1)
+                .addBox(-2.5F, -3F, -4F, 5, 4, 4, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        // Body
+        partdefinition.addOrReplaceChild("body", 
+            CubeListBuilder.create()
+                .texOffs(20, 0)
+                .addBox(-2.5F, -2F, -0F, 5, 5, 10, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            
+        // Arms
+        partdefinition.addOrReplaceChild("right_arm", 
+            CubeListBuilder.create()
+                .texOffs(0, 9)
+                .addBox(-1F, 0.0F, -1F, 2, 6, 2, new CubeDeformation(inflation)),
+            PartPose.offset(-1.5F, 3F + yOffset, -1F));
+            
+        partdefinition.addOrReplaceChild("left_arm", 
+            CubeListBuilder.create()
+                .texOffs(0, 9)
+                .mirror(true)
+                .addBox(-1F, 0.0F, -1F, 2, 6, 2, new CubeDeformation(inflation)),
+            PartPose.offset(1.5F, 3F + yOffset, -1F));
+            
+        // Legs
+        partdefinition.addOrReplaceChild("right_leg", 
+            CubeListBuilder.create()
+                .texOffs(8, 9)
+                .addBox(-1F, 0.0F, -1F, 2, 6, 2, new CubeDeformation(inflation)),
+            PartPose.offset(-1.5F, 3F + yOffset, 7F));
+            
+        partdefinition.addOrReplaceChild("left_leg", 
+            CubeListBuilder.create()
+                .texOffs(8, 9)
+                .mirror(true)
+                .addBox(-1F, 0.0F, -1F, 2, 6, 2, new CubeDeformation(inflation)),
+            PartPose.offset(1.5F, 3F + yOffset, 7F));
+            
+        // Tail
+        partdefinition.addOrReplaceChild("tail", 
+            CubeListBuilder.create()
+                .texOffs(16, 9)
+                .mirror(true)
+                .addBox(-0.5F, -8F, -1F, 1, 8, 1, new CubeDeformation(inflation)),
+            PartPose.offset(0.0F, -0.5F + yOffset, 7.5F));
+
+        return LayerDefinition.create(meshdefinition, 64, 32);
+    }
+
+    @Override
+    public void prepareMobModel(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
         this.isSitting = entityIn.getIsSitting();
         this.isSwinging = entityIn.getIsSwinging();
-        this.swingProgress = entityIn.swingProgress;
+        this.swingProgress = entityIn.attackAnim;
         this.kittystate = entityIn.getKittyState();
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        matrixStackIn.push();
-        if (this.isSitting) {
-            matrixStackIn.translate(0.0F, 0.25F, 0.0F);
-            this.tail.rotateAngleZ = 0.0F;
-            this.tail.rotateAngleX = -2.3F;
+    public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        // Head rotation - using exact degree to radian conversion and limiting range
+        // Clamp values to reduce extreme head movements that cause jitter
+        float clampedYaw = Mth.clamp(netHeadYaw, -45.0F, 45.0F);
+        float clampedPitch = Mth.clamp(headPitch, -30.0F, 30.0F);
+        
+        // Convert to radians using precise conversion (π/180)
+        this.headParts[9].yRot = (float)(clampedYaw * Math.PI / 180.0);
+        this.headParts[9].xRot = (float)(clampedPitch * Math.PI / 180.0);
+        
+        for (int i = 0; i < 9; i++) {
+            this.headParts[i].yRot = this.headParts[9].yRot;
+            this.headParts[i].xRot = this.headParts[9].xRot;
         }
-        for (int i = 0; i < 7; i++) {
-            this.headParts[i].render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        
+        // Arms swing with walking animation
+        this.rightArm.xRot = Mth.cos((limbSwing * 0.6662F) + 3.141593F) * 2.0F * limbSwingAmount * 0.5F;
+        this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
+        this.rightArm.zRot = 0.0F;
+        this.leftArm.zRot = 0.0F;
+        
+        // Legs walk animation
+        this.rightLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+        this.leftLeg.xRot = Mth.cos((limbSwing * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
+        this.rightLeg.yRot = 0.0F;
+        this.leftLeg.yRot = 0.0F;
+        
+        // Swinging animation
+        if (this.isSwinging) {
+            this.rightArm.xRot = -2F + this.swingProgress;
+            this.rightArm.yRot = 2.25F - (this.swingProgress * 2.0F);
+        } else {
+            this.rightArm.yRot = 0.0F;
         }
-        if (this.kittystate > 2) {
-            this.headParts[7].render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-        if (this.kittystate == 12) {
-            this.headParts[8].render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-        this.headParts[9].render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        if (this.isSitting) {
-            matrixStackIn.translate(0.0F, 0.0625F, 0.0625F);
-            float f6 = -1.570796F;
-            this.rightArm.rotateAngleX = f6;
-            this.leftArm.rotateAngleX = f6;
-            this.rightLeg.rotateAngleX = f6;
-            this.leftLeg.rotateAngleX = f6;
-            this.rightLeg.rotateAngleY = 0.1F;
-            this.leftLeg.rotateAngleY = -0.1F;
-        }
-        this.rightArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.leftArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.rightLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.leftLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        matrixStackIn.pop();
+        
+        this.leftArm.yRot = 0.0F;
+        
+        // Tail default position and swing based on leg movement
+        this.tail.xRot = -0.5F;
+        this.tail.zRot = this.leftLeg.xRot * 0.625F;
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.headParts[9].rotateAngleY = netHeadYaw / 57.29578F;
-        this.headParts[9].rotateAngleX = headPitch / 57.29578F;
-        for (int i = 0; i < 9; i++) {
-            this.headParts[i].rotateAngleY = this.headParts[9].rotateAngleY;
-            this.headParts[i].rotateAngleX = this.headParts[9].rotateAngleX;
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        poseStack.pushPose();
+        if (this.isSitting) {
+            poseStack.translate(0.0F, 0.25F, 0.0F);
+            this.tail.zRot = 0.0F;
+            this.tail.xRot = -2.3F;
         }
-        this.rightArm.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 2.0F * limbSwingAmount * 0.5F;
-        this.leftArm.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
-        this.rightArm.rotateAngleZ = 0.0F;
-        this.leftArm.rotateAngleZ = 0.0F;
-        this.rightLeg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        this.leftLeg.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
-        this.rightLeg.rotateAngleY = 0.0F;
-        this.leftLeg.rotateAngleY = 0.0F;
-        if (this.isSwinging) {
-            this.rightArm.rotateAngleX = -2F + this.swingProgress;
-            this.rightArm.rotateAngleY = 2.25F - (this.swingProgress * 2.0F);
-        } else {
-            this.rightArm.rotateAngleY = 0.0F;
+        for (int i = 0; i < 7; i++) {
+            this.headParts[i].render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
-        this.leftArm.rotateAngleY = 0.0F;
-        this.tail.rotateAngleX = -0.5F;
-        this.tail.rotateAngleZ = this.leftLeg.rotateAngleX * 0.625F;
+        if (this.kittystate > 2) {
+            this.headParts[7].render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+        if (this.kittystate == 12) {
+            this.headParts[8].render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+        this.headParts[9].render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        if (this.isSitting) {
+            poseStack.translate(0.0F, 0.0625F, 0.0625F);
+            float f6 = -1.570796F;
+            this.rightArm.xRot = f6;
+            this.leftArm.xRot = f6;
+            this.rightLeg.xRot = f6;
+            this.leftLeg.xRot = f6;
+            this.rightLeg.yRot = 0.1F;
+            this.leftLeg.yRot = -0.1F;
+        }
+        this.rightArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        poseStack.popPose();
     }
 }

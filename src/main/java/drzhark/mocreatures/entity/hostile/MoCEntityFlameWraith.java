@@ -5,60 +5,59 @@ package drzhark.mocreatures.entity.hostile;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.monster.IMob;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
-import javax.annotation.Nullable;
-
-public class MoCEntityFlameWraith extends MoCEntityWraith implements IMob {
+public class MoCEntityFlameWraith extends MoCEntityWraith implements Enemy {
 
     protected int burningTime;
 
-    public MoCEntityFlameWraith(EntityType<? extends MoCEntityFlameWraith> type, World world) {
+    public MoCEntityFlameWraith(EntityType<? extends MoCEntityFlameWraith> type, Level world) {
         super(type, world);
         this.texture = MoCreatures.proxy.alphaWraithEyes ? "wraith_flame_alpha.png" : "wraith_flame.png";
         //this.isImmuneToFire = true;
         this.burningTime = 30;
-        experienceValue = 7;
+        this.xpReward = 7;
     }
 
     @Override
-    public boolean isImmuneToFire() {
+    public boolean fireImmune() {
         return true;
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityWraith.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 25.0D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D);
-    }
-
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.FLAME_WRAITH;
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityWraith.createAttributes().add(Attributes.MAX_HEALTH, 25.0D).add(Attributes.ATTACK_DAMAGE, 4.0D);
     }
 
     @Override
-    public void livingTick() {
-        if (!this.world.isRemote) {
-            if (this.world.isDaytime()) {
-                float f = getBrightness();
-                if ((f > 0.5F) && this.world.canBlockSeeSky(new BlockPos(MathHelper.floor(this.getPosX()), MathHelper.floor(this.getPosY()), MathHelper.floor(this.getPosZ()))) && ((this.rand.nextFloat() * 30F) < ((f - 0.4F) * 2.0F))) {
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.FLAME_WRAITH;
+    }
+
+    @Override
+    public void aiStep() {
+        if (!this.level().isClientSide()) {
+            if (this.level().isDay()) {
+                float f = this.getLightLevelDependentMagicValue();
+                if ((f > 0.5F) && this.level().canSeeSky(new BlockPos(Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ()))) && ((this.random.nextFloat() * 30F) < ((f - 0.4F) * 2.0F))) {
                     this.setHealth(getHealth() - 2);
                 }
             }
         } else {
             for (int i = 0; i < 2; ++i) {
-                this.world.addParticle(ParticleTypes.FLAME, this.getPosX() + (this.rand.nextDouble() - 0.5D) * (double) this.getWidth(), this.getPosY() + this.rand.nextDouble() * (double) this.getHeight(), this.getPosZ() + (this.rand.nextDouble() - 0.5D) * (double) this.getWidth(), 0.0D, 0.0D, 0.0D);
+                this.level().addParticle(ParticleTypes.FLAME, this.getX() + (this.random.nextDouble() - 0.5D) * (double) this.getBbWidth(), this.getY() + this.random.nextDouble() * (double) this.getBbHeight(), this.getZ() + (this.random.nextDouble() - 0.5D) * (double) this.getBbWidth(), 0.0D, 0.0D, 0.0D);
             }
         }
-        super.livingTick();
+        super.aiStep();
     }
 
     //TODO TEST
@@ -68,10 +67,10 @@ public class MoCEntityFlameWraith extends MoCEntityWraith implements IMob {
     }*/
 
     @Override
-    public void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn) {
-        if (!this.world.isRemote && !this.world.getDimensionType().isUltrawarm()) {
-            entityLivingBaseIn.setFire(this.burningTime);
+    public void doEnchantDamageEffects(LivingEntity attacker, Entity target) {
+        if (!this.level().isClientSide() && !this.level().dimensionType().ultraWarm()) {
+            target.setSecondsOnFire(this.burningTime);
         }
-        super.applyEnchantments(entityLivingBaseIn, entityIn);
+        super.doEnchantDamageEffects(attacker, target);
     }
 }

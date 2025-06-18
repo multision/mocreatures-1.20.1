@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/amulet_bone"
+    "layer0": "mocreatures:item/amulet_bone"
   }
 }

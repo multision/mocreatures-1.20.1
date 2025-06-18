@@ -3,13 +3,15 @@
  */
 package drzhark.mocreatures.block;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class MoCBlockPlanks extends Block {
 
-    public MoCBlockPlanks(AbstractBlock.Properties properties) {
-        super(properties.sound(SoundType.WOOD));
+    public MoCBlockPlanks(BlockBehaviour.Properties properties) {
+        super(properties
+                .strength(2.0F, 3.0F)
+                .sound(SoundType.WOOD));
     }
 }

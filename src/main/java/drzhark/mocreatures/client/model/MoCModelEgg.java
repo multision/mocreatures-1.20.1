@@ -1,59 +1,111 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.item.MoCEntityEgg;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class MoCModelEgg<T extends MoCEntityEgg> extends EntityModel<T> {
 
-    public ModelRenderer Egg;
-    ModelRenderer Egg1;
-    ModelRenderer Egg2;
-    ModelRenderer Egg3;
-    ModelRenderer Egg4;
-    ModelRenderer Egg5;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "egg"), "main"
+    );
 
-    public MoCModelEgg() {
-        //textureWidth = 64;
-        //textureHeight = 32;
+    private final ModelPart egg1;
+    private final ModelPart egg2;
+    private final ModelPart egg3;
+    private final ModelPart egg4;
+    private final ModelPart egg5;
 
-        this.Egg1 = new ModelRenderer(this, 0, 0);
-        this.Egg1.addBox(0F, 0F, 0F, 3, 3, 3);
-        this.Egg1.setRotationPoint(0F, 20F, 0F);
+    public MoCModelEgg(ModelPart root) {
+        this.egg1 = root.getChild("egg1");
+        this.egg2 = root.getChild("egg2");
+        this.egg3 = root.getChild("egg3");
+        this.egg4 = root.getChild("egg4");
+        this.egg5 = root.getChild("egg5");
+    }
+    
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
 
-        this.Egg2 = new ModelRenderer(this, 10, 0);
-        this.Egg2.addBox(0F, 0F, 0F, 2, 1, 2);
-        this.Egg2.setRotationPoint(0.5F, 19.5F, 0.5F);
+        /*
+         * Recreating the five boxes from the 1.16 version. All pivots and box sizes
+         * exactly match the old ModelRenderer.addBox / setRotationPoint calls.
+         *
+         * Egg1:  addBox(0,0,0, 3,3,3),  pivot at (0,20,0)
+         * Egg2:  addBox(0,0,0, 2,1,2),  pivot at (0.5,19.5,0.5)
+         * Egg3:  addBox(0,0,0, 2,1,2),  pivot at (0.5,22.5,0.5)
+         * Egg4:  addBox(0,0,0, 1,2,2),  pivot at (-0.5,20.5,0.5)
+         * Egg5:  addBox(0,0,0, 1,2,2),  pivot at (2.5,20.5,0.5)
+         *
+         * (Note: No rotations were applied in the original code, so PartPose.offset(...) only.)
+         */
+        root.addOrReplaceChild("egg1",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 3, 3, 3),
+                PartPose.offset(0.0F, 20.0F, 0.0F)
+        );
 
-        this.Egg3 = new ModelRenderer(this, 30, 0);
-        this.Egg3.addBox(0F, 0F, 0F, 2, 1, 2);
-        this.Egg3.setRotationPoint(0.5F, 22.5F, 0.5F);
+        root.addOrReplaceChild("egg2",
+                CubeListBuilder.create()
+                        .texOffs(10, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 2, 1, 2),
+                PartPose.offset(0.5F, 19.5F, 0.5F)
+        );
 
-        this.Egg4 = new ModelRenderer(this, 24, 0);
-        this.Egg4.addBox(0F, 0F, 0F, 1, 2, 2);
-        this.Egg4.setRotationPoint(-0.5F, 20.5F, 0.5F);
+        root.addOrReplaceChild("egg3",
+                CubeListBuilder.create()
+                        .texOffs(30, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 2, 1, 2),
+                PartPose.offset(0.5F, 22.5F, 0.5F)
+        );
 
-        this.Egg5 = new ModelRenderer(this, 18, 0);
-        this.Egg5.addBox(0F, 0F, 0F, 1, 2, 2);
-        this.Egg5.setRotationPoint(2.5F, 20.5F, 0.5F);
+        root.addOrReplaceChild("egg4",
+                CubeListBuilder.create()
+                        .texOffs(24, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 1, 2, 2),
+                PartPose.offset(-0.5F, 20.5F, 0.5F)
+        );
 
+        root.addOrReplaceChild("egg5",
+                CubeListBuilder.create()
+                        .texOffs(18, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 1, 2, 2),
+                PartPose.offset(2.5F, 20.5F, 0.5F)
+        );
+
+        // You can pick any reasonable texture size. The original had textureWidth=64, textureHeight=32 commented out.
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Egg1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Egg2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Egg3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Egg4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Egg5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount,
+                          float ageInTicks, float netHeadYaw, float headPitch) {
+        // The egg does not animate, so leave empty.
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        //super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer,
+                               int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        egg1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        egg2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        egg3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        egg4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        egg5.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

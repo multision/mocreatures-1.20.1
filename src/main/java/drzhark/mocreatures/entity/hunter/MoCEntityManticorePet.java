@@ -6,36 +6,38 @@ package drzhark.mocreatures.entity.hunter;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCItems;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
 public class MoCEntityManticorePet extends MoCEntityBigCat {
 
-    public MoCEntityManticorePet(EntityType<? extends MoCEntityManticorePet> type, World world) {
+    public MoCEntityManticorePet(EntityType<? extends MoCEntityManticorePet> type, Level world) {
         super(type, world);
         this.chestName = "ManticoreChest";
     }
 
     // TODO: Varied stats depending on type
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityBigCat.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 40.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.4D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 7.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityBigCat.createAttributes()
+                .add(Attributes.MAX_HEALTH, 40.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.4D)
+                .add(Attributes.ATTACK_DAMAGE, 7.0D);
     }
 
     @Override
     public void selectType() {
-
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(4) + 1);
+            setTypeMoC(this.random.nextInt(4) + 1);
         }
         super.selectType();
     }
@@ -67,32 +69,32 @@ public class MoCEntityManticorePet extends MoCEntityBigCat {
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity player, Hand hand) {
-        final ActionResultType tameResult = this.processTameInteract(player, hand);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        final InteractionResult tameResult = this.processTameInteract(player, hand);
         if (tameResult != null) {
             return tameResult;
         }
 
-        if (this.getIsRideable() && this.getIsAdult() && (!this.getIsChested() || !player.isSneaking()) && !this.isBeingRidden()) {
-            if (!this.world.isRemote && player.startRiding(this)) {
-                player.rotationYaw = this.rotationYaw;
-                player.rotationPitch = this.rotationPitch;
+        if (this.getIsRideable() && this.getIsAdult() && (!this.getIsChested() || !player.isShiftKeyDown()) && !this.isVehicle()) {
+            if (!this.level().isClientSide() && player.startRiding(this)) {
+                player.setYRot(this.getYRot());
+                player.setXRot(this.getXRot());
                 setSitting(false);
             }
 
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        final ItemStack stack = player.getHeldItem(hand);
-        if (!stack.isEmpty() && getIsTamed() && (stack.getItem() == MoCItems.whip)) {
+        final ItemStack stack = player.getItemInHand(hand);
+        if (!stack.isEmpty() && getIsTamed() && (stack.is(MoCItems.WHIP.get()))) {
             setSitting(!getIsSitting());
             setIsJumping(false);
-            getNavigator().clearPath();
-            setAttackTarget(null);
-            return ActionResultType.SUCCESS;
+            getNavigation().stop();
+            setTarget(null);
+            return InteractionResult.SUCCESS;
         }
 
-        return super.getEntityInteractionResult(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
@@ -106,7 +108,7 @@ public class MoCEntityManticorePet extends MoCEntityBigCat {
     }
 
     @Override
-    public int getMaxAge() {
+    public int getMoCMaxAge() {
         return 130;
     }
 
@@ -121,7 +123,8 @@ public class MoCEntityManticorePet extends MoCEntityBigCat {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
         switch (getTypeMoC()) {
             case 2:
                 return MoCLootTables.DARK_MANTICORE;

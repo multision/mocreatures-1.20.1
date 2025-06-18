@@ -4,46 +4,62 @@
 package drzhark.mocreatures.entity;
 
 import drzhark.mocreatures.MoCTools;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.controller.FlyingMovementController;
-import net.minecraft.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
-import net.minecraft.pathfinding.FlyingPathNavigator;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomFlyingGoal;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * Updated for Minecraft 1.20.1 (Forge/Mojang mappings).
+ */
 public abstract class MoCEntityInsect extends MoCEntityAmbient {
 
     private int climbCounter;
 
-    protected MoCEntityInsect(EntityType<? extends MoCEntityInsect> type, World world) {
+    /**
+     * In 1.20.1, constructors take a Level, not a World.
+     */
+    protected MoCEntityInsect(EntityType<? extends MoCEntityInsect> type, Level world) {
         super(type, world);
-        //setSize(0.4F, 0.3F);
-        this.moveController = new FlyingMovementController(this, 10, false);
+        // Replace flying controller:
+        this.moveControl = new FlyingMoveControl(this, 10, false);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityAmbient.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 4.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D).createMutableAttribute(Attributes.FLYING_SPEED, 0.6D);
+    /**
+     * In 1.20.1, AttributeModifiers use AttributeSupplier.Builder instead of AttributeModifierMap.
+     */
+    public static AttributeSupplier.Builder registerAttributes() {
+        return MoCEntityAmbient.createAttributes()
+                .add(Attributes.MAX_HEALTH, 4.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.FLYING_SPEED, 0.6D);
+    }
+
+    /**
+     * Override createNavigation(Level) instead of createNavigator(World).
+     * Use FlightPathNavigation rather than FlyingPathNavigator.
+     */
+    @Override
+    protected PathNavigation createNavigation(Level worldIn) {
+        FlyingPathNavigation nav = new FlyingPathNavigation(this, worldIn);
+        nav.setCanPassDoors(true);
+        nav.setCanFloat(true);
+        return nav;
     }
 
     @Override
-    protected PathNavigator createNavigator(World worldIn) {
-        FlyingPathNavigator FlyingPathNavigator = new FlyingPathNavigator(this, worldIn);
-        FlyingPathNavigator.setCanEnterDoors(true);
-        FlyingPathNavigator.setCanSwim(true);
-        return FlyingPathNavigator;
-    }
-
-    @Override
-    protected void registerData() {
-        super.registerData();
+    protected void defineSynchedData() {
+        super.defineSynchedData();
     }
 
     @Override
@@ -53,28 +69,33 @@ public abstract class MoCEntityInsect extends MoCEntityAmbient {
     }
 
     @Override
-    public float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
+    public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.2F;
     }
 
     @Override
     public boolean getIsFlying() {
-        return this.isOnAir() && !this.isOnLadder();
+        return this.isOnAir() && !this.onClimbable();
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void tick() {
+        super.tick();
 
         if (this.isInWater()) {
-            this.setMotion(this.getMotion().mul(1.0D, 0.6D, 1.0D));
+            this.setDeltaMovement(this.getDeltaMovement().add(1.0D, 0.6D, 1.0D));
         }
 
-        if (!this.world.isRemote) {
-            if (this.rand.nextInt(50) == 0) {
-                int[] ai = MoCTools.returnNearestBlockCoord(this, this.isAttractedToLight() ? Blocks.TORCH : Blocks.TALL_GRASS, 8D);
+        if (!this.level().isClientSide) {
+            if (this.random.nextInt(50) == 0) {
+                int[] ai = MoCTools.returnNearestBlockCoord(
+                        this,
+                        this.isAttractedToLight() ? Blocks.TORCH : Blocks.TALL_GRASS,
+                        8D
+                );
                 if (ai[0] > -1000) {
-                    this.getNavigator().tryMoveToXYZ(ai[0], ai[1], ai[2], 1.0D);
+                    // In 1.20.1: getNavigation().moveTo(x, y, z, speed)
+                    this.getNavigation().moveTo(ai[0], ai[1], ai[2], 1.0D);
                 }
             }
         } else {
@@ -93,15 +114,14 @@ public abstract class MoCEntityInsect extends MoCEntityAmbient {
 
     @Override
     public void performAnimation(int animationType) {
-        if (animationType == 1) //climbing animation
-        {
+        if (animationType == 1) { // climbing animation
             this.climbCounter = 1;
         }
     }
 
     @Override
-    public boolean isOnLadder() {
-        return this.collidedHorizontally;
+    public boolean onClimbable() {
+        return this.horizontalCollision; // collidedHorizontally → horizontalCollision
     }
 
     public boolean climbing() {
@@ -109,16 +129,17 @@ public abstract class MoCEntityInsect extends MoCEntityAmbient {
     }
 
     @Override
-    protected void updateFallState(double y, boolean onGroundIn, BlockState state, BlockPos pos) {
+    protected void checkFallDamage(double y, boolean onGroundIn, BlockState state, BlockPos pos) {
+        // Insects don’t take fall damage—no changes needed here.
     }
 
     @Override
-    public boolean doesEntityNotTriggerPressurePlate() {
+    public boolean isIgnoringBlockTriggers() {
         return true;
     }
 
     @Override
-    public CreatureAttribute getCreatureAttribute() {
-        return CreatureAttribute.ARTHROPOD;
+    public MobType getMobType() {
+        return MobType.ARTHROPOD;
     }
 }

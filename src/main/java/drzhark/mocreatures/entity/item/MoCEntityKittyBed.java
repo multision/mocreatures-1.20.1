@@ -8,36 +8,41 @@ import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.neutral.MoCEntityKitty;
 import drzhark.mocreatures.init.MoCItems;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.MoverType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.*;
-import net.minecraft.util.math.RayTraceContext;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.HitResult;
 
-public class MoCEntityKittyBed extends MobEntity {
+public class MoCEntityKittyBed extends Mob {
 
-    private static final DataParameter<Boolean> HAS_MILK = EntityDataManager.createKey(MoCEntityKittyBed.class, DataSerializers.BOOLEAN);
-    private static final DataParameter<Boolean> HAS_FOOD = EntityDataManager.createKey(MoCEntityKittyBed.class, DataSerializers.BOOLEAN);
-    private static final DataParameter<Boolean> PICKED_UP = EntityDataManager.createKey(MoCEntityKittyBed.class, DataSerializers.BOOLEAN);
-    private static final DataParameter<Integer> SHEET_COLOR = EntityDataManager.createKey(MoCEntityKittyBed.class, DataSerializers.VARINT);
+    private static final EntityDataAccessor<Boolean> HAS_MILK = SynchedEntityData.defineId(MoCEntityKittyBed.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> HAS_FOOD = SynchedEntityData.defineId(MoCEntityKittyBed.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> PICKED_UP = SynchedEntityData.defineId(MoCEntityKittyBed.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> SHEET_COLOR = SynchedEntityData.defineId(MoCEntityKittyBed.class, EntityDataSerializers.INT);
     public float milkLevel;
 
-    public MoCEntityKittyBed(EntityType<? extends MoCEntityKittyBed> type, World world) {
+    public MoCEntityKittyBed(EntityType<? extends MoCEntityKittyBed> type, Level world) {
         super(type, world);
-        setNoAI(true);
+        setNoAi(true);
         this.milkLevel = 0.0F;
     }
 
@@ -45,54 +50,54 @@ public class MoCEntityKittyBed extends MobEntity {
         return MoCreatures.proxy.getModelTexture("kitty_bed.png");
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MobEntity.func_233666_p_().createMutableAttribute(Attributes.MAX_HEALTH, 20.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 20.0D);
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(HAS_MILK, Boolean.FALSE);
-        this.dataManager.register(HAS_FOOD, Boolean.FALSE);
-        this.dataManager.register(PICKED_UP, Boolean.FALSE);
-        this.dataManager.register(SHEET_COLOR, 0);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(HAS_MILK, false);
+        this.entityData.define(HAS_FOOD, false);
+        this.entityData.define(PICKED_UP, false);
+        this.entityData.define(SHEET_COLOR, 0);
     }
 
     public boolean getHasFood() {
-        return this.dataManager.get(HAS_FOOD);
+        return this.entityData.get(HAS_FOOD);
     }
 
     public void setHasFood(boolean flag) {
-        this.dataManager.set(HAS_FOOD, flag);
+        this.entityData.set(HAS_FOOD, flag);
     }
 
     public boolean getHasMilk() {
-        return this.dataManager.get(HAS_MILK);
+        return this.entityData.get(HAS_MILK);
     }
 
     public void setHasMilk(boolean flag) {
-        this.dataManager.set(HAS_MILK, flag);
+        this.entityData.set(HAS_MILK, flag);
     }
 
     public boolean getPickedUp() {
-        return this.dataManager.get(PICKED_UP);
+        return this.entityData.get(PICKED_UP);
     }
 
     public void setPickedUp(boolean flag) {
-        this.dataManager.set(PICKED_UP, flag);
+        this.entityData.set(PICKED_UP, flag);
     }
 
     public int getSheetColor() {
-        return this.dataManager.get(SHEET_COLOR);
+        return this.entityData.get(SHEET_COLOR);
     }
 
     public void setSheetColor(int i) {
-        this.dataManager.set(SHEET_COLOR, i);
+        this.entityData.set(SHEET_COLOR, i);
     }
 
     @Override
-    public boolean canBePushed() {
-        return !this.removed;
+    public boolean isPushable() {
+        return !this.isRemoved();
     }
 
     @Override
@@ -101,17 +106,23 @@ public class MoCEntityKittyBed extends MobEntity {
     }
 
     @Override
-    public boolean canDespawn(double distanceToClosestPlayer) {
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
         return false;
     }
 
     @Override
-    public boolean canEntityBeSeen(Entity entity) {
-        return this.world.rayTraceBlocks(new RayTraceContext(new Vector3d(this.getPosX(), this.getPosY() + getEyeHeight(), this.getPosZ()), new Vector3d(entity.getPosX(), entity.getPosY() + entity.getEyeHeight(), entity.getPosZ()), RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, this)).getType() == RayTraceResult.Type.MISS;
+    public boolean hasLineOfSight(Entity entity) {
+        return this.level().clip(new ClipContext(
+            new Vec3(this.getX(), this.getY() + getEyeHeight(), this.getZ()),
+            new Vec3(entity.getX(), entity.getY() + entity.getEyeHeight(), entity.getZ()),
+            ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.NONE,
+            this
+        )).getType() == HitResult.Type.MISS;
     }
 
     @Override
-    public boolean onLivingFall(float distance, float damageMultiplier) {
+    public boolean causeFallDamage(float distance, float damageMultiplier, DamageSource source) {
         return false;
     }
 
@@ -121,51 +132,51 @@ public class MoCEntityKittyBed extends MobEntity {
     }
 
     @Override
-    public double getMountedYOffset() {
+    public double getPassengersRidingOffset() {
         return 0.0D;
     }
 
     @Override
-    public void handleStatusUpdate(byte byte0) {
+    public void handleEntityEvent(byte byte0) {
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity player, Hand hand) {
-        final ItemStack stack = player.getHeldItem(hand);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        final ItemStack stack = player.getItemInHand(hand);
         if (!stack.isEmpty() && !getHasFood() && !getHasMilk()) {
-            if (stack.getItem() == MoCItems.petfood) {
-                if (!player.abilities.isCreativeMode) stack.shrink(1);
+            if (stack.is(MoCItems.PET_FOOD.get())) {
+                if (!player.isCreative()) stack.shrink(1);
                 MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_KITTYBED_POURINGFOOD.get());
                 setHasMilk(false);
                 setHasFood(true);
-            } else if (stack.getItem() == Items.MILK_BUCKET) {
-                player.setHeldItem(hand, new ItemStack(Items.BUCKET, 1));
+            } else if (stack.is(Items.MILK_BUCKET)) {
+                player.setItemInHand(hand, new ItemStack(Items.BUCKET, 1));
                 MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_KITTYBED_POURINGMILK.get());
                 setHasMilk(true);
                 setHasFood(false);
             }
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        if (this.getRidingEntity() == null) {
-            if (player.isSneaking()) {
+        if (this.getVehicle() == null) {
+            if (player.isCrouching()) {
                 final int color = getSheetColor();
-                player.inventory.addItemStackToInventory(new ItemStack(MoCItems.kittybed[color], 1));
-                if (getHasFood()) player.inventory.addItemStackToInventory(new ItemStack(MoCItems.petfood, 1));
-                else if (getHasMilk()) player.inventory.addItemStackToInventory(new ItemStack(Items.MILK_BUCKET, 1));
-                MoCTools.playCustomSound(this, SoundEvents.ENTITY_ITEM_PICKUP, 0.2F);
-                remove();
+                player.getInventory().add(new ItemStack(MoCItems.KITTYBED[color].get(), 1));
+                if (getHasFood()) player.getInventory().add(new ItemStack(MoCItems.PET_FOOD.get(), 1));
+                else if (getHasMilk()) player.getInventory().add(new ItemStack(Items.MILK_BUCKET, 1));
+                MoCTools.playCustomSound(this, SoundEvents.ITEM_PICKUP, 0.2F);
+                this.remove(RemovalReason.DISCARDED);
             } else {
-                setRotationYawHead((float) MoCTools.roundToNearest90Degrees(this.rotationYawHead) + 90.0F);
-                MoCTools.playCustomSound(this, SoundEvents.ENTITY_ITEM_FRAME_ROTATE_ITEM);
+                setYHeadRot((float) MoCTools.roundToNearest90Degrees(this.getYHeadRot()) + 90.0F);
+                MoCTools.playCustomSound(this, SoundEvents.ITEM_FRAME_ROTATE_ITEM);
             }
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        return ActionResultType.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void move(MoverType type, Vector3d pos) {
-        if (!this.world.isRemote && (this.getRidingEntity() != null || !this.onGround || !MoCreatures.proxy.staticBed)) {
+    public void move(MoverType type, Vec3 pos) {
+        if (!this.level().isClientSide() && (this.getVehicle() != null || !this.onGround() || !MoCreatures.proxy.staticBed)) {
             super.move(type, pos);
         }
     }
@@ -173,11 +184,11 @@ public class MoCEntityKittyBed extends MobEntity {
     @Override
     public void tick() {
         super.tick();
-        if (this.onGround) {
+        if (this.onGround()) {
             setPickedUp(false);
         }
-        if (!this.world.isRemote && (getHasMilk() || getHasFood()) && this.isBeingRidden() && getPassengers().get(0) instanceof MoCEntityKitty) {
-            MoCEntityKitty kitty = (MoCEntityKitty) getPassengers().get(0);
+        if (!this.level().isClientSide() && (getHasMilk() || getHasFood()) && this.isVehicle() && getFirstPassenger() instanceof MoCEntityKitty) {
+            MoCEntityKitty kitty = (MoCEntityKitty) getFirstPassenger();
             if (kitty.getKittyState() != 12) {
                 this.milkLevel += 0.003F;
                 if (this.milkLevel > 2.0F) {
@@ -191,7 +202,7 @@ public class MoCEntityKittyBed extends MobEntity {
     }
 
     @Override
-    public void readAdditional(CompoundNBT compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         setHasMilk(compound.getBoolean("HasMilk"));
         setSheetColor(compound.getInt("SheetColour"));
         setHasFood(compound.getBoolean("HasFood"));
@@ -199,7 +210,7 @@ public class MoCEntityKittyBed extends MobEntity {
     }
 
     @Override
-    public void writeAdditional(CompoundNBT compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         compound.putBoolean("HasMilk", getHasMilk());
         compound.putInt("SheetColour", getSheetColor());
         compound.putBoolean("HasFood", getHasFood());
@@ -207,7 +218,7 @@ public class MoCEntityKittyBed extends MobEntity {
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource damagesource, float i) {
+    public boolean hurt(DamageSource damagesource, float i) {
         return false;
     }
 }

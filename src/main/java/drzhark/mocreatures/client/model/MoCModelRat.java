@@ -1,114 +1,200 @@
 /*
  * GNU GENERAL PUBLIC LICENSE Version 3
+ *
+ * In 1.20.1:
+ *  - ModelRenderer → ModelPart
+ *  - setRotationAngles(...) → setupAnim(...)
+ *  - rotateAngleX/Y/Z → xRot, yRot, zRot
+ *  - render(...) → renderToBuffer(...)
  */
+
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.hostile.MoCEntityRat;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-
+@OnlyIn(Dist.CLIENT)
 public class MoCModelRat<T extends MoCEntityRat> extends EntityModel<T> {
 
-    public ModelRenderer Head;
 
-    public ModelRenderer EarR;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "rat"),
+            "main"
+    );
 
-    public ModelRenderer EarL;
+    private final ModelPart head;
+    private final ModelPart earR;
+    private final ModelPart earL;
+    private final ModelPart whiskerR;
+    private final ModelPart whiskerL;
+    private final ModelPart body;
+    private final ModelPart tail;
+    private final ModelPart frontL;
+    private final ModelPart frontR;
+    private final ModelPart rearL;
+    private final ModelPart rearR;
+    private final ModelPart bodyF;
 
-    public ModelRenderer WhiskerR;
+    private final float radianF = 57.29578F;
 
-    public ModelRenderer WhiskerL;
+    public MoCModelRat(ModelPart root) {
+        // All child names must match exactly those defined in createBodyLayer()
+        this.head      = root.getChild("head");
+        this.earR      = root.getChild("ear_r");
+        this.earL      = root.getChild("ear_l");
+        this.whiskerR  = root.getChild("whisker_r");
+        this.whiskerL  = root.getChild("whisker_l");
+        this.body      = root.getChild("body");
+        this.tail      = root.getChild("tail");
+        this.frontL    = root.getChild("front_l");
+        this.frontR    = root.getChild("front_r");
+        this.rearL     = root.getChild("rear_l");
+        this.rearR     = root.getChild("rear_r");
+        this.bodyF     = root.getChild("body_f");
+    }
+    
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
 
-    public ModelRenderer Body;
+        // HEAD
+        root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(-1.5F, -1.0F, -6.0F, 3, 4, 6),
+                PartPose.offset(0.0F, 19.0F, -6.0F)
+        );
 
-    public ModelRenderer Tail;
+        // EARS
+        root.addOrReplaceChild("ear_r",
+                CubeListBuilder.create()
+                        .texOffs(16, 26).addBox(-3.5F, -3.0F, -2.0F, 3, 3, 1),
+                PartPose.offset(0.0F, 19.0F, -6.0F)
+        );
+        root.addOrReplaceChild("ear_l",
+                CubeListBuilder.create()
+                        .texOffs(24, 26).addBox(0.5F, -3.0F, -2.0F, 3, 3, 1),
+                PartPose.offset(0.0F, 19.0F, -6.0F)
+        );
 
-    public ModelRenderer FrontL;
+        // WHISKERS
+        root.addOrReplaceChild("whisker_r",
+                CubeListBuilder.create()
+                        .texOffs(24, 16).addBox(-4.5F, -1.0F, -6.0F, 3, 3, 1),
+                PartPose.offset(0.0F, 19.0F, -6.0F)
+        );
+        root.addOrReplaceChild("whisker_l",
+                CubeListBuilder.create()
+                        .texOffs(24, 20).addBox(1.5F, -1.0F, -6.0F, 3, 3, 1),
+                PartPose.offset(0.0F, 19.0F, -6.0F)
+        );
 
-    public ModelRenderer FrontR;
+        // BODY (rotated 90° on X)
+        root.addOrReplaceChild("body",
+                CubeListBuilder.create()
+                        .texOffs(24, 0).addBox(-4.0F, -3.0F, -3.0F, 8, 8, 8),
+                PartPose.offsetAndRotation(0.0F, 20.0F, 2.0F, (float)Math.PI / 2F, 0.0F, 0.0F)
+        );
 
-    public ModelRenderer RearL;
+        // TAIL (rotated 90° on X)
+        root.addOrReplaceChild("tail",
+                CubeListBuilder.create()
+                        .texOffs(56, 0).addBox(-1.0F,  0.0F, -1.0F, 2, 18, 2),
+                PartPose.offsetAndRotation(0.0F, 20.0F, 7.0F, (float)Math.PI / 2F, 0.0F, 0.0F)
+        );
 
-    public ModelRenderer RearR;
+        // FRONT LEGS
+        root.addOrReplaceChild("front_l",
+                CubeListBuilder.create()
+                        .texOffs(0, 18).addBox(-2.0F, 0.0F, -3.0F, 2, 1, 4),
+                PartPose.offset(3.0F, 23.0F, -5.0F)
+        );
+        root.addOrReplaceChild("front_r",
+                CubeListBuilder.create()
+                        .texOffs(0, 18).addBox(0.0F, 0.0F, -3.0F, 2, 1, 4),
+                PartPose.offset(-3.0F, 23.0F, -5.0F)
+        );
 
-    public ModelRenderer BodyF;
+        // REAR LEGS
+        root.addOrReplaceChild("rear_l",
+                CubeListBuilder.create()
+                        .texOffs(0, 24).addBox(-2.0F, 0.0F, -4.0F, 2, 1, 5),
+                PartPose.offset(4.0F, 23.0F, 4.0F)
+        );
+        root.addOrReplaceChild("rear_r",
+                CubeListBuilder.create()
+                        .texOffs(0, 24).addBox(0.0F, 0.0F, -4.0F, 2, 1, 5),
+                PartPose.offset(-4.0F, 23.0F, 4.0F)
+        );
 
-    public MoCModelRat() {
-        this.Head = new ModelRenderer(this, 0, 0);
-        this.Head.addBox(-1.5F, -1.0F, -6.0F, 3, 4, 6, 0.0F);
-        this.Head.setRotationPoint(0.0F, 19.0F, -6.0F);
-        this.EarR = new ModelRenderer(this, 16, 26);
-        this.EarR.addBox(-3.5F, -3.0F, -2.0F, 3, 3, 1, 0.0F);
-        this.EarR.setRotationPoint(0.0F, 19F, -6.0F);
-        this.EarL = new ModelRenderer(this, 24, 26);
-        this.EarL.addBox(0.5F, -3.0F, -2.0F, 3, 3, 1, 0.0F);
-        this.EarL.setRotationPoint(0.0F, 19F, -6.0F);
-        this.WhiskerR = new ModelRenderer(this, 24, 16);
-        this.WhiskerR.addBox(-4.5F, -1.0F, -6.0F, 3, 3, 1, 0.0F);
-        this.WhiskerR.setRotationPoint(0.0F, 19.0F, -6.0F);
-        this.WhiskerL = new ModelRenderer(this, 24, 20);
-        this.WhiskerL.addBox(1.5F, -1.0F, -6.0F, 3, 3, 1, 0.0F);
-        this.WhiskerL.setRotationPoint(0.0F, 19.0F, -6.0F);
-        this.Body = new ModelRenderer(this, 24, 0);
-        this.Body.addBox(-4.0F, -3.0F, -3.0F, 8, 8, 8, 0.0F);
-        this.Body.setRotationPoint(0.0F, 20F, 2.0F);
-        this.Body.rotateAngleX = 1.570796F;
-        this.Tail = new ModelRenderer(this, 56, 0);
-        this.Tail.addBox(-1.0F, 0.0F, -1.0F, 2, 18, 2, 0.0F);
-        this.Tail.setRotationPoint(0.0F, 20F, 7.0F);
-        this.Tail.rotateAngleX = 1.570796F;
-        this.FrontL = new ModelRenderer(this, 0, 18);
-        this.FrontL.addBox(-2.0F, 0.0F, -3.0F, 2, 1, 4, 0.0F);
-        this.FrontL.setRotationPoint(3.0F, 23.0F, -5.0F);
-        this.FrontR = new ModelRenderer(this, 0, 18);
-        this.FrontR.addBox(0.0F, 0.0F, -3.0F, 2, 1, 4, 0.0F);
-        this.FrontR.setRotationPoint(-3.0F, 23.0F, -5.0F);
-        this.RearL = new ModelRenderer(this, 0, 24);
-        this.RearL.addBox(-2.0F, 0.0F, -4.0F, 2, 1, 5, 0.0F);
-        this.RearL.setRotationPoint(4.0F, 23.0F, 4.0F);
-        this.RearR = new ModelRenderer(this, 0, 24);
-        this.RearR.addBox(0.0F, 0.0F, -4.0F, 2, 1, 5, 0.0F);
-        this.RearR.setRotationPoint(-4.0F, 23.0F, 4.0F);
-        this.BodyF = new ModelRenderer(this, 32, 16);
-        this.BodyF.addBox(-3.0F, -3.0F, -7.0F, 6, 6, 6, 0.0F);
-        this.BodyF.setRotationPoint(0.0F, 20F, 0.0F);
+        // BODY FRONT
+        root.addOrReplaceChild("body_f",
+                CubeListBuilder.create()
+                        .texOffs(32, 16).addBox(-3.0F, -3.0F, -7.0F, 6, 6, 6),
+                PartPose.offset(0.0F, 20.0F, 0.0F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.EarR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.EarL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.WhiskerR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.WhiskerL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RearL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RearR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BodyF.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        earR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        earL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        whiskerR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        whiskerL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        frontL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        frontR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        rearL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        rearR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        bodyF.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.Head.rotateAngleX = -(headPitch / 57.29578F);
-        this.Head.rotateAngleY = netHeadYaw / 57.29578F;
-        this.EarR.rotateAngleX = this.Head.rotateAngleX;
-        this.EarR.rotateAngleY = this.Head.rotateAngleY;
-        this.EarL.rotateAngleX = this.Head.rotateAngleX;
-        this.EarL.rotateAngleY = this.Head.rotateAngleY;
-        this.WhiskerR.rotateAngleX = this.Head.rotateAngleX;
-        this.WhiskerR.rotateAngleY = this.Head.rotateAngleY;
-        this.WhiskerL.rotateAngleX = this.Head.rotateAngleX;
-        this.WhiskerL.rotateAngleY = this.Head.rotateAngleY;
-        this.FrontL.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 0.6F * limbSwingAmount;
-        this.RearL.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        this.RearR.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 0.6F * limbSwingAmount;
-        this.FrontR.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        this.Tail.rotateAngleY = this.FrontL.rotateAngleX * 0.625F;
+    /**
+     * In 1.20.1 this replaces setRotationAngles. 
+     * Params: entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch
+     */
+    @Override
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        // HEAD rotation
+        head.xRot = -headPitch * ((float)Math.PI / 180F);
+        head.yRot = netHeadYaw * ((float)Math.PI / 180F);
+
+        // Sync ears & whiskers with head
+        earR.xRot      = head.xRot;
+        earR.yRot      = head.yRot;
+        earL.xRot      = head.xRot;
+        earL.yRot      = head.yRot;
+        whiskerR.xRot  = head.xRot;
+        whiskerR.yRot  = head.yRot;
+        whiskerL.xRot  = head.xRot;
+        whiskerL.yRot  = head.yRot;
+
+        // Leg animation: alternating front/back
+        float frontLegX  = Mth.cos(limbSwing * 0.6662F) * 0.6F * limbSwingAmount;
+        float rearLegX   = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float frontLegX2 = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float rearLegX2  = Mth.cos(limbSwing * 0.6662F) * 0.6F * limbSwingAmount;
+
+        frontL.xRot = frontLegX;
+        rearL.xRot  = rearLegX;
+        rearR.xRot  = frontLegX2;
+        frontR.xRot = rearLegX2;
+
+        // Tail wags proportionally to one of the front legs
+        tail.yRot = frontL.xRot * 0.625F;
     }
 }

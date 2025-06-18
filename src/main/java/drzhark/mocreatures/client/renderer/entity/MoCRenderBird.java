@@ -3,39 +3,38 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.client.model.MoCModelBird;
 import drzhark.mocreatures.entity.passive.MoCEntityBird;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderBird extends MoCRenderMoC<MoCEntityBird, MoCModelBird<MoCEntityBird>> {
 
-    public MoCRenderBird(EntityRendererManager renderManagerIn, MoCModelBird modelbase, float f) {
+    public MoCRenderBird(EntityRendererProvider.Context renderManagerIn, MoCModelBird modelbase, float f) {
         super(renderManagerIn, modelbase, f);
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MobEntity par1Entity) {
-        return ((MoCEntityBird) par1Entity).getTexture();
+    public ResourceLocation getTextureLocation(MoCEntityBird par1Entity) {
+        return par1Entity.getTexture();
     }
 
     @Override
-    protected float handleRotationFloat(MoCEntityBird entitybird, float f) {
-        float f1 = entitybird.winge + ((entitybird.wingb - entitybird.winge) * f);
-        float f2 = entitybird.wingd + ((entitybird.wingc - entitybird.wingd) * f);
-        return (MathHelper.sin(f1) + 1.0F) * f2;
+    protected float getBob(MoCEntityBird entitybird, float partialTicks) {
+        float f1 = entitybird.winge + ((entitybird.wingb - entitybird.winge) * partialTicks);
+        float f2 = entitybird.wingd + ((entitybird.wingc - entitybird.wingd) * partialTicks);
+        return (Mth.sin(f1) + 1.0F) * f2;
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityBird entitybird, MatrixStack matrixStackIn, float f) {
-        if (!entitybird.world.isRemote && (entitybird.getRidingEntity() != null)) {
-            matrixStackIn.translate(0.0F, 1.3F, 0.0F);
+    protected void scale(MoCEntityBird entitybird, PoseStack poseStack, float f) {
+        if (!entitybird.level().isClientSide() && (entitybird.getVehicle() != null)) {
+            poseStack.translate(0.0F, 1.3F, 0.0F);
         }
     }
 }

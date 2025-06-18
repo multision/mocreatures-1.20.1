@@ -1,61 +1,53 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.item;
 
-import net.minecraft.item.Food;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.EffectInstance;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class MoCItemFood extends MoCItem {
     public int itemUseDuration;
 
     protected MoCItemFood(MoCItemFood.Builder builder) {
-        super(builder.properties.food(builder.foodBuilder.build()), builder.name);
-        itemUseDuration = builder.itemUseDuration;
+        super(builder.properties.food(builder.foodBuilder.build()));
+        this.itemUseDuration = builder.itemUseDuration;
     }
 
     @Override
     public int getUseDuration(ItemStack stack) {
-        if (itemUseDuration == 0) {
-            return 32;
-        }
-
-        return itemUseDuration;
+        return itemUseDuration == 0 ? 32 : itemUseDuration;
     }
 
-
     public static class Builder {
-        private Food.Builder foodBuilder;
+        private final FoodProperties.Builder foodBuilder;
         private int itemUseDuration;
-        private Item.Properties properties;
-        private String name;
+        private final Item.Properties properties;
+        private final String name = "PLACEHOLDER";
 
-        public Builder(Item.Properties properties, String name, int amount) {
-            this(properties, name, amount, 0.6F, false);
+        public Builder(Item.Properties properties, int amount) {
+            this(properties, amount, 0.6F, false);
         }
 
-        public Builder(Item.Properties properties, String name, int amount, float saturation, boolean isWolfFood) {
-            this(properties, name, amount, saturation, isWolfFood, 32);
+        public Builder(Item.Properties properties, int amount, float saturation, boolean isWolfFood) {
+            this(properties, amount, saturation, isWolfFood, 32);
         }
 
-        public Builder(Item.Properties properties, String name, int amount, float saturation, boolean isWolfFood, int eatingSpeed) {
+        public Builder(Item.Properties properties, int amount, float saturation, boolean isWolfFood, int eatingSpeed) {
             this.properties = properties;
-            this.name = name;
-            foodBuilder = (new Food.Builder()).hunger(amount).saturation(saturation);
-            if(isWolfFood)
-                foodBuilder.meat();
-            itemUseDuration = eatingSpeed; // 32 by default
+            this.foodBuilder = new FoodProperties.Builder().nutrition(amount).saturationMod(saturation);
+            if (isWolfFood) {
+                this.foodBuilder.meat();
+            }
+            this.itemUseDuration = eatingSpeed;
         }
 
         public Builder setAlwaysEdible() {
-            foodBuilder.setAlwaysEdible();
+            this.foodBuilder.alwaysEat();
             return this;
         }
 
-        public Builder setPotionEffect(EffectInstance effectIn, float probability) {
-            foodBuilder.effect(() -> effectIn, probability);
+        public Builder setPotionEffect(MobEffectInstance effectIn, float probability) {
+            this.foodBuilder.effect(() -> effectIn, probability);
             return this;
         }
 

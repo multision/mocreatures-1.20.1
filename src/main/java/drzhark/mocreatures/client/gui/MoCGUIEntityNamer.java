@@ -1,108 +1,97 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import drzhark.mocreatures.MoCConstants;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.IMoCEntity;
 import drzhark.mocreatures.entity.tameable.IMoCTameable;
 import drzhark.mocreatures.network.MoCMessageHandler;
 import drzhark.mocreatures.network.message.MoCMessageUpdatePetName;
-import drzhark.mocreatures.proxy.MoCProxyClient;
-import net.minecraft.client.gui.fonts.TextInputUtil;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Mob;
 
-@OnlyIn(Dist.CLIENT)
+@net.minecraftforge.api.distmarker.OnlyIn(net.minecraftforge.api.distmarker.Dist.CLIENT)
 public class MoCGUIEntityNamer extends Screen {
 
-    private static final TextureManager textureManager = MoCProxyClient.mc.getTextureManager();
-    private static final ResourceLocation TEXTURE_MOCNAME = MoCreatures.proxy.getGuiTexture("pet_naming.png");
+    @SuppressWarnings("removal")
+    private static final ResourceLocation TEXTURE = new ResourceLocation(MoCConstants.MOD_ID, "textures/gui/pet_naming.png");
+
     private final IMoCEntity namedEntity;
-    protected String screenTitle;
-    protected int xSize;
-    protected int ySize;
-    @SuppressWarnings("unused")
-    private int updateCounter;
-    private TextInputUtil textInputUtil;
-    private String  nameToSet;
+    private EditBox nameInput;
+    private final int imageWidth = 256;
+    private final int imageHeight = 181;
 
-    public MoCGUIEntityNamer(IMoCEntity mocanimal, String s) {
-        super(new StringTextComponent(("Choose your Pet's name:")));
-        this.xSize = 256;
-        this.ySize = 181;
-        this.screenTitle = "Choose your Pet's name:";
-        this.namedEntity = mocanimal;
-        this.nameToSet = s;
-        this.textInputUtil = new TextInputUtil(() -> nameToSet, (p_238850_1_) -> nameToSet = p_238850_1_,
-                TextInputUtil.getClipboardTextSupplier(this.minecraft), TextInputUtil.getClipboardTextSetter(this.minecraft), (p_238848_1_) -> true);
+    public MoCGUIEntityNamer(IMoCEntity entity, String defaultName) {
+        super(Component.literal("Choose your Pet's name:"));
+        this.namedEntity = entity;
+        this.nameInput = new EditBox(this.font, 0, 0, 200, 20, Component.literal("Pet Name"));
+        this.nameInput.setValue(defaultName);
     }
 
     @Override
-    public void init() {
-        this.buttons.clear();
-        this.minecraft.keyboardListener.enableRepeatEvents(true);
-        this.addButton(new Button(this.width / 2 - 100, (this.height - (this.ySize + 16)) / 2 + 150, 150, 20, new StringTextComponent("Done"), (guibutton) -> {
-            if (!guibutton.active) {
-                return;
-            }
-            if (this.nameToSet != null) {
-                updateName();
-            }
-        }));
+    protected void init() {
+        super.init();
+        int centerX = (this.width - imageWidth) / 2;
+        int centerY = (this.height - imageHeight) / 2;
+
+        this.nameInput = new EditBox(this.font, this.width / 2 - 75, centerY + 70, 150, 20, Component.literal("Pet Name"));
+        this.nameInput.setMaxLength(30);
+        this.nameInput.setFocused(true);
+        this.addRenderableWidget(nameInput);
+
+        //this.addRenderableWidget(new Button(this.width / 2 - 75, centerY + 100, 150, 20, Component.literal("Done"), btn -> updateName(), DEFAULT_NARRATION));
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Done"), btn -> updateName())
+                        .bounds(this.width / 2 - 75, centerY + 100, 150, 20)
+                        .build()
+        );
+
     }
 
-    public void updateName() {
-        this.namedEntity.setPetName(nameToSet);
-        MoCMessageHandler.INSTANCE.sendToServer(new MoCMessageUpdatePetName(((MobEntity) this.namedEntity).getEntityId(), this.nameToSet));
-        this.minecraft.displayGuiScreen(null);
+    private void updateName() {
+        String petName = this.nameInput.getValue().trim();
+        if (!petName.isEmpty()) {
+            this.namedEntity.setPetName(petName);
+            if (this.namedEntity instanceof Mob) {
+                MoCMessageHandler.INSTANCE.sendToServer(new MoCMessageUpdatePetName(((Mob) this.namedEntity).getId(), petName));
+            }
+        }
+        this.onClose();
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int i, int j, float f) {
-        renderBackground(matrixStack);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        textureManager.bindTexture(TEXTURE_MOCNAME);
-        int l = (this.width - this.xSize) / 2;
-        int i1 = (this.height - (this.ySize + 16)) / 2;
-        blit(matrixStack, l, i1, 0, 0, this.xSize, this.ySize);
-        drawCenteredString(matrixStack, this.font, this.screenTitle, this.width / 2, (this.height - (this.ySize + 16)) / 2 + 29, 0xffffff);
-        drawCenteredString(matrixStack, this.font, this.nameToSet + "_", this.width / 2, (this.height - (this.ySize + 16)) / 2 + 74, 0xffffff);
-        super.render(matrixStack, i, j, f);
-    }
+    public void render(GuiGraphics poseStack, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(poseStack);
+        int centerX = (this.width - imageWidth) / 2;
+        int centerY = (this.height - imageHeight) / 2;
 
-    public boolean charTyped(char codePoint, int modifiers) {
-        this.textInputUtil.putChar(codePoint);
-        return true;
+        poseStack.blit(TEXTURE, centerX, centerY, 0, 0, imageWidth, imageHeight);
+
+        poseStack.drawCenteredString(this.font, this.title, this.width / 2, centerY + 30, 0xFFFFFF);
+        nameInput.render(poseStack, mouseX, mouseY, partialTicks);
+
+        super.render(poseStack, mouseX, mouseY, partialTicks);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(keyCode == 257) {
+        if (keyCode == 257 || keyCode == 335) { // Enter or Numpad Enter
             updateName();
+            return true;
         }
-        return this.textInputUtil.specialKeyPressed(keyCode) ? true : super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public void onClose() {
-        this.minecraft.keyboardListener.enableRepeatEvents(false);
-        if (this.namedEntity instanceof IMoCTameable) {
-            IMoCTameable tamedEntity = (IMoCTameable) this.namedEntity;
-            tamedEntity.playTameEffect(true);
+        super.onClose();
+        if (this.namedEntity instanceof IMoCTameable tamed) {
+            tamed.playTameEffect(true);
         }
-    }
-
-    @Override
-    public void tick() {
-        this.updateCounter++;
     }
 }

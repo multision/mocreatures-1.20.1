@@ -7,34 +7,32 @@ import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.tameable.IMoCTameable;
 import drzhark.mocreatures.init.MoCItems;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityTiger extends MoCEntityBigCat {
 
-    public MoCEntityTiger(EntityType<? extends MoCEntityTiger> type, World world) {
+    public MoCEntityTiger(EntityType<? extends MoCEntityTiger> type, Level world) {
         super(type, world);
         //setSize(1.25F, 1.275F);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityBigCat.registerAttributes().createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityBigCat.createAttributes().add(Attributes.MOVEMENT_SPEED, 0.25D);
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            if (this.rand.nextInt(20) == 0) {
+            if (this.random.nextInt(20) == 0) {
                 setTypeMoC(2);
             } else {
                 setTypeMoC(1);
@@ -72,38 +70,38 @@ public class MoCEntityTiger extends MoCEntityBigCat {
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity player, Hand hand) {
-        final ActionResultType tameResult = this.processTameInteract(player, hand);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        final InteractionResult tameResult = this.processTameInteract(player, hand);
         if (tameResult != null) {
             return tameResult;
         }
 
-        final ItemStack stack = player.getHeldItem(hand);
-        if (!stack.isEmpty() && getIsTamed() && getTypeMoC() == 2 && (stack.getItem() == MoCItems.essencelight)) {
-            if (!player.abilities.isCreativeMode) stack.shrink(1);
+        final ItemStack stack = player.getItemInHand(hand);
+        if (!stack.isEmpty() && getIsTamed() && getTypeMoC() == 2 && (stack.is(MoCItems.ESSENCE_LIGHT.get()))) {
+            if (!player.getAbilities().instabuild) stack.shrink(1);
             if (stack.isEmpty()) {
-                player.setHeldItem(hand, new ItemStack(Items.GLASS_BOTTLE));
+                player.setItemInHand(hand, new ItemStack(Items.GLASS_BOTTLE));
             } else {
-                player.inventory.addItemStackToInventory(new ItemStack(Items.GLASS_BOTTLE));
+                player.getInventory().add(new ItemStack(Items.GLASS_BOTTLE));
             }
             setTypeMoC(3);
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        if (this.getIsRideable() && this.getIsAdult() && (!this.getIsChested() || !player.isSneaking()) && !this.isBeingRidden()) {
-            if (!this.world.isRemote && player.startRiding(this)) {
-                player.rotationYaw = this.rotationYaw;
-                player.rotationPitch = this.rotationPitch;
+        if (this.getIsRideable() && this.getIsAdult() && (!this.getIsChested() || !player.isShiftKeyDown()) && !this.isVehicle()) {
+            if (!this.level().isClientSide() && player.startRiding(this)) {
+                player.setYRot(this.getYRot());
+                player.setXRot(this.getXRot());
                 setSitting(false);
             }
 
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        return super.getEntityInteractionResult(player, hand);
+        return super.mobInteract(player, hand);
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.TIGER;
     }
 
@@ -169,7 +167,7 @@ public class MoCEntityTiger extends MoCEntityBigCat {
     }
 
     @Override
-    public int getMaxAge() {
+    public int getMoCMaxAge() {
         // White Tiger
         if (this.getTypeMoC() == 2 || this.getTypeMoC() == 3) {
             return 130;
@@ -180,16 +178,17 @@ public class MoCEntityTiger extends MoCEntityBigCat {
 
     @Override
     public boolean canAttackTarget(LivingEntity entity) {
-        if (!this.getIsAdult() && (this.getAge() < this.getMaxAge() * 0.8)) {
+        if (!this.getIsAdult() && (this.getMoCAge() < this.getMoCMaxAge() * 0.8)) {
             return false;
         }
         if (entity instanceof MoCEntityTiger) {
             return false;
         }
-        return entity.getHeight() < 2F && entity.getWidth() < 2F;
+        return entity.getBbHeight() < 2F && entity.getBbWidth() < 2F;
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.92F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.92F;
     }
 }

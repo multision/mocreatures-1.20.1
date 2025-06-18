@@ -8,16 +8,16 @@ import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityInsect;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
@@ -26,18 +26,18 @@ public class MoCEntityGrasshopper extends MoCEntityInsect {
     private int jumpCounter;
     private int soundCounter;
 
-    public MoCEntityGrasshopper(EntityType<? extends MoCEntityGrasshopper> type, World world) {
+    public MoCEntityGrasshopper(EntityType<? extends MoCEntityGrasshopper> type, Level world) {
         super(type, world);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityInsect.registerAttributes().createMutableAttribute(Attributes.ARMOR, 1.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityInsect.createAttributes().add(Attributes.ARMOR, 1.0D).add(Attributes.FLYING_SPEED, 0.25D);
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            int i = this.rand.nextInt(100);
+            int i = this.random.nextInt(100);
             if (i <= 50) {
                 setTypeMoC(1);
             } else {
@@ -56,11 +56,12 @@ public class MoCEntityGrasshopper extends MoCEntityInsect {
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
-        if (!this.world.isRemote) {
-            if (getIsFlying() || !this.onGround) {
-                PlayerEntity ep = this.world.getClosestPlayer(this, 5D);
+    public void aiStep() {
+        super.aiStep();
+        
+        if (!this.level().isClientSide()) {
+            if (getIsFlying() || !this.onGround()) {
+                Player ep = this.level().getNearestPlayer(this, 5D);
                 if (ep != null && --this.soundCounter == -1) {
                     MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GRASSHOPPER_FLY.get());
                     this.soundCounter = 10;
@@ -74,12 +75,25 @@ public class MoCEntityGrasshopper extends MoCEntityInsect {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+
+        if (!this.level().isClientSide()) {
+            if (onGround() && ((getDeltaMovement().x > 0.05D) || (getDeltaMovement().z > 0.05D) || (getDeltaMovement().x < -0.05D) || (getDeltaMovement().z < -0.05D)))
+                if (this.jumpCounter == 0) {
+                    this.setDeltaMovement(this.getDeltaMovement().x * 5D, 0.45D, this.getDeltaMovement().z * 5D);
+                    this.jumpCounter = 1;
+                }
+            }
+    }
+
+    @Override
     protected SoundEvent getAmbientSound() {
-        if (world.isDaytime()) {
+        if (level().isDay()) {
             // TODO: Add grasshopper daytime ambient sound
-            return world.rand.nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_GRASSHOPPER_CHIRP.get() : null;
+            return level().getRandom().nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_GRASSHOPPER_CHIRP.get() : null;
         } else {
-            return world.rand.nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_GRASSHOPPER_CHIRP.get() : null;
+            return level().getRandom().nextDouble() <= 0.1D ? MoCSoundEvents.ENTITY_GRASSHOPPER_CHIRP.get() : null;
         }
     }
 
@@ -94,19 +108,9 @@ public class MoCEntityGrasshopper extends MoCEntityInsect {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.GRASSHOPPER;
-    }
-
     @Override
-    public void tick() {
-        super.tick();
-        if (!this.world.isRemote) {
-            if (onGround && ((getMotion().getX() > 0.05D) || (getMotion().getZ() > 0.05D) || (getMotion().getX() < -0.05D) || (getMotion().getZ() < -0.05D)))
-                if (this.jumpCounter == 0) {
-                    this.setMotion(this.getMotion().getX() * 5D, 0.45D, this.getMotion().getZ() * 5D);
-                    this.jumpCounter = 1;
-                }
-        }
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.GRASSHOPPER;
     }
 
     @Override
@@ -115,7 +119,7 @@ public class MoCEntityGrasshopper extends MoCEntityInsect {
     }
 
     @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         if (getIsFlying()) {
             return 0.12F;
         }
@@ -123,7 +127,7 @@ public class MoCEntityGrasshopper extends MoCEntityInsect {
     }
 
     @Override
-    public float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
+    public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.15F;
     }
 }

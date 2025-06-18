@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/heart_fire"
+    "layer0": "mocreatures:item/heart_fire"
   }
 }

@@ -5,186 +5,100 @@ package drzhark.mocreatures.event;
 
 import drzhark.mocreatures.MoCTools;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntitySpawnPlacementRegistry;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.MobSpawnInfo;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.event.world.BiomeLoadingEvent;
-import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.MobSpawnSettings;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.Tags.Biomes;
+import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
+import drzhark.mocreatures.MoCConstants;
+
+@Mod.EventBusSubscriber(modid = MoCConstants.MOD_ID)
 public class MoCEventHooksTerrain {
 
-    public static final Object2ObjectOpenHashMap<ResourceLocation, List<MobSpawnInfo.Spawners>> creatureSpawnMap = new Object2ObjectOpenHashMap<>();
-    public static final Object2ObjectOpenHashMap<ResourceLocation, List<MobSpawnInfo.Spawners>> waterCreatureSpawnMap = new Object2ObjectOpenHashMap<>();
+    public static final Object2ObjectOpenHashMap<ResourceLocation, List<MobSpawnSettings.SpawnerData>> creatureSpawnMap = new Object2ObjectOpenHashMap<>();
+    public static final Object2ObjectOpenHashMap<ResourceLocation, List<MobSpawnSettings.SpawnerData>> waterCreatureSpawnMap = new Object2ObjectOpenHashMap<>();
 
-
-
-    @SubscribeEvent
-    public static void onBiomeLoad(BiomeLoadingEvent event) {
-    //public static void buildWorldGenSpawnLists() {
-        for (Biome biome : ForgeRegistries.BIOMES.getValues()) {
+    // This is now called from the mod initialization
+    public static void buildWorldGenSpawnLists() {
+        for (Biome biome : ForgeRegistries.BIOMES) {
             ResourceLocation biomeKey = ForgeRegistries.BIOMES.getKey(biome);
             if (biomeKey == null) continue;
 
-            List<MobSpawnInfo.Spawners> creatureList = new ArrayList<>(biome.getMobSpawnInfo().getSpawners(EntityClassification.CREATURE));
-            List<MobSpawnInfo.Spawners> waterList = new ArrayList<>(biome.getMobSpawnInfo().getSpawners(EntityClassification.WATER_CREATURE));
-
-            /*creatureList.removeIf(entry -> {
-                try {
-                    return entry.itemWeight <= 0 || !(entry.type.create(null) instanceof IMoCEntity);
-                } catch (Exception e) {
-                    return true;
-                }
-            });
-
-            waterList.removeIf(entry -> {
-                try {
-                    return entry.itemWeight <= 0 || !(entry.type.create(null) instanceof IMoCEntity);
-                } catch (Exception e) {
-                    return true;
-                }
-            });*/
+            List<MobSpawnSettings.SpawnerData> creatureList = new ArrayList<>(
+                biome.getMobSettings().getMobs(MobCategory.CREATURE).unwrap()
+            );
+            
+            List<MobSpawnSettings.SpawnerData> waterList = new ArrayList<>(
+                biome.getMobSettings().getMobs(MobCategory.WATER_CREATURE).unwrap()
+            );
 
             creatureSpawnMap.put(biomeKey, creatureList);
             waterCreatureSpawnMap.put(biomeKey, waterList);
         }
     }
 
-    /*@SubscribeEvent
-    public static void onBiomeLoad(BiomeLoadingEvent event) {
-        List<MobSpawnInfo.Spawners> creatureList = new ArrayList<>(event.getSpawns().getSpawner(EntityClassification.CREATURE));
-        List<MobSpawnInfo.Spawners> waterList = new ArrayList<>(event.getSpawns().getSpawner(EntityClassification.WATER_CREATURE));
-
-        //creatureList.removeIf(entry -> entry.weight == 0); // Simplified filter, rely on registration elsewhere
-        //waterList.removeIf(entry -> entry.weight == 0);
-
-        creatureSpawnMap.put(event.getName(), creatureList);
-        waterCreatureSpawnMap.put(event.getName(), waterList);
-    }*/
-
-    @SuppressWarnings("DataFlowIssue")
+    /*
+     * The BiomeDictionary was deprecated in 1.19+ and replaced with biome tags.
+     * Most of this code is no longer needed as biome tags are now defined in JSON files.
+     * In 1.20.1, we should use the tag system instead.
+     */
     public static void addBiomeTypes() {
-        // Extreme Hills replacements (Forge 1.16+)
-        BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, new ResourceLocation("minecraft:mountains")), BiomeDictionary.Type.MOUNTAIN);
-        BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, new ResourceLocation("minecraft:wooded_mountains")), BiomeDictionary.Type.MOUNTAIN);
-
-        // Mesa biome support
-        BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, new ResourceLocation("minecraft:badlands")), BiomeDictionary.Type.MESA);
-        BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, new ResourceLocation("minecraft:eroded_badlands")), BiomeDictionary.Type.MESA);
-        BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, new ResourceLocation("minecraft:wooded_badlands_plateau")), BiomeDictionary.Type.MESA);
-
-        // Traverse support
-        ResourceLocation rockyPlateau = new ResourceLocation("traverse:rocky_plateau");
-        if (ForgeRegistries.BIOMES.containsKey(rockyPlateau)) {
-            BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, rockyPlateau), BiomeDictionary.Type.PLAINS);
-        }
-
-        ResourceLocation aridHighland = new ResourceLocation("traverse:arid_highland");
-        if (ForgeRegistries.BIOMES.containsKey(aridHighland)) {
-            BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, aridHighland), BiomeDictionary.Type.SAVANNA);
-        }
+        // This method is kept for backwards compatibility but its functionality
+        // has been replaced by tag files in the data/minecraft/tags/worldgen/biome directory
+        
+        // For custom mod biomes that need to be tagged, we should create JSON tag files
+        // Example: src/main/resources/data/minecraft/tags/worldgen/biome/is_mountain.json
+        
+        // For the Wyvern dimension biomes, we've already created appropriate tag files:
+        // - data/mocreatures/tags/worldgen/biome/is_wyvernlair.json
+        // - data/mocreatures/tags/worldgen/biome/is_wyvern_forest.json
+        // - data/mocreatures/tags/worldgen/biome/is_wyvern_plains.json
+        // - etc.
     }
 
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
-        if (!(event.getWorld() instanceof ServerWorld)) return;
+        if (!(event.getLevel() instanceof ServerLevel)) return;
 
-        ServerWorld world = (ServerWorld) event.getWorld();
-        Chunk chunk = (Chunk) event.getChunk();
-        BlockPos pos = new BlockPos(chunk.getPos().getXStart() + 8, 0, chunk.getPos().getZStart() + 8);
-        Biome biome = world.getBiome(pos);
+        ServerLevel level = (ServerLevel) event.getLevel();
+        LevelChunk chunk = (LevelChunk) event.getChunk();
+        BlockPos pos = new BlockPos(chunk.getPos().getMinBlockX() + 8, 0, chunk.getPos().getMinBlockZ() + 8);
+        Biome biome = level.getBiome(pos).value();
 
         ResourceLocation biomeKey = ForgeRegistries.BIOMES.getKey(biome);
         if (biomeKey == null) return;
 
-        Random rand = world.rand;
+        RandomSource random = level.getRandom();
 
-        List<MobSpawnInfo.Spawners> creatureList = creatureSpawnMap.get(biomeKey);
-        List<MobSpawnInfo.Spawners> waterList = waterCreatureSpawnMap.get(biomeKey);
+        List<MobSpawnSettings.SpawnerData> creatureList = creatureSpawnMap.get(biomeKey);
+        List<MobSpawnSettings.SpawnerData> waterList = waterCreatureSpawnMap.get(biomeKey);
 
         if (creatureList != null) {
-            MoCTools.performCustomWorldGenSpawning(world, biome, pos.getX(), pos.getZ(), 16, 16, rand, creatureList, EntitySpawnPlacementRegistry.PlacementType.ON_GROUND);
+            MoCTools.performCustomWorldGenSpawning(level, biome, pos.getX(), pos.getZ(), 16, 16, random, 
+                creatureList, SpawnPlacements.Type.ON_GROUND);
         }
 
         if (waterList != null) {
-            MoCTools.performCustomWorldGenSpawning(world, biome, pos.getX(), pos.getZ(), 16, 16, rand, waterList, EntitySpawnPlacementRegistry.PlacementType.IN_WATER);
+            MoCTools.performCustomWorldGenSpawning(level, biome, pos.getX(), pos.getZ(), 16, 16, random, 
+                waterList, SpawnPlacements.Type.IN_WATER);
         }
     }
 }
-
-
-
-//public class MoCEventHooksTerrain {
-
-//    public static List<Biome.MobSpawnInfo.Spawners> creatureList = new ArrayList<>(); //TODO FINISHED
-//    public static List<Biome.MobSpawnInfo.Spawners> waterCreatureList = new ArrayList<>();
-//    public static Object2ObjectOpenHashMap<Biome, List<Biome.MobSpawnInfo.Spawners>> creatureSpawnMap = new Object2ObjectOpenHashMap<>();
-//    public static Object2ObjectOpenHashMap<Biome, List<Biome.MobSpawnInfo.Spawners>> waterCreatureSpawnMap = new Object2ObjectOpenHashMap<>();
-//
-//    public static void buildWorldGenSpawnLists() {
-//        for (Biome biome : ForgeRegistries.BIOMES.getValuesCollection()) {
-//            creatureList = new ArrayList<>(biome.getSpawnableList(EntityClassification.CREATURE));
-//            creatureList.removeIf(entry -> entry.itemWeight == 0 || !IMoCEntity.class.isAssignableFrom(entry.entityClass));
-//            creatureSpawnMap.put(biome, creatureList);
-//
-//            waterCreatureList = new ArrayList<>(biome.getSpawnableList(EntityClassification.WATER_CREATURE));
-//            waterCreatureList.removeIf(entry -> entry.itemWeight == 0 || !IMoCEntity.class.isAssignableFrom(entry.entityClass));
-//            waterCreatureSpawnMap.put(biome, waterCreatureList);
-//        }
-//    }
-//
-//    @SuppressWarnings("DataFlowIssue")
-//    public static void addBiomeTypes() {
-//        // Extreme Hills
-//        BiomeDictionary.addTypes(Biomes.EXTREME_HILLS, MoCEntities.STEEP);
-//        BiomeDictionary.addTypes(Biomes.EXTREME_HILLS_EDGE, MoCEntities.STEEP);
-//        BiomeDictionary.addTypes(Biomes.MUTATED_EXTREME_HILLS, MoCEntities.STEEP);
-//        BiomeDictionary.addTypes(Biomes.MUTATED_EXTREME_HILLS_WITH_TREES, MoCEntities.STEEP);
-//
-//        // Mesa
-//        BiomeDictionary.addTypes(Biomes.MUTATED_MESA, BiomeDictionary.Type.MESA);
-//        BiomeDictionary.addTypes(Biomes.MUTATED_MESA_ROCK, BiomeDictionary.Type.MESA);
-//        BiomeDictionary.addTypes(Biomes.MUTATED_MESA_CLEAR_ROCK, BiomeDictionary.Type.MESA);
-//
-//        // Traverse
-//        ResourceLocation rockyPlateau = new ResourceLocation("traverse:rocky_plateau");
-//        if (ForgeRegistries.BIOMES.containsKey(rockyPlateau)) {
-//            BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, rockyPlateau), BiomeDictionary.Type.PLAINS);
-//        }
-//        ResourceLocation aridHighland = new ResourceLocation("traverse:arid_highland");
-//        if (ForgeRegistries.BIOMES.containsKey(aridHighland)) {
-//            BiomeDictionary.addTypes(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, aridHighland), BiomeDictionary.Type.SAVANNA);
-//        }
-//    }
-//
-//    @SubscribeEvent
-//    public void onPopulateChunk(PopulateChunkEvent.Populate event) {
-//        // Regular spawning
-//        if (event.getType() == PopulateChunkEvent.Populate.EventType.ANIMALS) {
-//            int chunkX = event.getChunkX() * 16;
-//            int chunkZ = event.getChunkZ() * 16;
-//            int centerX = chunkX + 8;
-//            int centerZ = chunkZ + 8;
-//            World world = event.getWorld();
-//            Random rand = event.getRand();
-//            BlockPos blockPos = new BlockPos(chunkX, 0, chunkZ);
-//            Biome biome = world.getBiome(blockPos.add(16, 0, 16));
-//
-//            MoCTools.performCustomWorldGenSpawning(world, biome, centerX, centerZ, 16, 16, rand, creatureSpawnMap.get(biome), MobEntity.SpawnPlacementType.ON_GROUND);
-//            MoCTools.performCustomWorldGenSpawning(world, biome, centerX, centerZ, 16, 16, rand, waterCreatureSpawnMap.get(biome), MobEntity.SpawnPlacementType.IN_WATER);
-//        }
-//    }
-//}

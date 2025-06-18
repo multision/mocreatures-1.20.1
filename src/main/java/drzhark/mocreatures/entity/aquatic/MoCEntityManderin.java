@@ -5,15 +5,13 @@ package drzhark.mocreatures.entity.aquatic;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityManderin extends MoCEntitySmallFish {
 
-    public MoCEntityManderin(EntityType<? extends MoCEntityManderin> type, World world) {
+    public MoCEntityManderin(EntityType<? extends MoCEntityManderin> type, Level world) {
         super(type, world);
         this.setTypeMoC(7);
     }
@@ -23,7 +21,8 @@ public class MoCEntityManderin extends MoCEntitySmallFish {
         return MoCreatures.proxy.getModelTexture("smallfish_mandarinfish.png");
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.MANDARINFISH;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.MANDARINFISH;
     }
 }

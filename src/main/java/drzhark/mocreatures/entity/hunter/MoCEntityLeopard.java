@@ -7,37 +7,35 @@ import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.tameable.IMoCTameable;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.BiomeDictionary.Type;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 
 public class MoCEntityLeopard extends MoCEntityBigCat {
 
-    public MoCEntityLeopard(EntityType<? extends MoCEntityLeopard> type, World world) {
+    public MoCEntityLeopard(EntityType<? extends MoCEntityLeopard> type, Level world) {
         super(type, world);
         //setSize(1.165F, 1.01F);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityBigCat.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 25.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 6.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityBigCat.createAttributes()
+                .add(Attributes.MAX_HEALTH, 25.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.ATTACK_DAMAGE, 6.0D);
     }
 
     @Override
     public void selectType() {
-
         if (getTypeMoC() == 0) {
             checkSpawningBiome();
         }
@@ -46,14 +44,16 @@ public class MoCEntityLeopard extends MoCEntityBigCat {
 
     @Override
     public boolean checkSpawningBiome() {
-        int i = MathHelper.floor(this.getPosX());
-        int j = MathHelper.floor(getBoundingBox().minY);
-        int k = MathHelper.floor(this.getPosZ());
+        int i = Mth.floor(this.getX());
+        int j = Mth.floor(getBoundingBox().minY);
+        int k = Mth.floor(this.getZ());
         BlockPos pos = new BlockPos(i, j, k);
 
-        RegistryKey<Biome> currentbiome = MoCTools.biomeKind(this.world, pos);
+        ResourceKey<Biome> currentbiome = MoCTools.biomeKind(this.level(), pos);
         try {
-            if (BiomeDictionary.hasType(currentbiome, Type.SNOWY)) {
+            // In 1.20.1, BiomeDictionary is deprecated, use biome path instead
+            String biomePath = currentbiome.location().getPath();
+            if (biomePath.contains("snow") || biomePath.contains("frozen")) {
                 setTypeMoC(2); //snow leopard
                 return true;
             }
@@ -78,27 +78,27 @@ public class MoCEntityLeopard extends MoCEntityBigCat {
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity player, Hand hand) {
-        final ActionResultType tameResult = this.processTameInteract(player, hand);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        final InteractionResult tameResult = this.processTameInteract(player, hand);
         if (tameResult != null) {
             return tameResult;
         }
 
-        if (this.getIsRideable() && this.getIsAdult() && (!this.getIsChested() || !player.isSneaking()) && !this.isBeingRidden()) {
-            if (!this.world.isRemote && player.startRiding(this)) {
-                player.rotationYaw = this.rotationYaw;
-                player.rotationPitch = this.rotationPitch;
+        if (this.getIsRideable() && this.getIsAdult() && (!this.getIsChested() || !player.isShiftKeyDown()) && !this.isVehicle()) {
+            if (!this.level().isClientSide() && player.startRiding(this)) {
+                player.setYRot(this.getYRot());
+                player.setXRot(this.getXRot());
                 setSitting(false);
             }
 
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        return super.getEntityInteractionResult(player, hand);
+        return super.mobInteract(player, hand);
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.LEOPARD;
     }
 
@@ -139,22 +139,23 @@ public class MoCEntityLeopard extends MoCEntityBigCat {
     }
 
     @Override
-    public int getMaxAge() {
+    public int getMoCMaxAge() {
         return 95;
     }
 
     @Override
     public boolean canAttackTarget(LivingEntity entity) {
-        if (!this.getIsAdult() && (this.getAge() < this.getMaxAge() * 0.8)) {
+        if (!this.getIsAdult() && (this.getMoCAge() < this.getMoCMaxAge() * 0.8)) {
             return false;
         }
         if (entity instanceof MoCEntityLeopard) {
             return false;
         }
-        return entity.getHeight() < 1.3F && entity.getWidth() < 1.3F;
+        return entity.getBbHeight() < 1.3F && entity.getBbWidth() < 1.3F;
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.92F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.92F;
     }
 }

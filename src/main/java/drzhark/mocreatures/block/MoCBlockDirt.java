@@ -3,14 +3,15 @@
  */
 package drzhark.mocreatures.block;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
-import net.minecraftforge.common.ToolType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class MoCBlockDirt extends Block {
 
-    public MoCBlockDirt(AbstractBlock.Properties properties) {
-        super(properties.harvestLevel(0).harvestTool(ToolType.SHOVEL).sound(SoundType.GROUND));
+    public MoCBlockDirt(BlockBehaviour.Properties properties) {
+        super(properties
+                .strength(0.5F)
+                .sound(SoundType.GRAVEL)); // Closest modern equivalent to dirt sound
     }
 }

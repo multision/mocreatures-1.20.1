@@ -1,304 +1,565 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.neutral.MoCEntityEnt;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelEnt<T extends MoCEntityEnt> extends EntityModel<T> {
 
-    ModelRenderer Body;
-    ModelRenderer LShoulder;
-    ModelRenderer LArm;
-    ModelRenderer LWrist;
-    ModelRenderer LHand;
-    ModelRenderer LFingers;
-    ModelRenderer RShoulder;
-    ModelRenderer RArm;
-    ModelRenderer RWrist;
-    ModelRenderer RHand;
-    ModelRenderer RFingers;
-    ModelRenderer LLeg;
-    ModelRenderer LThigh;
-    ModelRenderer LKnee;
-    ModelRenderer LAnkle;
-    ModelRenderer LFoot;
-    ModelRenderer RLeg;
-    ModelRenderer RThigh;
-    ModelRenderer RKnee;
-    ModelRenderer RAnkle;
-    ModelRenderer RFoot;
-    ModelRenderer Neck;
-    ModelRenderer Face;
-    ModelRenderer Head;
-    ModelRenderer Nose;
-    ModelRenderer Mouth;
-    ModelRenderer TreeBase;
-    ModelRenderer Leave1;
-    ModelRenderer Leave2;
-    ModelRenderer Leave3;
-    ModelRenderer Leave4;
-    ModelRenderer Leave5;
-    ModelRenderer Leave6;
-    ModelRenderer Leave7;
-    ModelRenderer Leave8;
-    ModelRenderer Leave9;
-    ModelRenderer Leave10;
-    ModelRenderer Leave11;
-    ModelRenderer Leave12;
-    ModelRenderer Leave13;
-    ModelRenderer Leave14;
-    ModelRenderer Leave15;
-    ModelRenderer Leave16;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION =
+            new ModelLayerLocation(new ResourceLocation("mocreatures", "ent"), "main");
 
-    public MoCModelEnt() {
-        this.textureWidth = 128;
-        this.textureHeight = 256;
+    //private final ModelPart root;
+    private final ModelPart Body;
+    private final ModelPart LShoulder;
+    private final ModelPart LArm;
+    private final ModelPart LWrist;
+    private final ModelPart LHand;
+    private final ModelPart LFingers;
+    private final ModelPart RShoulder;
+    private final ModelPart RArm;
+    private final ModelPart RWrist;
+    private final ModelPart RHand;
+    private final ModelPart RFingers;
+    private final ModelPart LLeg;
+    private final ModelPart LThigh;
+    private final ModelPart LKnee;
+    private final ModelPart LAnkle;
+    private final ModelPart LFoot;
+    private final ModelPart RLeg;
+    private final ModelPart RThigh;
+    private final ModelPart RKnee;
+    private final ModelPart RAnkle;
+    private final ModelPart RFoot;
+    private final ModelPart Neck;
+    private final ModelPart Face;
+    private final ModelPart Head;
+    private final ModelPart Nose;
+    private final ModelPart Mouth;
+    private final ModelPart TreeBase;
+    private final ModelPart Leave1;
+    private final ModelPart Leave2;
+    private final ModelPart Leave3;
+    private final ModelPart Leave4;
+    private final ModelPart Leave5;
+    private final ModelPart Leave6;
+    private final ModelPart Leave7;
+    private final ModelPart Leave8;
+    private final ModelPart Leave9;
+    private final ModelPart Leave10;
+    private final ModelPart Leave11;
+    private final ModelPart Leave12;
+    private final ModelPart Leave13;
+    private final ModelPart Leave14;
+    private final ModelPart Leave15;
+    private final ModelPart Leave16;
 
-        this.Body = new ModelRenderer(this, 68, 36);
-        this.Body.addBox(-7.5F, -12.5F, -4.5F, 15, 25, 9);
-        this.Body.setRotationPoint(0F, -31F, 0F);
-        this.LShoulder = new ModelRenderer(this, 48, 108);
-        this.LShoulder.addBox(6F, -14F, -4.8F, 9, 7, 7);
-        this.LShoulder.setRotationPoint(0F, -31F, 0F);
-        setRotation(this.LShoulder, 0F, 0F, -0.1745329F);
-        this.LArm = new ModelRenderer(this, 80, 108);
-        this.LArm.addBox(0F, -4F, -5F, 6, 24, 6);
-        this.LArm.setRotationPoint(10F, -42F, 1F);
-        setRotation(this.LArm, 0F, 0F, -0.1745329F);
-        this.LWrist = new ModelRenderer(this, 0, 169);
-        this.LWrist.addBox(2F, 17F, -6F, 8, 15, 8);
-        this.LWrist.setRotationPoint(10F, -42F, 1F);
-        this.LHand = new ModelRenderer(this, 88, 241);
-        this.LHand.addBox(1F, 28F, -7F, 10, 5, 10);
-        this.LHand.setRotationPoint(10F, -42F, 1F);
-        this.LFingers = new ModelRenderer(this, 88, 176);
-        this.LFingers.addBox(1F, 33F, -7F, 10, 15, 10);
-        this.LFingers.setRotationPoint(10F, -42F, 1F);
-        this.RShoulder = new ModelRenderer(this, 48, 122);
-        this.RShoulder.addBox(-15F, -14F, -4.8F, 9, 7, 7);
-        this.RShoulder.setRotationPoint(0F, -31F, 0F);
-        setRotation(this.RShoulder, 0F, 0F, 0.1745329F);
-        this.RArm = new ModelRenderer(this, 104, 108);
-        this.RArm.addBox(-6F, -4F, -5F, 6, 24, 6);
-        this.RArm.setRotationPoint(-10F, -42F, 1F);
-        setRotation(this.RArm, 0F, 0F, 0.1745329F);
-        this.RWrist = new ModelRenderer(this, 32, 169);
-        this.RWrist.addBox(-10F, 17F, -6F, 8, 15, 8);
-        this.RWrist.setRotationPoint(-10F, -42F, 1F);
-        this.RHand = new ModelRenderer(this, 88, 226);
-        this.RHand.addBox(-11F, 28F, -7F, 10, 5, 10);
-        this.RHand.setRotationPoint(-10F, -42F, 1F);
-        this.RFingers = new ModelRenderer(this, 88, 201);
-        this.RFingers.addBox(-11F, 33F, -7F, 10, 15, 10);
-        this.RFingers.setRotationPoint(-10F, -42F, 1F);
-        this.LLeg = new ModelRenderer(this, 0, 90);
-        this.LLeg.addBox(3F, 0F, -3F, 6, 20, 6);
-        this.LLeg.setRotationPoint(0F, -21F, 0F);
-        this.LThigh = new ModelRenderer(this, 24, 64);
-        this.LThigh.addBox(2.5F, 4F, -3.5F, 7, 12, 7);
-        this.LThigh.setRotationPoint(0F, -21F, 0F);
-        this.LKnee = new ModelRenderer(this, 0, 0);
-        this.LKnee.addBox(2F, 20F, -4F, 8, 24, 8);
-        this.LKnee.setRotationPoint(0F, -21F, 0F);
-        this.LAnkle = new ModelRenderer(this, 32, 29);
-        this.LAnkle.addBox(1.5F, 25F, -4.5F, 9, 20, 9);
-        this.LAnkle.setRotationPoint(0F, -21F, 0F);
-        this.LFoot = new ModelRenderer(this, 0, 206);
-        this.LFoot.addBox(1.5F, 38F, -23.5F, 9, 5, 9);
-        this.LFoot.setRotationPoint(0F, -21F, 0F);
-        setRotation(this.LFoot, 0.2617994F, 0F, 0F);
-        this.RLeg = new ModelRenderer(this, 0, 64);
-        this.RLeg.addBox(-9F, 0F, -3F, 6, 20, 6);
-        this.RLeg.setRotationPoint(0F, -21F, 0F);
-        this.RThigh = new ModelRenderer(this, 24, 83);
-        this.RThigh.addBox(-9.5F, 4F, -3.5F, 7, 12, 7);
-        this.RThigh.setRotationPoint(0F, -21F, 0F);
-        this.RKnee = new ModelRenderer(this, 0, 32);
-        this.RKnee.addBox(-10F, 20F, -4F, 8, 24, 8);
-        this.RKnee.setRotationPoint(0F, -21F, 0F);
-        this.RAnkle = new ModelRenderer(this, 32, 0);
-        this.RAnkle.addBox(-10.5F, 25F, -4.5F, 9, 20, 9);
-        this.RAnkle.setRotationPoint(0F, -21F, 0F);
-        this.RFoot = new ModelRenderer(this, 0, 192);
-        this.RFoot.addBox(-10.5F, 38F, -23.5F, 9, 5, 9);
-        this.RFoot.setRotationPoint(0F, -21F, 0F);
-        setRotation(this.RFoot, 0.2617994F, 0F, 0F);
-        this.Neck = new ModelRenderer(this, 52, 90);
-        this.Neck.addBox(-4F, -8F, -5.8F, 8, 10, 8);
-        this.Neck.setRotationPoint(0F, -44F, 0F);
-        setRotation(this.Neck, 0.5235988F, 0F, 0F);
-        this.Face = new ModelRenderer(this, 52, 70);
-        this.Face.addBox(-4.5F, -11F, -9F, 9, 7, 8);
-        this.Face.setRotationPoint(0F, -44F, 0F);
-        this.Head = new ModelRenderer(this, 84, 88);
-        this.Head.addBox(-6F, -20.5F, -9.5F, 12, 10, 10);
-        this.Head.setRotationPoint(0F, -44F, 0F);
-        this.Nose = new ModelRenderer(this, 82, 88);
-        this.Nose.addBox(-1.5F, -12F, -12F, 3, 7, 3);
-        this.Nose.setRotationPoint(0F, -44F, 0F);
-        setRotation(this.Nose, -0.122173F, 0F, 0F);
-        this.Mouth = new ModelRenderer(this, 77, 36);
-        this.Mouth.addBox(-3F, -8F, -6.8F, 6, 2, 1);
-        this.Mouth.setRotationPoint(0F, -44F, 0F);
-        setRotation(this.Mouth, 0.5235988F, 0F, 0F);
-        this.TreeBase = new ModelRenderer(this, 0, 136);
-        this.TreeBase.addBox(-10F, -31.5F, -11.5F, 20, 13, 20);
-        this.TreeBase.setRotationPoint(0F, -44F, 0F);
-        this.Leave1 = new ModelRenderer(this, 0, 224);
-        this.Leave1.addBox(-16F, -45F, -17F, 16, 16, 16);
-        this.Leave1.setRotationPoint(0F, -44F, 0F);
-        this.Leave2 = new ModelRenderer(this, 0, 224);
-        this.Leave2.addBox(0F, -45F, -17F, 16, 16, 16);
-        this.Leave2.setRotationPoint(0F, -44F, 0F);
-        this.Leave3 = new ModelRenderer(this, 0, 224);
-        this.Leave3.addBox(0F, -45F, -1F, 16, 16, 16);
-        this.Leave3.setRotationPoint(0F, -44F, 0F);
-        this.Leave4 = new ModelRenderer(this, 0, 224);
-        this.Leave4.addBox(-16F, -45F, -1F, 16, 16, 16);
-        this.Leave4.setRotationPoint(0F, -44F, 0F);
-        this.Leave5 = new ModelRenderer(this, 0, 224);
-        this.Leave5.addBox(-16F, -45F, -33F, 16, 16, 16);
-        this.Leave5.setRotationPoint(0F, -44F, 0F);
-        this.Leave6 = new ModelRenderer(this, 0, 224);
-        this.Leave6.addBox(0F, -45F, -33F, 16, 16, 16);
-        this.Leave6.setRotationPoint(0F, -44F, 0F);
-        this.Leave7 = new ModelRenderer(this, 0, 224);
-        this.Leave7.addBox(16F, -45F, -17F, 16, 16, 16);
-        this.Leave7.setRotationPoint(0F, -44F, 0F);
-        this.Leave8 = new ModelRenderer(this, 0, 224);
-        this.Leave8.addBox(16F, -45F, -1F, 16, 16, 16);
-        this.Leave8.setRotationPoint(0F, -44F, 0F);
-        this.Leave9 = new ModelRenderer(this, 0, 224);
-        this.Leave9.addBox(0F, -45F, 15F, 16, 16, 16);
-        this.Leave9.setRotationPoint(0F, -44F, 0F);
-        this.Leave10 = new ModelRenderer(this, 0, 224);
-        this.Leave10.addBox(-16F, -45F, 15F, 16, 16, 16);
-        this.Leave10.setRotationPoint(0F, -44F, 0F);
-        this.Leave11 = new ModelRenderer(this, 0, 224);
-        this.Leave11.addBox(-32F, -45F, -1F, 16, 16, 16);
-        this.Leave11.setRotationPoint(0F, -44F, 0F);
-        this.Leave12 = new ModelRenderer(this, 0, 224);
-        this.Leave12.addBox(-32F, -45F, -17F, 16, 16, 16);
-        this.Leave12.setRotationPoint(0F, -44F, 0F);
-        this.Leave13 = new ModelRenderer(this, 0, 224);
-        this.Leave13.addBox(-16F, -61F, -17F, 16, 16, 16);
-        this.Leave13.setRotationPoint(0F, -44F, 0F);
-        this.Leave14 = new ModelRenderer(this, 0, 224);
-        this.Leave14.addBox(0F, -61F, -17F, 16, 16, 16);
-        this.Leave14.setRotationPoint(0F, -44F, 0F);
-        this.Leave15 = new ModelRenderer(this, 0, 224);
-        this.Leave15.addBox(0F, -61F, -1F, 16, 16, 16);
-        this.Leave15.setRotationPoint(0F, -44F, 0F);
-        this.Leave16 = new ModelRenderer(this, 0, 224);
-        this.Leave16.addBox(-16F, -61F, -1F, 16, 16, 16);
-        this.Leave16.setRotationPoint(0F, -44F, 0F);
+    public MoCModelEnt(ModelPart root) {
+        //this.root       = root;
+        this.Body       = root.getChild("Body");
+        this.LShoulder  = root.getChild("LShoulder");
+        this.LArm       = root.getChild("LArm");
+        this.LWrist     = root.getChild("LWrist");
+        this.LHand      = root.getChild("LHand");
+        this.LFingers   = root.getChild("LFingers");
+        this.RShoulder  = root.getChild("RShoulder");
+        this.RArm       = root.getChild("RArm");
+        this.RWrist     = root.getChild("RWrist");
+        this.RHand      = root.getChild("RHand");
+        this.RFingers   = root.getChild("RFingers");
+        this.LLeg       = root.getChild("LLeg");
+        this.LThigh     = root.getChild("LThigh");
+        this.LKnee      = root.getChild("LKnee");
+        this.LAnkle     = root.getChild("LAnkle");
+        this.LFoot      = root.getChild("LFoot");
+        this.RLeg       = root.getChild("RLeg");
+        this.RThigh     = root.getChild("RThigh");
+        this.RKnee      = root.getChild("RKnee");
+        this.RAnkle     = root.getChild("RAnkle");
+        this.RFoot      = root.getChild("RFoot");
+        this.Neck       = root.getChild("Neck");
+        this.Face       = root.getChild("Face");
+        this.Head       = root.getChild("Head");
+        this.Nose       = root.getChild("Nose");
+        this.Mouth      = root.getChild("Mouth");
+        this.TreeBase   = root.getChild("TreeBase");
+        this.Leave1     = root.getChild("Leave1");
+        this.Leave2     = root.getChild("Leave2");
+        this.Leave3     = root.getChild("Leave3");
+        this.Leave4     = root.getChild("Leave4");
+        this.Leave5     = root.getChild("Leave5");
+        this.Leave6     = root.getChild("Leave6");
+        this.Leave7     = root.getChild("Leave7");
+        this.Leave8     = root.getChild("Leave8");
+        this.Leave9     = root.getChild("Leave9");
+        this.Leave10    = root.getChild("Leave10");
+        this.Leave11    = root.getChild("Leave11");
+        this.Leave12    = root.getChild("Leave12");
+        this.Leave13    = root.getChild("Leave13");
+        this.Leave14    = root.getChild("Leave14");
+        this.Leave15    = root.getChild("Leave15");
+        this.Leave16    = root.getChild("Leave16");
+    }
 
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh    = new MeshDefinition();
+        PartDefinition parts   = mesh.getRoot();
+
+        // Body
+        parts.addOrReplaceChild("Body",
+                CubeListBuilder.create()
+                        .texOffs(68, 36)
+                        .addBox(-7.5F, -12.5F, -4.5F, 15, 25, 9),
+                PartPose.offset(0F, -31F, 0F)
+        );
+
+        // LShoulder
+        parts.addOrReplaceChild("LShoulder",
+                CubeListBuilder.create()
+                        .texOffs(48, 108)
+                        .addBox(6F, -14F, -4.8F, 9, 7, 7),
+                PartPose.offsetAndRotation(0F, -31F, 0F, 0F, 0F, -0.1745329F)
+        );
+
+        // LArm
+        parts.addOrReplaceChild("LArm",
+                CubeListBuilder.create()
+                        .texOffs(80, 108)
+                        .addBox(0F, -4F, -5F, 6, 24, 6),
+                PartPose.offsetAndRotation(10F, -42F, 1F, 0F, 0F, -0.1745329F)
+        );
+
+        // LWrist
+        parts.addOrReplaceChild("LWrist",
+                CubeListBuilder.create()
+                        .texOffs(0, 169)
+                        .addBox(2F, 17F, -6F, 8, 15, 8),
+                PartPose.offset(10F, -42F, 1F)
+        );
+
+        // LHand
+        parts.addOrReplaceChild("LHand",
+                CubeListBuilder.create()
+                        .texOffs(88, 241)
+                        .addBox(1F, 28F, -7F, 10, 5, 10),
+                PartPose.offset(10F, -42F, 1F)
+        );
+
+        // LFingers
+        parts.addOrReplaceChild("LFingers",
+                CubeListBuilder.create()
+                        .texOffs(88, 176)
+                        .addBox(1F, 33F, -7F, 10, 15, 10),
+                PartPose.offset(10F, -42F, 1F)
+        );
+
+        // RShoulder
+        parts.addOrReplaceChild("RShoulder",
+                CubeListBuilder.create()
+                        .texOffs(48, 122)
+                        .addBox(-15F, -14F, -4.8F, 9, 7, 7),
+                PartPose.offsetAndRotation(0F, -31F, 0F, 0F, 0F, 0.1745329F)
+        );
+
+        // RArm
+        parts.addOrReplaceChild("RArm",
+                CubeListBuilder.create()
+                        .texOffs(104, 108)
+                        .addBox(-6F, -4F, -5F, 6, 24, 6),
+                PartPose.offsetAndRotation(-10F, -42F, 1F, 0F, 0F, 0.1745329F)
+        );
+
+        // RWrist
+        parts.addOrReplaceChild("RWrist",
+                CubeListBuilder.create()
+                        .texOffs(32, 169)
+                        .addBox(-10F, 17F, -6F, 8, 15, 8),
+                PartPose.offset(-10F, -42F, 1F)
+        );
+
+        // RHand
+        parts.addOrReplaceChild("RHand",
+                CubeListBuilder.create()
+                        .texOffs(88, 226)
+                        .addBox(-11F, 28F, -7F, 10, 5, 10),
+                PartPose.offset(-10F, -42F, 1F)
+        );
+
+        // RFingers
+        parts.addOrReplaceChild("RFingers",
+                CubeListBuilder.create()
+                        .texOffs(88, 201)
+                        .addBox(-11F, 33F, -7F, 10, 15, 10),
+                PartPose.offset(-10F, -42F, 1F)
+        );
+
+        // LLeg
+        parts.addOrReplaceChild("LLeg",
+                CubeListBuilder.create()
+                        .texOffs(0, 90)
+                        .addBox(3F, 0F, -3F, 6, 20, 6),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // LThigh
+        parts.addOrReplaceChild("LThigh",
+                CubeListBuilder.create()
+                        .texOffs(24, 64)
+                        .addBox(2.5F, 4F, -3.5F, 7, 12, 7),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // LKnee
+        parts.addOrReplaceChild("LKnee",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(2F, 20F, -4F, 8, 24, 8),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // LAnkle
+        parts.addOrReplaceChild("LAnkle",
+                CubeListBuilder.create()
+                        .texOffs(32, 29)
+                        .addBox(1.5F, 25F, -4.5F, 9, 20, 9),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // LFoot
+        parts.addOrReplaceChild("LFoot",
+                CubeListBuilder.create()
+                        .texOffs(0, 206)
+                        .addBox(1.5F, 38F, -23.5F, 9, 5, 9),
+                PartPose.offsetAndRotation(0F, -21F, 0F, 0.2617994F, 0F, 0F)
+        );
+
+        // RLeg
+        parts.addOrReplaceChild("RLeg",
+                CubeListBuilder.create()
+                        .texOffs(0, 64)
+                        .addBox(-9F, 0F, -3F, 6, 20, 6),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // RThigh
+        parts.addOrReplaceChild("RThigh",
+                CubeListBuilder.create()
+                        .texOffs(24, 83)
+                        .addBox(-9.5F, 4F, -3.5F, 7, 12, 7),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // RKnee
+        parts.addOrReplaceChild("RKnee",
+                CubeListBuilder.create()
+                        .texOffs(0, 32)
+                        .addBox(-10F, 20F, -4F, 8, 24, 8),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // RAnkle
+        parts.addOrReplaceChild("RAnkle",
+                CubeListBuilder.create()
+                        .texOffs(32, 0)
+                        .addBox(-10.5F, 25F, -4.5F, 9, 20, 9),
+                PartPose.offset(0F, -21F, 0F)
+        );
+
+        // RFoot
+        parts.addOrReplaceChild("RFoot",
+                CubeListBuilder.create()
+                        .texOffs(0, 192)
+                        .addBox(-10.5F, 38F, -23.5F, 9, 5, 9),
+                PartPose.offsetAndRotation(0F, -21F, 0F, 0.2617994F, 0F, 0F)
+        );
+
+        // Neck
+        parts.addOrReplaceChild("Neck",
+                CubeListBuilder.create()
+                        .texOffs(52, 90)
+                        .addBox(-4F, -8F, -5.8F, 8, 10, 8),
+                PartPose.offsetAndRotation(0F, -44F, 0F, 0.5235988F, 0F, 0F)
+        );
+
+        // Face
+        parts.addOrReplaceChild("Face",
+                CubeListBuilder.create()
+                        .texOffs(52, 70)
+                        .addBox(-4.5F, -11F, -9F, 9, 7, 8),
+                PartPose.offset(0F, -44F, 0F)
+        );
+
+        // Head
+        parts.addOrReplaceChild("Head",
+                CubeListBuilder.create()
+                        .texOffs(84, 88)
+                        .addBox(-6F, -20.5F, -9.5F, 12, 10, 10),
+                PartPose.offset(0F, -44F, 0F)
+        );
+
+        // Nose
+        parts.addOrReplaceChild("Nose",
+                CubeListBuilder.create()
+                        .texOffs(82, 88)
+                        .addBox(-1.5F, -12F, -12F, 3, 7, 3),
+                PartPose.offsetAndRotation(0F, -44F, 0F, -0.122173F, 0F, 0F)
+        );
+
+        // Mouth
+        parts.addOrReplaceChild("Mouth",
+                CubeListBuilder.create()
+                        .texOffs(77, 36)
+                        .addBox(-3F, -8F, -6.8F, 6, 2, 1),
+                PartPose.offsetAndRotation(0F, -44F, 0F, 0.5235988F, 0F, 0F)
+        );
+
+        // TreeBase
+        parts.addOrReplaceChild("TreeBase",
+                CubeListBuilder.create()
+                        .texOffs(0, 136)
+                        .addBox(-10F, -31.5F, -11.5F, 20, 13, 20),
+                PartPose.offset(0F, -44F, 0F)
+        );
+
+        // Leaves (all use the same texture offset 0,224)
+        parts.addOrReplaceChild("Leave1",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-16F, -45F, -17F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave2",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(0F, -45F, -17F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave3",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(0F, -45F, -1F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave4",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-16F, -45F, -1F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave5",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-16F, -45F, -33F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave6",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(0F, -45F, -33F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave7",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(16F, -45F, -17F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave8",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(16F, -45F, -1F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave9",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(0F, -45F, 15F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave10",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-16F, -45F, 15F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave11",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-32F, -45F, -1F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave12",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-32F, -45F, -17F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave13",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-16F, -61F, -17F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave14",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(0F, -61F, -17F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave15",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(0F, -61F, -1F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+        parts.addOrReplaceChild("Leave16",
+                CubeListBuilder.create()
+                        .texOffs(0, 224)
+                        .addBox(-16F, -61F, -1F, 16, 16, 16),
+                PartPose.offset(0F, -44F, 0F)
+        );
+
+        return LayerDefinition.create(mesh, 128, 256);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LShoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LWrist.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LHand.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFingers.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RShoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RWrist.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RHand.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFingers.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LThigh.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LKnee.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LAnkle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RThigh.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RKnee.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RAnkle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Face.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Nose.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Mouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TreeBase.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave6.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave7.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave8.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave9.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave10.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave11.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave12.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave13.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave14.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave15.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leave16.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void renderToBuffer(
+            PoseStack pose,
+            VertexConsumer buffer,
+            int packedLight,
+            int packedOverlay,
+            float r,
+            float g,
+            float b,
+            float a
+    ) {
+        this.Body.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LShoulder.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LArm.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LWrist.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LHand.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LFingers.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RShoulder.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RArm.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RWrist.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RHand.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RFingers.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LLeg.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LThigh.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LKnee.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LAnkle.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.LFoot.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RLeg.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RThigh.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RKnee.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RAnkle.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.RFoot.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Neck.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Face.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Head.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Nose.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Mouth.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.TreeBase.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave1.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave2.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave3.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave4.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave5.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave6.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave7.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave8.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave9.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave10.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave11.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave12.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave13.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave14.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave15.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
+        this.Leave16.render(pose, buffer, packedLight, packedOverlay, r, g, b, a);
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
+    @Override
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        float rad = 57.29578F;
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        //super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
-        float radianF = 57.29578F;
+        // Arm swings
+        float RArmXRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 2.0F * limbSwingAmount * 0.5F;
+        float LArmXRot = Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
 
-        float RArmXRot = MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI) * 2.0F * limbSwingAmount * 0.5F;
-        float LArmXRot = MathHelper.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
-        float RLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 1.0F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.0F * limbSwingAmount;
+        // Leg swings
+        float RLegXRot = Mth.cos(limbSwing * 0.6662F) * 1.0F * limbSwingAmount;
+        float LLegXRot = Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.0F * limbSwingAmount;
 
-        this.LWrist.rotateAngleZ = (MathHelper.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
-        this.LWrist.rotateAngleX = LArmXRot;
-        this.RWrist.rotateAngleZ = -(MathHelper.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
-        this.RWrist.rotateAngleX = RArmXRot;
+        // Wrist waggle animation
+        this.LWrist.xRot = LArmXRot;
+        this.LWrist.zRot = (Mth.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
+        this.RWrist.xRot = RArmXRot;
+        this.RWrist.zRot = -(Mth.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
 
-        this.LHand.rotateAngleX = this.LFingers.rotateAngleX = this.LArm.rotateAngleX = this.LWrist.rotateAngleX;
-        this.LHand.rotateAngleZ = this.LFingers.rotateAngleZ = this.LWrist.rotateAngleZ;
-        this.LArm.rotateAngleZ = (-10F / radianF) + this.LWrist.rotateAngleZ;
+        // Propagate to hand/fingers/arm
+        this.LArm.xRot     = this.LWrist.xRot;
+        this.LHand.xRot    = this.LWrist.xRot;
+        this.LFingers.xRot = this.LWrist.xRot;
+        this.LArm.zRot     = (-10F / rad) + this.LWrist.zRot;
+        this.LHand.zRot    = this.LWrist.zRot;
+        this.LFingers.zRot = this.LWrist.zRot;
 
-        this.RHand.rotateAngleX = this.RFingers.rotateAngleX = this.RArm.rotateAngleX = this.RWrist.rotateAngleX;
-        this.RHand.rotateAngleZ = this.RFingers.rotateAngleZ = this.RWrist.rotateAngleZ;
-        this.RArm.rotateAngleZ = (10F / radianF) + this.RWrist.rotateAngleZ;
+        this.RArm.xRot     = this.RWrist.xRot;
+        this.RHand.xRot    = this.RWrist.xRot;
+        this.RFingers.xRot = this.RWrist.xRot;
+        this.RArm.zRot     = ( 10F / rad) + this.RWrist.zRot;
+        this.RHand.zRot    = this.RWrist.zRot;
+        this.RFingers.zRot = this.RWrist.zRot;
 
-        this.RLeg.rotateAngleX = RLegXRot;
-        this.LLeg.rotateAngleX = LLegXRot;
-        this.LThigh.rotateAngleX = this.LKnee.rotateAngleX = this.LAnkle.rotateAngleX = this.LLeg.rotateAngleX;
-        this.RThigh.rotateAngleX = this.RKnee.rotateAngleX = this.RAnkle.rotateAngleX = this.RLeg.rotateAngleX;
+        // Legs
+        this.RLeg.xRot   = RLegXRot;
+        this.LLeg.xRot   = LLegXRot;
+        this.LThigh.xRot = this.LKnee.xRot = this.LAnkle.xRot = this.LLeg.xRot;
+        this.RThigh.xRot = this.RKnee.xRot = this.RAnkle.xRot = this.RLeg.xRot;
+        this.LFoot.xRot  = (15F / rad) + this.LLeg.xRot;
+        this.RFoot.xRot  = (15F / rad) + this.RLeg.xRot;
 
-        this.LFoot.rotateAngleX = (15F / radianF) + this.LLeg.rotateAngleX;
-        this.RFoot.rotateAngleX = (15F / radianF) + this.RLeg.rotateAngleX;
-        this.Neck.rotateAngleY = netHeadYaw / radianF; //this moves head to left and right
-        //Neck.rotateAngleX = headPitch/ radianF;
-
-        this.Mouth.rotateAngleY =
-                this.Face.rotateAngleY = this.Nose.rotateAngleY = this.Head.rotateAngleY = this.TreeBase.rotateAngleY = this.Neck.rotateAngleY;
-        this.Leave1.rotateAngleY =
-                this.Leave2.rotateAngleY =
-                        this.Leave3.rotateAngleY =
-                                this.Leave4.rotateAngleY = this.Leave5.rotateAngleY = this.Leave6.rotateAngleY = this.Neck.rotateAngleY;
-        this.Leave7.rotateAngleY =
-                this.Leave8.rotateAngleY = this.Leave9.rotateAngleY = this.Leave10.rotateAngleY = this.Leave11.rotateAngleY = this.Neck.rotateAngleY;
-        this.Leave12.rotateAngleY =
-                this.Leave13.rotateAngleY =
-                        this.Leave14.rotateAngleY = this.Leave15.rotateAngleY = this.Leave16.rotateAngleY = this.Neck.rotateAngleY;
+        // Head yaw
+        float headYRot = netHeadYaw / rad;
+        this.Neck.yRot = headYRot;
+        this.Face.yRot = headYRot;
+        this.Head.yRot = headYRot;
+        this.Nose.yRot = headYRot;
+        this.Mouth.yRot = headYRot;
+        this.TreeBase.yRot = headYRot;
+        this.Leave1.yRot = headYRot;
+        this.Leave2.yRot = headYRot;
+        this.Leave3.yRot = headYRot;
+        this.Leave4.yRot = headYRot;
+        this.Leave5.yRot = headYRot;
+        this.Leave6.yRot = headYRot;
+        this.Leave7.yRot = headYRot;
+        this.Leave8.yRot = headYRot;
+        this.Leave9.yRot = headYRot;
+        this.Leave10.yRot = headYRot;
+        this.Leave11.yRot = headYRot;
+        this.Leave12.yRot = headYRot;
+        this.Leave13.yRot = headYRot;
+        this.Leave14.yRot = headYRot;
+        this.Leave15.yRot = headYRot;
+        this.Leave16.yRot = headYRot;
     }
 }

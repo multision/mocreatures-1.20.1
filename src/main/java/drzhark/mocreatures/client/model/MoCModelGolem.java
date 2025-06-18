@@ -3,323 +3,138 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
 import drzhark.mocreatures.entity.hostile.MoCEntityGolem;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * Port of MoCModelGolem (1.16.5) to 1.20.1.
+ * Replaces ModelRenderer[][] with ModelPart[][], and merges setLivingAnimations + setRotationAngles into setupAnim.
+ * 
+ * Will attempt to separate the setupAnim into two methods:
+ * 1. setupAnim
+ * 2. prepareMobModel
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelGolem<T extends MoCEntityGolem> extends EntityModel<T> {
 
-    ModelRenderer[][] blocks;
-    ModelRenderer head;
-    ModelRenderer headb;
-    ModelRenderer chest;
-    ModelRenderer chestb;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "golem"), "main"
+    );
 
-    byte[] blocksText;
-    float radianF = 57.29578F;
-    int w = 32;
-    int h = 16;
+    private final ModelPart[][] blocks; // [23][28]
+    private final ModelPart head;
+    private final ModelPart headb;
+    private final ModelPart chest;
+    private final ModelPart chestb;
+
+    private final float radianF = 57.29578F;
+    private final int w = 32;
+    private final int h = 16;
+
+    private final int[] blocksText = new int[23];
+
     private MoCEntityGolem entityG;
     private boolean angry;
 
-    public MoCModelGolem() {
-        this.blocks = new ModelRenderer[23][28];
-        this.blocksText = new byte[23];
-        this.textureWidth = 128;
-        this.textureHeight = 128;
+    public MoCModelGolem(ModelPart root) {
+        this.blocks = new ModelPart[23][28];
 
-        for (byte i = 0; i < 23; i++) {
-            this.blocksText[i] = 30;
+        // Retrieve head/chest parts
+        this.head   = root.getChild("head");
+        this.headb  = root.getChild("headb");
+        this.chest  = root.getChild("chest");
+        this.chestb = root.getChild("chestb");
+
+        // Retrieve all block variants
+        for (int g = 0; g < 23; g++) {
+            ModelPart groupPart = root.getChild("group_" + g);
+            for (int v = 0; v < 28; v++) {
+                this.blocks[g][v] = groupPart.getChild("block_" + g + "_" + v);
+            }
         }
-
-        //head
-        this.head = new ModelRenderer(this, 96, 64);
-        this.head.addBox(-4F, -4F, -4F, 8, 8, 8);
-        this.head.setRotationPoint(0F, -10F, 0F);
-        setRotation(this.head, 0F, 0.7853982F, 0F);
-
-        this.headb = new ModelRenderer(this, 96, 80);
-        this.headb.addBox(-4F, -4F, -4F, 8, 8, 8);
-        this.headb.setRotationPoint(0F, -10F, 0F);
-        setRotation(this.headb, 0F, 0.7853982F, 0F);
-
-        this.chest = new ModelRenderer(this, 96, 96);
-        this.chest.addBox(-4F, -4F, -4F, 8, 8, 8);
-        this.chest.setRotationPoint(0F, -3F, -7F);
-        setRotation(this.chest, 0F, 0.7853982F, 0F);
-
-        this.chestb = new ModelRenderer(this, 96, 112);
-        this.chestb.addBox(-4F, -4F, -4F, 8, 8, 8);
-        this.chestb.setRotationPoint(0F, -3F, -7F);
-        setRotation(this.chestb, 0F, 0.7853982F, 0F);
-
-        for (byte i = 0; i < 28; i++) {
-            int textX = (i / 8) * this.w;
-            int textY = (i % 8) * this.h;
-
-            //lchest1
-            this.blocks[0][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[0][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[0][i].setRotationPoint(0F, -3F, 0F);
-            setRotationG(this.blocks[0][i], -97F, -40F, 0F);
-
-            //lchest2
-            this.blocks[1][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[1][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[1][i].setRotationPoint(0F, -3F, 0F);
-            setRotationG(this.blocks[1][i], -55F, -41F, 0F);
-
-            //rchest1
-            this.blocks[2][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[2][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[2][i].setRotationPoint(0F, -3F, 0F);
-            setRotationG(this.blocks[2][i], -97F, 40F, 0F);
-
-            //rchest2
-            this.blocks[3][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[3][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[3][i].setRotationPoint(0F, -3F, 0F);
-            setRotationG(this.blocks[3][i], -55F, 41F, 0F);
-
-            //back
-            this.blocks[4][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[4][i].addBox(-7F, -14F, -1F, 8, 8, 8);
-            this.blocks[4][i].setRotationPoint(0F, 6F, 3F);
-            setRotation(this.blocks[4][i], 0F, 0.7853982F, 0F);
-
-            //lback1
-            this.blocks[5][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[5][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[5][i].setRotationPoint(0F, -3F, 0F);
-            setRotation(this.blocks[5][i], 1.919862F, 0.6981317F, 0F);
-
-            //lback2
-            this.blocks[6][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[6][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[6][i].setRotationPoint(0F, -3F, 0F);
-            setRotation(this.blocks[6][i], 1.183003F, 0.6981317F, 0F);
-
-            //rback1
-            this.blocks[7][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[7][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[7][i].setRotationPoint(0F, -3F, 0F);
-            setRotation(this.blocks[7][i], 1.919862F, -0.6981317F, 0F);
-
-            //rback2
-            this.blocks[8][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[8][i].addBox(-4F, 3F, -4F, 8, 8, 8);
-            this.blocks[8][i].setRotationPoint(0F, -3F, 0F);
-            setRotation(this.blocks[8][i], 1.183003F, -0.6981317F, 0F);
-
-            //lshoulder
-            this.blocks[9][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[9][i].addBox(0F, -2F, -4F, 8, 8, 8);
-            this.blocks[9][i].setRotationPoint(8F, -3F, 0F);
-            setRotation(this.blocks[9][i], 0F, 0F, -0.6981317F);
-
-            //larm[12]
-            this.blocks[10][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[10][i].addBox(2F, 4F, -4F, 8, 8, 8);
-            this.blocks[10][i].setRotationPoint(8F, -3F, 0F);
-            setRotation(this.blocks[10][i], 0F, 0F, -0.2094395F);
-
-            //lhand
-            this.blocks[11][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[11][i].addBox(4.5F, 11F, -4F, 8, 8, 8);
-            this.blocks[11][i].setRotationPoint(8F, -3F, 0F);
-
-            //rshoulder
-            this.blocks[12][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[12][i].addBox(-8F, -2F, -4F, 8, 8, 8);
-            this.blocks[12][i].setRotationPoint(-8F, -3F, 0F);
-            setRotation(this.blocks[12][i], 0F, 0F, 0.6981317F);
-
-            //rarm
-            this.blocks[13][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[13][i].addBox(-10F, 4F, -4F, 8, 8, 8);
-            this.blocks[13][i].setRotationPoint(-8F, -3F, 0F);
-            setRotation(this.blocks[13][i], 0F, 0F, 0.2094395F);
-
-            //rhand
-            this.blocks[14][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[14][i].addBox(-12.5F, 11F, -4F, 8, 8, 8);
-            this.blocks[14][i].setRotationPoint(-8F, -3F, 0F);
-
-            //lthigh
-            this.blocks[15][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[15][i].addBox(-3.5F, 0F, -4F, 8, 8, 8);
-            this.blocks[15][i].setRotationPoint(5F, 4F, 0F);
-            setRotation(this.blocks[15][i], -0.3490659F, 0F, 0F);
-
-            //lknee
-            this.blocks[16][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[16][i].addBox(-4F, 6F, -7F, 8, 8, 8);
-            this.blocks[16][i].setRotationPoint(5F, 4F, 0F);
-
-            //lfoot
-            this.blocks[17][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[17][i].addBox(-3.5F, 12F, -5F, 8, 8, 8);
-            this.blocks[17][i].setRotationPoint(5F, 4F, 0F);
-
-            //rthigh
-            this.blocks[18][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[18][i].addBox(-4.5F, 0F, -4F, 8, 8, 8);
-            this.blocks[18][i].setRotationPoint(-5F, 4F, 0F);
-            setRotation(this.blocks[18][i], -0.3490659F, 0F, 0F);
-
-            //rknee
-            this.blocks[19][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[19][i].addBox(-4F, 6F, -7F, 8, 8, 8);
-            this.blocks[19][i].setRotationPoint(-5F, 4F, 0F);
-
-            //rfoot
-            this.blocks[20][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[20][i].addBox(-4.5F, 12F, -5F, 8, 8, 8);
-            this.blocks[20][i].setRotationPoint(-5F, 4F, 0F);
-
-            //groin
-            this.blocks[21][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[21][i].addBox(0F, -4F, -8F, 8, 8, 8);
-            this.blocks[21][i].setRotationPoint(0F, 6F, 3F);
-            setRotation(this.blocks[21][i], 0F, 0.7853982F, 0F);
-
-            //butt
-            this.blocks[22][i] = new ModelRenderer(this, textX, textY);
-            this.blocks[22][i].addBox(-4F, -4F, -4F, 8, 8, 8);
-            this.blocks[22][i].setRotationPoint(0F, 6F, 3F);
-            setRotation(this.blocks[22][i], -0.7435722F, 0F, 0F);
-        }
-
-    }
-
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.entityG = entityIn;
-        this.angry = entityIn.getGolemState() > 1;
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // Update indices for which variant to display
         for (int i = 0; i < 23; i++) {
-            this.blocksText[i] = entityG.getBlockText(i);
-        }
-        float yOffset = entityG.getAdjustedYOffset();
-        matrixStackIn.push();
-        matrixStackIn.translate(0F, yOffset, 0F);
-        for (int i = 0; i < 23; i++) {
-            //blocksText[i] = entityG.getBlockText(i);
-            if (this.blocksText[i] != 30) {
-                this.blocks[i][this.blocksText[i]].render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            }
+            this.blocksText[i] = entity.getBlockText(i);
         }
 
-        if (this.angry) {
-            this.headb.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.chestb.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        } else {
-            this.head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.chest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-        matrixStackIn.pop();
+        // Head yaw: 45° + netHeadYaw
+        float headYawRad = (45F + netHeadYaw) / this.radianF;
+        this.head.yRot  = headYawRad;
+        this.headb.yRot = headYawRad;
 
-    }
-
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    private void setRotationG(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x / this.radianF;
-        model.rotateAngleY = y / this.radianF;
-        model.rotateAngleZ = z / this.radianF;
-    }
-
-    public void
-    setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        boolean openChest = entityIn.openChest();
-        boolean isSummoning = entityIn.isMissingCubes();
-        boolean throwing = (entityIn.tCounter > 25);
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.2F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
-        float RArmZRot = -(MathHelper.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
-        float LArmZRot = (MathHelper.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
-
-        this.head.rotateAngleY = (45F + netHeadYaw) / this.radianF;
-        this.headb.rotateAngleY = (45F + netHeadYaw) / this.radianF;
-
+        // Chest rotation: 45°, or if summoning, 45° + (ageInTicks/2)
+        boolean isSummoning = entity.isMissingCubes();
+        float chestYaw = 45F / this.radianF;
         if (isSummoning) {
-            this.chest.rotateAngleY = (45F / this.radianF) + (ageInTicks / 2F);
-            this.chestb.rotateAngleY = (45F / this.radianF) + (ageInTicks / 2F);
-        } else {
-            this.chest.rotateAngleY = 45F / this.radianF;
-            this.chestb.rotateAngleY = 45F / this.radianF;
+            chestYaw += ageInTicks / 2F;
         }
+        this.chest.yRot  = chestYaw;
+        this.chestb.yRot = chestYaw;
 
+        // Determine if chest is open
+        boolean openChest = entity.openChest();
         if (openChest) {
-            this.chest.rotationPointZ = -7F;
-            this.chestb.rotationPointZ = -7F;
-
-            if (this.blocksText[0] != 30) {
-                this.blocks[0][this.blocksText[0]].rotateAngleY = -60F / this.radianF;
-            }
-            if (this.blocksText[1] != 30) {
-                this.blocks[1][this.blocksText[1]].rotateAngleY = -55F / this.radianF;
-            }
-            if (this.blocksText[2] != 30) {
-                this.blocks[2][this.blocksText[2]].rotateAngleY = 60F / this.radianF;
-            }
-            if (this.blocksText[3] != 30) {
-                this.blocks[3][this.blocksText[3]].rotateAngleY = 55F / this.radianF;
-            }
+            // Pivot chest at z = -7
+            this.chest.setPos(0F, -3F, -7F);
+            this.chestb.setPos(0F, -3F, -7F);
+            // Update front‐chest block rotations
+            if (this.blocksText[0]  != 30) this.blocks[0][ this.blocksText[0] ].yRot = -60F / this.radianF;
+            if (this.blocksText[1]  != 30) this.blocks[1][ this.blocksText[1] ].yRot = -55F / this.radianF;
+            if (this.blocksText[2]  != 30) this.blocks[2][ this.blocksText[2] ].yRot =  60F / this.radianF;
+            if (this.blocksText[3]  != 30) this.blocks[3][ this.blocksText[3] ].yRot =  55F / this.radianF;
         } else {
-            this.chest.rotationPointZ = -4F;
-            this.chestb.rotationPointZ = -4F;
-
-            if (this.blocksText[0] != 30) {
-                this.blocks[0][this.blocksText[0]].rotateAngleY = -40F / this.radianF;
-            }
-            if (this.blocksText[1] != 30) {
-                this.blocks[1][this.blocksText[1]].rotateAngleY = -41F / this.radianF;
-            }
-            if (this.blocksText[2] != 30) {
-                this.blocks[2][this.blocksText[2]].rotateAngleY = 40F / this.radianF;
-            }
-            if (this.blocksText[3] != 30) {
-                this.blocks[3][this.blocksText[3]].rotateAngleY = 41F / this.radianF;
-            }
+            // Pivot chest at z = -4
+            this.chest.setPos(0F, -3F, -4F);
+            this.chestb.setPos(0F, -3F, -4F);
+            // Reset front‐chest block rotations
+            if (this.blocksText[0]  != 30) this.blocks[0][ this.blocksText[0] ].yRot = -40F / this.radianF;
+            if (this.blocksText[1]  != 30) this.blocks[1][ this.blocksText[1] ].yRot = -41F / this.radianF;
+            if (this.blocksText[2]  != 30) this.blocks[2][ this.blocksText[2] ].yRot =  40F / this.radianF;
+            if (this.blocksText[3]  != 30) this.blocks[3][ this.blocksText[3] ].yRot =  41F / this.radianF;
         }
 
-        if (this.blocksText[15] != 30) {
-            this.blocks[15][this.blocksText[15]].rotateAngleX = (-20F / this.radianF) + LLegXRot;
-        }
+        // Leg rotations
+        float RLegXRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.2F * limbSwingAmount;
+        float LLegXRot = Mth.cos(limbSwing * 0.6662F) * 1.2F * limbSwingAmount;
 
-        if (this.blocksText[16] != 30) {
-            this.blocks[16][this.blocksText[16]].rotateAngleX = LLegXRot;
-        }
+        // Blocks 15–20: thighs, knees, feet
+        if (this.blocksText[15] != 30) this.blocks[15][ this.blocksText[15] ].xRot = (-20F / this.radianF) + LLegXRot;
+        if (this.blocksText[16] != 30) this.blocks[16][ this.blocksText[16] ].xRot = LLegXRot;
+        if (this.blocksText[17] != 30) this.blocks[17][ this.blocksText[17] ].xRot = LLegXRot;
+        if (this.blocksText[18] != 30) this.blocks[18][ this.blocksText[18] ].xRot = (-20F / this.radianF) + RLegXRot;
+        if (this.blocksText[19] != 30) this.blocks[19][ this.blocksText[19] ].xRot = RLegXRot;
+        if (this.blocksText[20] != 30) this.blocks[20][ this.blocksText[20] ].xRot = RLegXRot;
 
-        if (this.blocksText[17] != 30) {
-            this.blocks[17][this.blocksText[17]].rotateAngleX = LLegXRot;
-        }
-
-        if (this.blocksText[18] != 30) {
-            this.blocks[18][this.blocksText[18]].rotateAngleX = (-20F / this.radianF) + RLegXRot;
-        }
-
-        if (this.blocksText[19] != 30) {
-            this.blocks[19][this.blocksText[19]].rotateAngleX = RLegXRot;
-        }
-
-        if (this.blocksText[20] != 30) {
-            this.blocks[20][this.blocksText[20]].rotateAngleX = RLegXRot;
-        }
+        // Arm swaying
+        boolean throwing = (entity.tCounter > 25);
+        float RArmZRot = -(Mth.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
+        float LArmZRot =  (Mth.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
 
         if (throwing) {
             LLegXRot = -90F / this.radianF;
@@ -328,34 +143,252 @@ public class MoCModelGolem<T extends MoCEntityGolem> extends EntityModel<T> {
             LArmZRot = 0F;
         }
 
+        // Blocks 9–14: shoulders, arms, hands
         if (this.blocksText[12] != 30) {
-            this.blocks[12][this.blocksText[12]].rotateAngleZ = (40F / this.radianF) + RArmZRot;
-            this.blocks[12][this.blocksText[12]].rotateAngleX = LLegXRot;
+            ModelPart p = this.blocks[12][ this.blocksText[12] ];
+            p.zRot = (40F  / this.radianF) + RArmZRot;
+            p.xRot = LLegXRot;
         }
-
         if (this.blocksText[13] != 30) {
-            this.blocks[13][this.blocksText[13]].rotateAngleZ = (12F / this.radianF) + RArmZRot;
-            this.blocks[13][this.blocksText[13]].rotateAngleX = LLegXRot;
+            ModelPart p = this.blocks[13][ this.blocksText[13] ];
+            p.zRot = (12F  / this.radianF) + RArmZRot;
+            p.xRot = LLegXRot;
         }
-
         if (this.blocksText[14] != 30) {
-            this.blocks[14][this.blocksText[14]].rotateAngleZ = RArmZRot;
-            this.blocks[14][this.blocksText[14]].rotateAngleX = LLegXRot;
+            ModelPart p = this.blocks[14][ this.blocksText[14] ];
+            p.zRot = RArmZRot;
+            p.xRot = LLegXRot;
         }
-
-        if (this.blocksText[9] != 30) {
-            this.blocks[9][this.blocksText[9]].rotateAngleZ = (-40F / this.radianF) + LArmZRot;
-            this.blocks[9][this.blocksText[9]].rotateAngleX = RLegXRot;
+        if (this.blocksText[9]  != 30) {
+            ModelPart p = this.blocks[9][  this.blocksText[9]  ];
+            p.zRot = (-40F / this.radianF) + LArmZRot;
+            p.xRot = RLegXRot;
         }
-
         if (this.blocksText[10] != 30) {
-            this.blocks[10][this.blocksText[10]].rotateAngleZ = (-12F / this.radianF) + LArmZRot;
-            this.blocks[10][this.blocksText[10]].rotateAngleX = RLegXRot;
+            ModelPart p = this.blocks[10][ this.blocksText[10] ];
+            p.zRot = (-12F / this.radianF) + LArmZRot;
+            p.xRot = RLegXRot;
+        }
+        if (this.blocksText[11] != 30) {
+            ModelPart p = this.blocks[11][ this.blocksText[11] ];
+            p.zRot = LArmZRot;
+            p.xRot = RLegXRot;
+        }
+    }
+
+    @Override
+    public void prepareMobModel(T p_102614_, float p_102615_, float p_102616_, float p_102617_) {
+        this.entityG = p_102614_;
+        this.angry = p_102614_.getGolemState() > 1;
+    }
+
+    @Override
+    public void renderToBuffer(
+            PoseStack poseStack,
+            VertexConsumer vertexConsumer,
+            int packedLight,
+            int packedOverlay,
+            float red,
+            float green,
+            float blue,
+            float alpha
+    ) {
+        // Render all visible blocks
+        float yOffset = entityG.getAdjustedYOffset();
+
+        poseStack.pushPose();
+        poseStack.translate(0F, yOffset, 0F);
+
+        for (int g = 0; g < 23; g++) {
+            int idx = this.blocksText[g];
+            if (idx != 30) {
+                this.blocks[g][idx].render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            }
         }
 
-        if (this.blocksText[11] != 30) {
-            this.blocks[11][this.blocksText[11]].rotateAngleZ = LArmZRot;
-            this.blocks[11][this.blocksText[11]].rotateAngleX = RLegXRot;
+        // Render head/chest based on angry state
+        if (this.angry) {
+            this.headb.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.chestb.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            this.head.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.chest.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
         }
+        
+        poseStack.popPose();
+    }
+
+    /**
+     * Defines the mesh and texture size (128×128). Bake this layer via EntityRenderersEvent.RegisterLayerDefinitions.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh    = new MeshDefinition();
+        PartDefinition root    = mesh.getRoot();
+
+        // HEAD (default rotation 45° yaw)
+        root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(96, 64)
+                        .addBox(-4F, -4F, -4F, 8, 8, 8, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, -10F, 0F, 0F, 0.7853982F, 0F)
+        );
+        root.addOrReplaceChild("headb",
+                CubeListBuilder.create()
+                        .texOffs(96, 80)
+                        .addBox(-4F, -4F, -4F, 8, 8, 8, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, -10F, 0F, 0F, 0.7853982F, 0F)
+        );
+
+        // CHEST (default yaw 45°)
+        root.addOrReplaceChild("chest",
+                CubeListBuilder.create()
+                        .texOffs(96, 96)
+                        .addBox(-4F, -4F, -4F, 8, 8, 8, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, -3F, -7F, 0F, 0.7853982F, 0F)
+        );
+        root.addOrReplaceChild("chestb",
+                CubeListBuilder.create()
+                        .texOffs(96, 112)
+                        .addBox(-4F, -4F, -4F, 8, 8, 8, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, -3F, -7F, 0F, 0.7853982F, 0F)
+        );
+
+        // Now define 23 groups, each with 28 texture variants
+        for (int g = 0; g < 23; g++) {
+            PartDefinition groupPart = root.addOrReplaceChild("group_" + g,
+                    CubeListBuilder.create(), PartPose.offset(0F, 0F, 0F)
+            );
+
+            // Each variant gets its own child
+            for (int v = 0; v < 28; v++) {
+                int textX = (v / 8) * 32;
+                int textY = (v % 8) * 16;
+
+                // We build the cube for group g, variant v
+                CubeListBuilder builder = CubeListBuilder.create().texOffs(textX, textY);
+                PartPose pose;
+
+                switch (g) {
+                    case 0: // lchest1
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                -97F / 57.29578F, -40F / 57.29578F, 0F);
+                        break;
+                    case 1: // lchest2
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                -55F / 57.29578F, -41F / 57.29578F, 0F);
+                        break;
+                    case 2: // rchest1
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                -97F / 57.29578F,  40F / 57.29578F, 0F);
+                        break;
+                    case 3: // rchest2
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                -55F / 57.29578F,  41F / 57.29578F, 0F);
+                        break;
+                    case 4: // back
+                        builder.addBox(-7F, -14F, -1F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, 6F, 3F,
+                                0F, 45F / 57.29578F, 0F);
+                        break;
+                    case 5: // lback1
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                110F / 57.29578F,  40F / 57.29578F, 0F);
+                        break;
+                    case 6: // lback2
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                67.8F / 57.29578F,  40F / 57.29578F, 0F);
+                        break;
+                    case 7: // rback1
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                110F / 57.29578F, -40F / 57.29578F, 0F);
+                        break;
+                    case 8: // rback2
+                        builder.addBox(-4F, 3F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, -3F, 0F,
+                                67.8F / 57.29578F, -40F / 57.29578F, 0F);
+                        break;
+                    case 9: // lshoulder
+                        builder.addBox(0F, -2F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(8F, -3F, 0F,
+                                0F, 0F, -40F / 57.29578F);
+                        break;
+                    case 10: // larm
+                        builder.addBox(2F, 4F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(8F, -3F, 0F,
+                                0F, 0F, -12F / 57.29578F);
+                        break;
+                    case 11: // lhand
+                        builder.addBox(4.5F, 11F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offset(8F, -3F, 0F);
+                        break;
+                    case 12: // rshoulder
+                        builder.addBox(-8F, -2F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(-8F, -3F, 0F,
+                                0F, 0F, 40F / 57.29578F);
+                        break;
+                    case 13: // rarm
+                        builder.addBox(-10F, 4F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(-8F, -3F, 0F,
+                                0F, 0F, 12F / 57.29578F);
+                        break;
+                    case 14: // rhand
+                        builder.addBox(-12.5F, 11F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offset(-8F, -3F, 0F);
+                        break;
+                    case 15: // lthigh
+                        builder.addBox(-3.5F, 0F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(5F, 4F, 0F,
+                                -20F / 57.29578F, 0F, 0F);
+                        break;
+                    case 16: // lknee
+                        builder.addBox(-4F, 6F, -7F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offset(5F, 4F, 0F);
+                        break;
+                    case 17: // lfoot
+                        builder.addBox(-3.5F, 12F, -5F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offset(5F, 4F, 0F);
+                        break;
+                    case 18: // rthigh
+                        builder.addBox(-4.5F, 0F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(-5F, 4F, 0F,
+                                -20F / 57.29578F, 0F, 0F);
+                        break;
+                    case 19: // rknee
+                        builder.addBox(-4F, 6F, -7F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offset(-5F, 4F, 0F);
+                        break;
+                    case 20: // rfoot
+                        builder.addBox(-4.5F, 12F, -5F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offset(-5F, 4F, 0F);
+                        break;
+                    case 21: // groin
+                        builder.addBox(0F, -4F, -8F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, 6F, 3F,
+                                0F, 45F / 57.29578F, 0F);
+                        break;
+                    case 22: // butt
+                        builder.addBox(-4F, -4F, -4F, 8, 8, 8, new CubeDeformation(0.0F));
+                        pose = PartPose.offsetAndRotation(0F, 6F, 3F,
+                                -42.6F / 57.29578F, 0F, 0F);
+                        break;
+                    default:
+                        // Should not occur
+                        builder.addBox(0F, 0F, 0F, 0, 0, 0, new CubeDeformation(0.0F));
+                        pose = PartPose.ZERO;
+                        break;
+                }
+
+                groupPart.addOrReplaceChild("block_" + g + "_" + v, builder, pose);
+            }
+        }
+
+        return LayerDefinition.create(mesh, 128, 128);
     }
 }

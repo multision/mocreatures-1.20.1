@@ -1,694 +1,1065 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.hunter.MoCEntityBear;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelBear<T extends MoCEntityBear> extends EntityModel<T> {
 
-    public ModelRenderer Saddle;
-    public ModelRenderer SaddleBack;
-    public ModelRenderer SaddleFront;
-    public ModelRenderer Bag;
-    public ModelRenderer SaddleSitted;
-    public ModelRenderer SaddleBackSitted;
-    public ModelRenderer SaddleFrontSitted;
-    public ModelRenderer BagSitted;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "bear"), "main"
+    );
 
-    ModelRenderer Tail;
-    ModelRenderer Mouth;
-    ModelRenderer LegFR1;
-    ModelRenderer Neck;
-    ModelRenderer LEar;
-    ModelRenderer Snout;
-    ModelRenderer Head;
-    ModelRenderer REar;
-    ModelRenderer Abdomen;
-    ModelRenderer Torso;
-    ModelRenderer LegRR3;
-    ModelRenderer LegRR1;
-    ModelRenderer LegRR2;
-    ModelRenderer LegFR2;
-    ModelRenderer LegFR3;
-    ModelRenderer LegFL1;
-    ModelRenderer LegFL3;
-    ModelRenderer LegFL2;
-    ModelRenderer LegRL1;
-    ModelRenderer LegRL2;
-    ModelRenderer LegRL3;
-    ModelRenderer MouthOpen;
+    // All parts, named exactly as before (stand, biped, and sit variants mixed together)
+    private final ModelPart root;
 
-    ModelRenderer BHead;
-    ModelRenderer BSnout;
-    ModelRenderer BMouth;
-    ModelRenderer BMouthOpen;
-    ModelRenderer BNeck;
-    ModelRenderer BLEar;
-    ModelRenderer BREar;
-    ModelRenderer BTorso;
-    ModelRenderer BAbdomen;
-    ModelRenderer BTail;
-    ModelRenderer BLegFL1;
-    ModelRenderer BLegFL2;
-    ModelRenderer BLegFL3;
-    ModelRenderer BLegFR1;
-    ModelRenderer BLegFR2;
-    ModelRenderer BLegFR3;
-    ModelRenderer BLegRL1;
-    ModelRenderer BLegRL2;
-    ModelRenderer BLegRL3;
-    ModelRenderer BLegRR1;
-    ModelRenderer BLegRR2;
-    ModelRenderer BLegRR3;
+    // "On all fours" parts:
+    private final ModelPart head;
+    private final ModelPart mouth;
+    private final ModelPart mouthOpen;
+    private final ModelPart lEar;
+    private final ModelPart rEar;
+    private final ModelPart snout;
+    private final ModelPart neck;
+    private final ModelPart abdomen;
+    private final ModelPart torso;
+    private final ModelPart tail;
+    private final ModelPart legFL1, legFL2, legFL3;
+    private final ModelPart legFR1, legFR2, legFR3;
+    private final ModelPart legRL1, legRL2, legRL3;
+    private final ModelPart legRR1, legRR2, legRR3;
 
-    ModelRenderer CHead;
-    ModelRenderer CSnout;
-    ModelRenderer CMouth;
-    ModelRenderer CMouthOpen;
-    ModelRenderer CLEar;
-    ModelRenderer CREar;
-    ModelRenderer CNeck;
-    ModelRenderer CTorso;
-    ModelRenderer CAbdomen;
-    ModelRenderer CTail;
-    ModelRenderer CLegFL1;
-    ModelRenderer CLegFL2;
-    ModelRenderer CLegFL3;
-    ModelRenderer CLegFR1;
-    ModelRenderer CLegFR2;
-    ModelRenderer CLegFR3;
-    ModelRenderer CLegRL1;
-    ModelRenderer CLegRL2;
-    ModelRenderer CLegRL3;
-    ModelRenderer CLegRR1;
-    ModelRenderer CLegRR2;
-    ModelRenderer CLegRR3;
+    // "Standing up" (biped) parts:
+    private final ModelPart bHead;
+    private final ModelPart bSnout;
+    private final ModelPart bMouth;
+    private final ModelPart bMouthOpen;
+    private final ModelPart bNeck;
+    private final ModelPart bLEar;
+    private final ModelPart bREar;
+    private final ModelPart bTorso;
+    private final ModelPart bAbdomen;
+    private final ModelPart bTail;
+    private final ModelPart bLegFL1, bLegFL2, bLegFL3;
+    private final ModelPart bLegFR1, bLegFR2, bLegFR3;
+    private final ModelPart bLegRL1, bLegRL2, bLegRL3;
+    private final ModelPart bLegRR1, bLegRR2, bLegRR3;
 
-    private int bearstate;
+    // "Sitting" parts:
+    private final ModelPart cHead;
+    private final ModelPart cSnout;
+    private final ModelPart cMouth;
+    private final ModelPart cMouthOpen;
+    private final ModelPart cLEar;
+    private final ModelPart cREar;
+    private final ModelPart cNeck;
+    private final ModelPart cTorso;
+    private final ModelPart cAbdomen;
+    private final ModelPart cTail;
+    private final ModelPart cLegFL1, cLegFL2, cLegFL3;
+    private final ModelPart cLegFR1, cLegFR2, cLegFR3;
+    private final ModelPart cLegRL1, cLegRL2, cLegRL3;
+    private final ModelPart cLegRR1, cLegRR2, cLegRR3;
+
+    // Saddle/Bag parts (both "on all fours" and "sitting" variants):
+    private final ModelPart saddle, saddleBack, saddleFront, bag;
+    private final ModelPart saddleSitted, saddleBackSitted, saddleFrontSitted, bagSitted;
+
+    // State trackers:
+    private int bearState;
     private float attackSwing;
-
-    private MoCEntityBear entitybear;
-
-    public MoCModelBear() {
-        this.textureWidth = 128;
-        this.textureHeight = 128;
-
-        this.Head = new ModelRenderer(this, 19, 0);
-        this.Head.addBox(-4F, 0F, -4F, 8, 8, 5);
-        this.Head.setRotationPoint(0F, 6F, -10F);
-        setRotation(this.Head, 0.1502636F, 0F, 0F);
-
-        this.Mouth = new ModelRenderer(this, 24, 21);
-        this.Mouth.addBox(-1.5F, 6F, -6.8F, 3, 2, 5);
-        this.Mouth.setRotationPoint(0F, 6F, -10F);
-        setRotation(this.Mouth, -0.0068161F, 0F, 0F);
-
-        this.MouthOpen = new ModelRenderer(this, 24, 21);
-        this.MouthOpen.addBox(-1.5F, 4F, -9.5F, 3, 2, 5);
-        this.MouthOpen.setRotationPoint(0F, 6F, -10F);
-        setRotation(this.MouthOpen, 0.534236F, 0F, 0F);
-
-        this.LEar = new ModelRenderer(this, 40, 0);
-        this.LEar.addBox(2F, -2F, -2F, 3, 3, 1);
-        this.LEar.setRotationPoint(0F, 6F, -10F);
-        setRotation(this.LEar, 0.1502636F, -0.3490659F, 0.1396263F);
-
-        this.REar = new ModelRenderer(this, 16, 0);
-        this.REar.addBox(-5F, -2F, -2F, 3, 3, 1);
-        this.REar.setRotationPoint(0F, 6F, -10F);
-        setRotation(this.REar, 0.1502636F, 0.3490659F, -0.1396263F);
-
-        this.Snout = new ModelRenderer(this, 23, 13);
-        this.Snout.addBox(-2F, 3F, -8F, 4, 3, 5);
-        this.Snout.setRotationPoint(0F, 6F, -10F);
-        setRotation(this.Snout, 0.1502636F, 0F, 0F);
-
-        this.Neck = new ModelRenderer(this, 18, 28);
-        this.Neck.addBox(-3.5F, 0F, -7F, 7, 7, 7);
-        this.Neck.setRotationPoint(0F, 5F, -5F);
-        setRotation(this.Neck, 0.2617994F, 0F, 0F);
-
-        this.Abdomen = new ModelRenderer(this, 13, 62);
-        this.Abdomen.addBox(-4.5F, 0F, 0F, 9, 11, 10);
-        this.Abdomen.setRotationPoint(0F, 5F, 5F);
-        setRotation(this.Abdomen, -0.4363323F, 0F, 0F);
-
-        this.Torso = new ModelRenderer(this, 12, 42);
-        this.Torso.addBox(-5F, 0F, 0F, 10, 10, 10);
-        this.Torso.setRotationPoint(0F, 5F, -5F);
-
-        this.Tail = new ModelRenderer(this, 26, 83);
-        this.Tail.addBox(-1.5F, 0F, 0F, 3, 3, 3);
-        this.Tail.setRotationPoint(0F, 8.466666F, 12F);
-        setRotation(this.Tail, 0.4363323F, 0F, 0F);
-
-        this.LegFL1 = new ModelRenderer(this, 40, 22);
-        this.LegFL1.addBox(-2.5F, 0F, -2.5F, 5, 8, 5);
-        this.LegFL1.setRotationPoint(4F, 10F, -4F);
-        setRotation(this.LegFL1, 0.2617994F, 0F, 0F);
-
-        this.LegFL2 = new ModelRenderer(this, 46, 35);
-        this.LegFL2.addBox(-2F, 7F, 0F, 4, 6, 4);
-        this.LegFL2.setRotationPoint(4F, 10F, -4F);
-
-        this.LegFL3 = new ModelRenderer(this, 46, 45);
-        this.LegFL3.addBox(-2F, 12F, -1F, 4, 2, 5);
-        this.LegFL3.setRotationPoint(4F, 10F, -4F);
-
-        this.LegFR1 = new ModelRenderer(this, 4, 22);
-        this.LegFR1.addBox(-2.5F, 0F, -2.5F, 5, 8, 5);
-        this.LegFR1.setRotationPoint(-4F, 10F, -4F);
-        setRotation(this.LegFR1, 0.2617994F, 0F, 0F);
-
-        this.LegFR2 = new ModelRenderer(this, 2, 35);
-        this.LegFR2.addBox(-2F, 7F, 0F, 4, 6, 4);
-        this.LegFR2.setRotationPoint(-4F, 10F, -4F);
-
-        this.LegFR3 = new ModelRenderer(this, 0, 45);
-        this.LegFR3.addBox(-2F, 12F, -1F, 4, 2, 5);
-        this.LegFR3.setRotationPoint(-4F, 10F, -4F);
-
-        this.LegRL1 = new ModelRenderer(this, 34, 83);
-        this.LegRL1.addBox(-1.5F, 0F, -2.5F, 4, 8, 6);
-        this.LegRL1.setRotationPoint(3.5F, 11F, 9F);
-        setRotation(this.LegRL1, -0.1745329F, 0F, 0F);
-
-        this.LegRL2 = new ModelRenderer(this, 41, 97);
-        this.LegRL2.addBox(-2F, 6F, -1F, 4, 6, 4);
-        this.LegRL2.setRotationPoint(3.5F, 11F, 9F);
-
-        this.LegRL3 = new ModelRenderer(this, 44, 107);
-        this.LegRL3.addBox(-2F, 11F, -2F, 4, 2, 5);
-        this.LegRL3.setRotationPoint(3.5F, 11F, 9F);
-
-        this.LegRR1 = new ModelRenderer(this, 10, 83);
-        this.LegRR1.addBox(-2.5F, 0F, -2.5F, 4, 8, 6);
-        this.LegRR1.setRotationPoint(-3.5F, 11F, 9F);
-        setRotation(this.LegRR1, -0.1745329F, 0F, 0F);
-
-        this.LegRR2 = new ModelRenderer(this, 7, 97);
-        this.LegRR2.addBox(-2F, 6F, -1F, 4, 6, 4);
-        this.LegRR2.setRotationPoint(-3.5F, 11F, 9F);
-
-        this.LegRR3 = new ModelRenderer(this, 2, 107);
-        this.LegRR3.addBox(-2F, 11F, -2F, 4, 2, 5);
-        this.LegRR3.setRotationPoint(-3.5F, 11F, 9F);
-
-        //---standing
-
-        this.BHead = new ModelRenderer(this, 19, 0);
-        this.BHead.addBox(-4F, 0F, -4F, 8, 8, 5);
-        this.BHead.setRotationPoint(0F, -12F, 5F);
-        setRotation(this.BHead, -0.0242694F, 0F, 0F);
-
-        this.BSnout = new ModelRenderer(this, 23, 13);
-        this.BSnout.addBox(-2F, 2.5F, -8.5F, 4, 3, 5);
-        this.BSnout.setRotationPoint(0F, -12F, 5F);
-        setRotation(this.BSnout, -0.0242694F, 0F, 0F);
-
-        this.BMouth = new ModelRenderer(this, 24, 21);
-        this.BMouth.addBox(-1.5F, 5.5F, -8.0F, 3, 2, 5);
-        this.BMouth.setRotationPoint(0F, -12F, 5F);
-        setRotation(this.BMouth, -0.08726F, 0F, 0F);
-
-        this.BMouthOpen = new ModelRenderer(this, 24, 21);
-        this.BMouthOpen.addBox(-1.5F, 3.5F, -11F, 3, 2, 5);
-        this.BMouthOpen.setRotationPoint(0F, -12F, 5F);
-        setRotation(this.BMouthOpen, 0.5235988F, 0F, 0F);
-
-        this.BNeck = new ModelRenderer(this, 18, 28);
-        this.BNeck.addBox(-3.5F, 0F, -7F, 7, 6, 7);
-        this.BNeck.setRotationPoint(0F, -3F, 11F);
-        setRotation(this.BNeck, -1.336881F, 0F, 0F);
-
-        this.BLEar = new ModelRenderer(this, 40, 0);
-        this.BLEar.addBox(2F, -2F, -2F, 3, 3, 1);
-        this.BLEar.setRotationPoint(0F, -12F, 5F);
-        setRotation(this.BLEar, -0.0242694F, -0.3490659F, 0.1396263F);
-
-        this.BREar = new ModelRenderer(this, 16, 0);
-        this.BREar.addBox(-5F, -2F, -2F, 3, 3, 1);
-        this.BREar.setRotationPoint(0F, -12F, 5F);
-        setRotation(this.BREar, -0.0242694F, 0.3490659F, -0.1396263F);
-
-        this.BTorso = new ModelRenderer(this, 12, 42);
-        this.BTorso.addBox(-5F, 0F, 0F, 10, 10, 10);
-        this.BTorso.setRotationPoint(0F, -3.5F, 12.3F);
-        setRotation(this.BTorso, -1.396263F, 0F, 0F);
-
-        this.BAbdomen = new ModelRenderer(this, 13, 62);
-        this.BAbdomen.addBox(-4.5F, 0F, 0F, 9, 11, 10);
-        this.BAbdomen.setRotationPoint(0F, 6F, 14F);
-        setRotation(this.BAbdomen, -1.570796F, 0F, 0F);
-
-        this.BTail = new ModelRenderer(this, 26, 83);
-        this.BTail.addBox(-1.5F, 0F, 0F, 3, 3, 3);
-        this.BTail.setRotationPoint(0F, 12.46667F, 12.6F);
-        setRotation(this.BTail, 0.3619751F, 0F, 0F);
-
-        this.BLegFL1 = new ModelRenderer(this, 40, 22);
-        this.BLegFL1.addBox(-2.5F, 0F, -2.5F, 5, 8, 5);
-        this.BLegFL1.setRotationPoint(5F, -1F, 6F);
-        setRotation(this.BLegFL1, 0.2617994F, 0F, -0.2617994F);
-
-        this.BLegFL2 = new ModelRenderer(this, 46, 35);
-        this.BLegFL2.addBox(0F, 5F, 3F, 4, 6, 4);
-        this.BLegFL2.setRotationPoint(5F, -1F, 6F);
-        setRotation(this.BLegFL2, -0.5576792F, 0F, 0F);
-
-        this.BLegFL3 = new ModelRenderer(this, 46, 45);
-        this.BLegFL3.addBox(0.1F, -7F, -14F, 4, 2, 5);
-        this.BLegFL3.setRotationPoint(5F, -1F, 6F);
-        setRotation(this.BLegFL3, 2.007645F, 0F, 0F);
-
-        this.BLegFR1 = new ModelRenderer(this, 4, 22);
-        this.BLegFR1.addBox(-2.5F, 0F, -2.5F, 5, 8, 5);
-        this.BLegFR1.setRotationPoint(-5F, -1F, 6F);
-        setRotation(this.BLegFR1, 0.2617994F, 0F, 0.2617994F);
-
-        this.BLegFR2 = new ModelRenderer(this, 2, 35);
-        this.BLegFR2.addBox(-4F, 5F, 3F, 4, 6, 4);
-        this.BLegFR2.setRotationPoint(-5F, -1F, 6F);
-        setRotation(this.BLegFR2, -0.5576792F, 0F, 0F);
-
-        this.BLegFR3 = new ModelRenderer(this, 0, 45);
-        this.BLegFR3.addBox(-4.1F, -7F, -14F, 4, 2, 5);
-        this.BLegFR3.setRotationPoint(-5F, -1F, 6F);
-        setRotation(this.BLegFR3, 2.007129F, 0F, 0F);
-
-        this.BLegRL1 = new ModelRenderer(this, 34, 83);
-        this.BLegRL1.addBox(-1.5F, 0F, -2.5F, 4, 8, 6);
-        this.BLegRL1.setRotationPoint(3F, 11F, 9F);
-        setRotation(this.BLegRL1, -0.5235988F, -0.2617994F, 0F);
-
-        this.BLegRL2 = new ModelRenderer(this, 41, 97);
-        this.BLegRL2.addBox(-1.3F, 6F, -3F, 4, 6, 4);
-        this.BLegRL2.setRotationPoint(3F, 11F, 9F);
-        setRotation(this.BLegRL2, 0F, -0.2617994F, 0F);
-
-        this.BLegRL3 = new ModelRenderer(this, 44, 107);
-        this.BLegRL3.addBox(-1.2F, 11F, -4F, 4, 2, 5);
-        this.BLegRL3.setRotationPoint(3F, 11F, 9F);
-        setRotation(this.BLegRL3, 0F, -0.2617994F, 0F);
-
-        this.BLegRR1 = new ModelRenderer(this, 10, 83);
-        this.BLegRR1.addBox(-2.5F, 0F, -2.5F, 4, 8, 6);
-        this.BLegRR1.setRotationPoint(-3F, 11F, 9F);
-        setRotation(this.BLegRR1, -0.1745329F, 0.2617994F, 0F);
-
-        this.BLegRR2 = new ModelRenderer(this, 7, 97);
-        this.BLegRR2.addBox(-2.4F, 6F, -1F, 4, 6, 4);
-        this.BLegRR2.setRotationPoint(-3F, 11F, 9F);
-        setRotation(this.BLegRR2, 0F, 0.2617994F, 0F);
-
-        this.BLegRR3 = new ModelRenderer(this, 2, 107);
-        this.BLegRR3.addBox(-2.5F, 11F, -2F, 4, 2, 5);
-        this.BLegRR3.setRotationPoint(-3F, 11F, 9F);
-        setRotation(this.BLegRR3, 0F, 0.2617994F, 0F);
-
-        //---Sitting
-        this.CHead = new ModelRenderer(this, 19, 0);
-        this.CHead.addBox(-4F, 0F, -4F, 8, 8, 5);
-        this.CHead.setRotationPoint(0F, 3F, -3.5F);
-        setRotation(this.CHead, 0.1502636F, 0F, 0F);
-
-        this.CSnout = new ModelRenderer(this, 23, 13);
-        this.CSnout.addBox(-2F, 3F, -8.5F, 4, 3, 5);
-        this.CSnout.setRotationPoint(0F, 3F, -3.5F);
-        setRotation(this.CSnout, 0.1502636F, 0F, 0F);
-
-        this.CMouth = new ModelRenderer(this, 24, 21);
-        this.CMouth.addBox(-1.5F, 6F, -7F, 3, 2, 5);
-        this.CMouth.setRotationPoint(0F, 3F, -3.5F);
-        setRotation(this.CMouth, -0.0068161F, 0F, 0F);
-
-        this.CMouthOpen = new ModelRenderer(this, 24, 21);
-        this.CMouthOpen.addBox(-1.5F, 5.5F, -9F, 3, 2, 5);
-        this.CMouthOpen.setRotationPoint(0F, 3F, -3.5F);
-        setRotation(this.CMouthOpen, 0.3665191F, 0F, 0F);
-
-        this.CLEar = new ModelRenderer(this, 40, 0);
-        this.CLEar.addBox(2F, -2F, -2F, 3, 3, 1);
-        this.CLEar.setRotationPoint(0F, 3F, -3.5F);
-        setRotation(this.CLEar, 0.1502636F, -0.3490659F, 0.1396263F);
-
-        this.CREar = new ModelRenderer(this, 16, 0);
-        this.CREar.addBox(-5F, -2F, -2F, 3, 3, 1);
-        this.CREar.setRotationPoint(0F, 3F, -3.5F);
-        setRotation(this.CREar, 0.1502636F, 0.3490659F, -0.1396263F);
-
-        this.CNeck = new ModelRenderer(this, 18, 28);
-        this.CNeck.addBox(-3.5F, 0F, -7F, 7, 7, 7);
-        this.CNeck.setRotationPoint(0F, 5.8F, 3.4F);
-        setRotation(this.CNeck, -0.3316126F, 0F, 0F);
-
-        this.CTorso = new ModelRenderer(this, 12, 42);
-        this.CTorso.addBox(-5F, 0F, 0F, 10, 10, 10);
-        this.CTorso.setRotationPoint(0F, 5.8F, 3.4F);
-        setRotation(this.CTorso, -0.9712912F, 0F, 0F);
-
-        this.CAbdomen = new ModelRenderer(this, 13, 62);
-        this.CAbdomen.addBox(-4.5F, 0F, 0F, 9, 11, 10);
-        this.CAbdomen.setRotationPoint(0F, 14F, 9F);
-        setRotation(this.CAbdomen, -1.570796F, 0F, 0F);
-
-        this.CTail = new ModelRenderer(this, 26, 83);
-        this.CTail.addBox(-1.5F, 0F, 0F, 3, 3, 3);
-        this.CTail.setRotationPoint(0F, 21.46667F, 8F);
-        setRotation(this.CTail, 0.4363323F, 0F, 0F);
-
-        this.CLegFL1 = new ModelRenderer(this, 40, 22);
-        this.CLegFL1.addBox(-2.5F, 0F, -1.5F, 5, 8, 5);
-        this.CLegFL1.setRotationPoint(4F, 10F, 0F);
-        setRotation(this.CLegFL1, -0.2617994F, 0F, 0F);
-
-        this.CLegFL2 = new ModelRenderer(this, 46, 35);
-        this.CLegFL2.addBox(-2F, 0F, -1.2F, 4, 6, 4);
-        this.CLegFL2.setRotationPoint(4F, 17F, -2F);
-        setRotation(this.CLegFL2, -0.3490659F, 0F, 0.2617994F);
-
-        this.CLegFL3 = new ModelRenderer(this, 46, 45);
-        this.CLegFL3.addBox(-2F, 0F, -3F, 4, 2, 5);
-        this.CLegFL3.setRotationPoint(2.5F, 22F, -4F);
-        setRotation(this.CLegFL3, 0F, 0.1745329F, 0F);
-
-        this.CLegFR1 = new ModelRenderer(this, 4, 22);
-        this.CLegFR1.addBox(-2.5F, 0F, -1.5F, 5, 8, 5);
-        this.CLegFR1.setRotationPoint(-4F, 10F, 0F);
-        setRotation(this.CLegFR1, -0.2617994F, 0F, 0F);
-
-        this.CLegFR2 = new ModelRenderer(this, 2, 35);
-        this.CLegFR2.addBox(-2F, 0F, -1.2F, 4, 6, 4);
-        this.CLegFR2.setRotationPoint(-4F, 17F, -2F);
-        setRotation(this.CLegFR2, -0.3490659F, 0F, -0.2617994F);
-
-        this.CLegFR3 = new ModelRenderer(this, 0, 45);
-        this.CLegFR3.addBox(-2F, 0F, -3F, 4, 2, 5);
-        this.CLegFR3.setRotationPoint(-2.5F, 22F, -4F);
-        setRotation(this.CLegFR3, 0F, -0.1745329F, 0F);
-
-        this.CLegRL1 = new ModelRenderer(this, 34, 83);
-        this.CLegRL1.addBox(-1.5F, 0F, -2.5F, 4, 8, 6);
-        this.CLegRL1.setRotationPoint(3F, 21F, 5F);
-        setRotation(this.CLegRL1, -1.396263F, -0.3490659F, 0.3490659F);
-
-        this.CLegRL2 = new ModelRenderer(this, 41, 97);
-        this.CLegRL2.addBox(-2F, 0F, -2F, 4, 6, 4);
-        this.CLegRL2.setRotationPoint(5.2F, 22.5F, -1F);
-        setRotation(this.CLegRL2, -1.570796F, 0F, 0.3490659F);
-
-        this.CLegRL3 = new ModelRenderer(this, 44, 107);
-        this.CLegRL3.addBox(-2F, 0F, -3F, 4, 2, 5);
-        this.CLegRL3.setRotationPoint(5.5F, 22F, -6F);
-        setRotation(this.CLegRL3, -1.375609F, 0F, 0.3490659F);
-
-        this.CLegRR1 = new ModelRenderer(this, 10, 83);
-        this.CLegRR1.addBox(-2.5F, 0F, -2.5F, 4, 8, 6);
-        this.CLegRR1.setRotationPoint(-3F, 21F, 5F);
-        setRotation(this.CLegRR1, -1.396263F, 0.3490659F, -0.3490659F);
-
-        this.CLegRR2 = new ModelRenderer(this, 7, 97);
-        this.CLegRR2.addBox(-2F, 0F, -2F, 4, 6, 4);
-        this.CLegRR2.setRotationPoint(-5.2F, 22.5F, -1F);
-        setRotation(this.CLegRR2, -1.570796F, 0F, -0.3490659F);
-
-        this.CLegRR3 = new ModelRenderer(this, 2, 107);
-        this.CLegRR3.addBox(-2F, 0F, -3F, 4, 2, 5);
-        this.CLegRR3.setRotationPoint(-5.5F, 22F, -6F);
-        setRotation(this.CLegRR3, -1.375609F, 0F, -0.3490659F);
-
-        Saddle = new ModelRenderer(this, 36, 114);
-        Saddle.addBox(-4F, -0.5F, -3F, 8, 2, 6, 0F);
-        Saddle.setRotationPoint(0F, 4F, -2F);
-
-        SaddleBack = new ModelRenderer(this, 20, 108);
-        SaddleBack.addBox(-4F, -0.2F, 2.9F, 8, 2, 4, 0F);
-        SaddleBack.setRotationPoint(0F, 4F, -2F);
-        SaddleBack.rotateAngleX = 0.10088F;
-
-        SaddleFront = new ModelRenderer(this, 36, 122);
-        SaddleFront.addBox(-2.5F, -1F, -3F, 5, 2, 3, 0F);
-        SaddleFront.setRotationPoint(0F, 4F, -2F);
-        SaddleFront.rotateAngleX = -0.1850049F;
-
-        Bag = new ModelRenderer(this, 0, 114);
-        Bag.addBox(-5F, -3F, -2.5F, 10, 2, 5, 0F);
-        Bag.setRotationPoint(0F, 7F, 7F);
-        Bag.rotateAngleX = -0.4363323F;
-
-        BagSitted = new ModelRenderer(this, 0, 114);
-        BagSitted.addBox(-5F, -3F, -2.5F, 10, 2, 5, 0F);
-        BagSitted.setRotationPoint(0F, 17F, 8F);
-        BagSitted.rotateAngleX = -1.570796F;
-
-        SaddleSitted = new ModelRenderer(this, 36, 114);
-        SaddleSitted.addBox(-4F, -0.5F, -3F, 8, 2, 6, 0F);
-        SaddleSitted.setRotationPoint(0F, 7.5F, 6.5F);
-        SaddleSitted.rotateAngleX = -0.9686577F;
-
-        SaddleBackSitted = new ModelRenderer(this, 20, 108);
-        SaddleBackSitted.addBox(-4F, -0.3F, 2.9F, 8, 2, 4, 0F);
-        SaddleBackSitted.setRotationPoint(0F, 7.5F, 6.5F);
-        SaddleBackSitted.rotateAngleX = -0.9162979F;
-
-        SaddleFrontSitted = new ModelRenderer(this, 36, 122);
-        SaddleFrontSitted.addBox(-2.5F, -1F, -3F, 5, 2, 3, 0F);
-        SaddleFrontSitted.setRotationPoint(0F, 7.5F, 6.5F);
-        SaddleFrontSitted.rotateAngleX = -1.151917F;
+    private MoCEntityBear entityBear;
+
+    public MoCModelBear(ModelPart root) {
+        this.root = root;
+
+        // "On all fours" children
+        this.head       = root.getChild("head");
+        this.mouth      = root.getChild("mouth");
+        this.mouthOpen  = root.getChild("mouth_open");
+        this.lEar       = root.getChild("l_ear");
+        this.rEar       = root.getChild("r_ear");
+        this.snout      = root.getChild("snout");
+        this.neck       = root.getChild("neck");
+        this.abdomen    = root.getChild("abdomen");
+        this.torso      = root.getChild("torso");
+        this.tail       = root.getChild("tail");
+        this.legFL1     = root.getChild("leg_fl1");
+        this.legFL2     = root.getChild("leg_fl2");
+        this.legFL3     = root.getChild("leg_fl3");
+        this.legFR1     = root.getChild("leg_fr1");
+        this.legFR2     = root.getChild("leg_fr2");
+        this.legFR3     = root.getChild("leg_fr3");
+        this.legRL1     = root.getChild("leg_rl1");
+        this.legRL2     = root.getChild("leg_rl2");
+        this.legRL3     = root.getChild("leg_rl3");
+        this.legRR1     = root.getChild("leg_rr1");
+        this.legRR2     = root.getChild("leg_rr2");
+        this.legRR3     = root.getChild("leg_rr3");
+
+        // "Standing up" children
+        this.bHead      = root.getChild("b_head");
+        this.bSnout     = root.getChild("b_snout");
+        this.bMouth     = root.getChild("b_mouth");
+        this.bMouthOpen = root.getChild("b_mouth_open");
+        this.bNeck      = root.getChild("b_neck");
+        this.bLEar      = root.getChild("b_l_ear");
+        this.bREar      = root.getChild("b_r_ear");
+        this.bTorso     = root.getChild("b_torso");
+        this.bAbdomen   = root.getChild("b_abdomen");
+        this.bTail      = root.getChild("b_tail");
+        this.bLegFL1    = root.getChild("b_leg_fl1");
+        this.bLegFL2    = root.getChild("b_leg_fl2");
+        this.bLegFL3    = root.getChild("b_leg_fl3");
+        this.bLegFR1    = root.getChild("b_leg_fr1");
+        this.bLegFR2    = root.getChild("b_leg_fr2");
+        this.bLegFR3    = root.getChild("b_leg_fr3");
+        this.bLegRL1    = root.getChild("b_leg_rl1");
+        this.bLegRL2    = root.getChild("b_leg_rl2");
+        this.bLegRL3    = root.getChild("b_leg_rl3");
+        this.bLegRR1    = root.getChild("b_leg_rr1");
+        this.bLegRR2    = root.getChild("b_leg_rr2");
+        this.bLegRR3    = root.getChild("b_leg_rr3");
+
+        // "Sitting" children
+        this.cHead      = root.getChild("c_head");
+        this.cSnout     = root.getChild("c_snout");
+        this.cMouth     = root.getChild("c_mouth");
+        this.cMouthOpen = root.getChild("c_mouth_open");
+        this.cLEar      = root.getChild("c_l_ear");
+        this.cREar      = root.getChild("c_r_ear");
+        this.cNeck      = root.getChild("c_neck");
+        this.cTorso     = root.getChild("c_torso");
+        this.cAbdomen   = root.getChild("c_abdomen");
+        this.cTail      = root.getChild("c_tail");
+        this.cLegFL1    = root.getChild("c_leg_fl1");
+        this.cLegFL2    = root.getChild("c_leg_fl2");
+        this.cLegFL3    = root.getChild("c_leg_fl3");
+        this.cLegFR1    = root.getChild("c_leg_fr1");
+        this.cLegFR2    = root.getChild("c_leg_fr2");
+        this.cLegFR3    = root.getChild("c_leg_fr3");
+        this.cLegRL1    = root.getChild("c_leg_rl1");
+        this.cLegRL2    = root.getChild("c_leg_rl2");
+        this.cLegRL3    = root.getChild("c_leg_rl3");
+        this.cLegRR1    = root.getChild("c_leg_rr1");
+        this.cLegRR2    = root.getChild("c_leg_rr2");
+        this.cLegRR3    = root.getChild("c_leg_rr3");
+
+        // Saddle & Bag (both poses)
+        this.saddle            = root.getChild("saddle");
+        this.saddleBack        = root.getChild("saddle_back");
+        this.saddleFront       = root.getChild("saddle_front");
+        this.bag               = root.getChild("bag");
+        this.saddleSitted      = root.getChild("saddle_sitted");
+        this.saddleBackSitted  = root.getChild("saddle_back_sitted");
+        this.saddleFrontSitted = root.getChild("saddle_front_sitted");
+        this.bagSitted         = root.getChild("bag_sitted");
     }
 
+    /**
+     * Builds the entire mesh hierarchy.  Mirrors your old addBox/ setRotation calls exactly.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // ----------------------------------------------------------------------
+        // "On all fours" parts
+        // ----------------------------------------------------------------------
+
+        root.addOrReplaceChild(
+                "head",
+                CubeListBuilder.create()
+                        .texOffs(19, 0)
+                        .addBox(-4F, 0F, -4F, 8, 8, 5),
+                PartPose.offsetAndRotation(0F, 6F, -10F, 0.1502636F, 0F, 0F)
+        );
+
+        root.addOrReplaceChild(
+                "mouth",
+                CubeListBuilder.create()
+                        .texOffs(24, 21)
+                        .addBox(-1.5F, 6F, -6.8F, 3, 2, 5),
+                PartPose.offsetAndRotation(0F, 6F, -10F, -0.0068161F, 0F, 0F)
+        );
+
+        root.addOrReplaceChild(
+                "mouth_open",
+                CubeListBuilder.create()
+                        .texOffs(24, 21)
+                        .addBox(-1.5F, 4F, -9.5F, 3, 2, 5),
+                PartPose.offsetAndRotation(0F, 6F, -10F, 0.534236F, 0F, 0F)
+        );
+
+        root.addOrReplaceChild(
+                "l_ear",
+                CubeListBuilder.create()
+                        .texOffs(40, 0)
+                        .addBox(2F, -2F, -2F, 3, 3, 1),
+                PartPose.offsetAndRotation(0F, 6F, -10F, 0.1502636F, -0.3490659F, 0.1396263F)
+        );
+
+        root.addOrReplaceChild(
+                "r_ear",
+                CubeListBuilder.create()
+                        .texOffs(16, 0)
+                        .addBox(-5F, -2F, -2F, 3, 3, 1),
+                PartPose.offsetAndRotation(0F, 6F, -10F, 0.1502636F, 0.3490659F, -0.1396263F)
+        );
+
+        root.addOrReplaceChild(
+                "snout",
+                CubeListBuilder.create()
+                        .texOffs(23, 13)
+                        .addBox(-2F, 3F, -8F, 4, 3, 5),
+                PartPose.offsetAndRotation(0F, 6F, -10F, 0.1502636F, 0F, 0F)
+        );
+
+        root.addOrReplaceChild(
+                "neck",
+                CubeListBuilder.create()
+                        .texOffs(18, 28)
+                        .addBox(-3.5F, 0F, -7F, 7, 7, 7),
+                PartPose.offsetAndRotation(0F, 5F, -5F, 0.2617994F, 0F, 0F)
+        );
+
+        root.addOrReplaceChild(
+                "abdomen",
+                CubeListBuilder.create()
+                        .texOffs(13, 62)
+                        .addBox(-4.5F, 0F, 0F, 9, 11, 10),
+                PartPose.offsetAndRotation(0F, 5F, 5F, -0.4363323F, 0F, 0F)
+        );
+
+        root.addOrReplaceChild(
+                "torso",
+                CubeListBuilder.create()
+                        .texOffs(12, 42)
+                        .addBox(-5F, 0F, 0F, 10, 10, 10),
+                PartPose.offset(0F, 5F, -5F)
+        );
+
+        root.addOrReplaceChild(
+                "tail",
+                CubeListBuilder.create()
+                        .texOffs(26, 83)
+                        .addBox(-1.5F, 0F, 0F, 3, 3, 3),
+                PartPose.offsetAndRotation(0F, 8.466666F, 12F, 0.4363323F, 0F, 0F)
+        );
+
+        root.addOrReplaceChild(
+                "leg_fl1",
+                CubeListBuilder.create()
+                        .texOffs(40, 22)
+                        .addBox(-2.5F, 0F, -2.5F, 5, 8, 5),
+                PartPose.offsetAndRotation(4F, 10F, -4F, 0.2617994F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "leg_fl2",
+                CubeListBuilder.create()
+                        .texOffs(46, 35)
+                        .addBox(-2F, 7F, 0F, 4, 6, 4),
+                PartPose.offset(4F, 10F, -4F)
+        );
+        root.addOrReplaceChild(
+                "leg_fl3",
+                CubeListBuilder.create()
+                        .texOffs(46, 45)
+                        .addBox(-2F, 12F, -1F, 4, 2, 5),
+                PartPose.offset(4F, 10F, -4F)
+        );
+
+        root.addOrReplaceChild(
+                "leg_fr1",
+                CubeListBuilder.create()
+                        .texOffs(4, 22)
+                        .addBox(-2.5F, 0F, -2.5F, 5, 8, 5),
+                PartPose.offsetAndRotation(-4F, 10F, -4F, 0.2617994F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "leg_fr2",
+                CubeListBuilder.create()
+                        .texOffs(2, 35)
+                        .addBox(-2F, 7F, 0F, 4, 6, 4),
+                PartPose.offset(-4F, 10F, -4F)
+        );
+        root.addOrReplaceChild(
+                "leg_fr3",
+                CubeListBuilder.create()
+                        .texOffs(0, 45)
+                        .addBox(-2F, 12F, -1F, 4, 2, 5),
+                PartPose.offset(-4F, 10F, -4F)
+        );
+
+        root.addOrReplaceChild(
+                "leg_rl1",
+                CubeListBuilder.create()
+                        .texOffs(34, 83)
+                        .addBox(-1.5F, 0F, -2.5F, 4, 8, 6),
+                PartPose.offsetAndRotation(3.5F, 11F, 9F, -0.1745329F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "leg_rl2",
+                CubeListBuilder.create()
+                        .texOffs(41, 97)
+                        .addBox(-2F, 6F, -1F, 4, 6, 4),
+                PartPose.offset(3.5F, 11F, 9F)
+        );
+        root.addOrReplaceChild(
+                "leg_rl3",
+                CubeListBuilder.create()
+                        .texOffs(44, 107)
+                        .addBox(-2F, 11F, -2F, 4, 2, 5),
+                PartPose.offset(3.5F, 11F, 9F)
+        );
+
+        root.addOrReplaceChild(
+                "leg_rr1",
+                CubeListBuilder.create()
+                        .texOffs(10, 83)
+                        .addBox(-2.5F, 0F, -2.5F, 4, 8, 6),
+                PartPose.offsetAndRotation(-3.5F, 11F, 9F, -0.1745329F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "leg_rr2",
+                CubeListBuilder.create()
+                        .texOffs(7, 97)
+                        .addBox(-2F, 6F, -1F, 4, 6, 4),
+                PartPose.offset(-3.5F, 11F, 9F)
+        );
+        root.addOrReplaceChild(
+                "leg_rr3",
+                CubeListBuilder.create()
+                        .texOffs(2, 107)
+                        .addBox(-2F, 11F, -2F, 4, 2, 5),
+                PartPose.offset(-3.5F, 11F, 9F)
+        );
+
+        // ----------------------------------------------------------------------
+        // "Standing up" (biped) parts
+        // ----------------------------------------------------------------------
+
+        root.addOrReplaceChild(
+                "b_head",
+                CubeListBuilder.create()
+                        .texOffs(19, 0)
+                        .addBox(-4F, 0F, -4F, 8, 8, 5),
+                PartPose.offsetAndRotation(0F, -12F, 5F, -0.0242694F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_snout",
+                CubeListBuilder.create()
+                        .texOffs(23, 13)
+                        .addBox(-2F, 2.5F, -8.5F, 4, 3, 5),
+                PartPose.offsetAndRotation(0F, -12F, 5F, -0.0242694F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_mouth",
+                CubeListBuilder.create()
+                        .texOffs(24, 21)
+                        .addBox(-1.5F, 5.5F, -8.0F, 3, 2, 5),
+                PartPose.offsetAndRotation(0F, -12F, 5F, -0.08726F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_mouth_open",
+                CubeListBuilder.create()
+                        .texOffs(24, 21)
+                        .addBox(-1.5F, 3.5F, -11F, 3, 2, 5),
+                PartPose.offsetAndRotation(0F, -12F, 5F, 0.5235988F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_neck",
+                CubeListBuilder.create()
+                        .texOffs(18, 28)
+                        .addBox(-3.5F, 0F, -7F, 7, 6, 7),
+                PartPose.offsetAndRotation(0F, -3F, 11F, -1.336881F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_l_ear",
+                CubeListBuilder.create()
+                        .texOffs(40, 0)
+                        .addBox(2F, -2F, -2F, 3, 3, 1),
+                PartPose.offsetAndRotation(0F, -12F, 5F, -0.0242694F, -0.3490659F, 0.1396263F)
+        );
+        root.addOrReplaceChild(
+                "b_r_ear",
+                CubeListBuilder.create()
+                        .texOffs(16, 0)
+                        .addBox(-5F, -2F, -2F, 3, 3, 1),
+                PartPose.offsetAndRotation(0F, -12F, 5F, -0.0242694F, 0.3490659F, -0.1396263F)
+        );
+        root.addOrReplaceChild(
+                "b_torso",
+                CubeListBuilder.create()
+                        .texOffs(12, 42)
+                        .addBox(-5F, 0F, 0F, 10, 10, 10),
+                PartPose.offsetAndRotation(0F, -3.5F, 12.3F, -1.396263F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_abdomen",
+                CubeListBuilder.create()
+                        .texOffs(13, 62)
+                        .addBox(-4.5F, 0F, 0F, 9, 11, 10),
+                PartPose.offsetAndRotation(0F, 6F, 14F, -1.570796F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_tail",
+                CubeListBuilder.create()
+                        .texOffs(26, 83)
+                        .addBox(-1.5F, 0F, 0F, 3, 3, 3),
+                PartPose.offsetAndRotation(0F, 12.46667F, 12.6F, 0.3619751F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_fl1",
+                CubeListBuilder.create()
+                        .texOffs(40, 22)
+                        .addBox(-2.5F, 0F, -2.5F, 5, 8, 5),
+                PartPose.offsetAndRotation(5F, -1F, 6F, 0.2617994F, 0F, -0.2617994F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_fl2",
+                CubeListBuilder.create()
+                        .texOffs(46, 35)
+                        .addBox(0F, 5F, 3F, 4, 6, 4),
+                PartPose.offsetAndRotation(5F, -1F, 6F, -0.5576792F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_fl3",
+                CubeListBuilder.create()
+                        .texOffs(46, 45)
+                        .addBox(0.1F, -7F, -14F, 4, 2, 5),
+                PartPose.offsetAndRotation(5F, -1F, 6F, 2.007645F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_fr1",
+                CubeListBuilder.create()
+                        .texOffs(4, 22)
+                        .addBox(-2.5F, 0F, -2.5F, 5, 8, 5),
+                PartPose.offsetAndRotation(-5F, -1F, 6F, 0.2617994F, 0F, 0.2617994F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_fr2",
+                CubeListBuilder.create()
+                        .texOffs(2, 35)
+                        .addBox(-4F, 5F, 3F, 4, 6, 4),
+                PartPose.offsetAndRotation(-5F, -1F, 6F, -0.5576792F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_fr3",
+                CubeListBuilder.create()
+                        .texOffs(0, 45)
+                        .addBox(-4.1F, -7F, -14F, 4, 2, 5),
+                PartPose.offsetAndRotation(-5F, -1F, 6F, 2.007129F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_rl1",
+                CubeListBuilder.create()
+                        .texOffs(34, 83)
+                        .addBox(-1.5F, 0F, -2.5F, 4, 8, 6),
+                PartPose.offsetAndRotation(3F, 11F, 9F, -0.5235988F, -0.2617994F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_rl2",
+                CubeListBuilder.create()
+                        .texOffs(41, 97)
+                        .addBox(-1.3F, 6F, -3F, 4, 6, 4),
+                PartPose.offsetAndRotation(3F, 11F, 9F, 0F, -0.2617994F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_rl3",
+                CubeListBuilder.create()
+                        .texOffs(44, 107)
+                        .addBox(-1.2F, 11F, -4F, 4, 2, 5),
+                PartPose.offsetAndRotation(3F, 11F, 9F, 0F, -0.2617994F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_rr1",
+                CubeListBuilder.create()
+                        .texOffs(10, 83)
+                        .addBox(-2.5F, 0F, -2.5F, 4, 8, 6),
+                PartPose.offsetAndRotation(-3F, 11F, 9F, -0.1745329F, 0.2617994F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_rr2",
+                CubeListBuilder.create()
+                        .texOffs(7, 97)
+                        .addBox(-2.4F, 6F, -1F, 4, 6, 4),
+                PartPose.offsetAndRotation(-3F, 11F, 9F, 0F, 0.2617994F, 0F)
+        );
+        root.addOrReplaceChild(
+                "b_leg_rr3",
+                CubeListBuilder.create()
+                        .texOffs(2, 107)
+                        .addBox(-2.5F, 11F, -2F, 4, 2, 5),
+                PartPose.offsetAndRotation(-3F, 11F, 9F, 0F, 0.2617994F, 0F)
+        );
+
+        // ----------------------------------------------------------------------
+        // "Sitting" parts
+        // ----------------------------------------------------------------------
+
+        root.addOrReplaceChild(
+                "c_head",
+                CubeListBuilder.create()
+                        .texOffs(19, 0)
+                        .addBox(-4F, 0F, -4F, 8, 8, 5),
+                PartPose.offsetAndRotation(0F, 3F, -3.5F, 0.1502636F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_snout",
+                CubeListBuilder.create()
+                        .texOffs(23, 13)
+                        .addBox(-2F, 3F, -8.5F, 4, 3, 5),
+                PartPose.offsetAndRotation(0F, 3F, -3.5F, 0.1502636F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_mouth",
+                CubeListBuilder.create()
+                        .texOffs(24, 21)
+                        .addBox(-1.5F, 6F, -7F, 3, 2, 5),
+                PartPose.offsetAndRotation(0F, 3F, -3.5F, -0.0068161F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_mouth_open",
+                CubeListBuilder.create()
+                        .texOffs(24, 21)
+                        .addBox(-1.5F, 5.5F, -9F, 3, 2, 5),
+                PartPose.offsetAndRotation(0F, 3F, -3.5F, 0.3665191F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_l_ear",
+                CubeListBuilder.create()
+                        .texOffs(40, 0)
+                        .addBox(2F, -2F, -2F, 3, 3, 1),
+                PartPose.offsetAndRotation(0F, 3F, -3.5F, 0.1502636F, -0.3490659F, 0.1396263F)
+        );
+        root.addOrReplaceChild(
+                "c_r_ear",
+                CubeListBuilder.create()
+                        .texOffs(16, 0)
+                        .addBox(-5F, -2F, -2F, 3, 3, 1),
+                PartPose.offsetAndRotation(0F, 3F, -3.5F, 0.1502636F, 0.3490659F, -0.1396263F)
+        );
+        root.addOrReplaceChild(
+                "c_neck",
+                CubeListBuilder.create()
+                        .texOffs(18, 28)
+                        .addBox(-3.5F, 0F, -7F, 7, 7, 7),
+                PartPose.offsetAndRotation(0F, 5.8F, 3.4F, -0.3316126F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_torso",
+                CubeListBuilder.create()
+                        .texOffs(12, 42)
+                        .addBox(-5F, 0F, 0F, 10, 10, 10),
+                PartPose.offsetAndRotation(0F, 5.8F, 3.4F, -0.9712912F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_abdomen",
+                CubeListBuilder.create()
+                        .texOffs(13, 62)
+                        .addBox(-4.5F, 0F, 0F, 9, 11, 10),
+                PartPose.offsetAndRotation(0F, 14F, 9F, -1.570796F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_tail",
+                CubeListBuilder.create()
+                        .texOffs(26, 83)
+                        .addBox(-1.5F, 0F, 0F, 3, 3, 3),
+                PartPose.offsetAndRotation(0F, 21.46667F, 8F, 0.4363323F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_fl1",
+                CubeListBuilder.create()
+                        .texOffs(40, 22)
+                        .addBox(-2.5F, 0F, -1.5F, 5, 8, 5),
+                PartPose.offsetAndRotation(4F, 10F, 0F, -0.2617994F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_fl2",
+                CubeListBuilder.create()
+                        .texOffs(46, 35)
+                        .addBox(-2F, 0F, -1.2F, 4, 6, 4),
+                PartPose.offsetAndRotation(4F, 17F, -2F, -0.3490659F, 0F, 0.2617994F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_fl3",
+                CubeListBuilder.create()
+                        .texOffs(46, 45)
+                        .addBox(-2F, 0F, -3F, 4, 2, 5),
+                PartPose.offsetAndRotation(2.5F, 22F, -4F, 0F, 0.1745329F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_fr1",
+                CubeListBuilder.create()
+                        .texOffs(4, 22)
+                        .addBox(-2.5F, 0F, -1.5F, 5, 8, 5),
+                PartPose.offsetAndRotation(-4F, 10F, 0F, -0.2617994F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_fr2",
+                CubeListBuilder.create()
+                        .texOffs(2, 35)
+                        .addBox(-2F, 0F, -1.2F, 4, 6, 4),
+                PartPose.offsetAndRotation(-4F, 17F, -2F, -0.3490659F, 0F, -0.2617994F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_fr3",
+                CubeListBuilder.create()
+                        .texOffs(0, 45)
+                        .addBox(-2F, 0F, -3F, 4, 2, 5),
+                PartPose.offsetAndRotation(-2.5F, 22F, -4F, 0F, -0.1745329F, 0F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_rl1",
+                CubeListBuilder.create()
+                        .texOffs(34, 83)
+                        .addBox(-1.5F, 0F, -2.5F, 4, 8, 6),
+                PartPose.offsetAndRotation(3F, 21F, 5F, -1.396263F, -0.3490659F, 0.3490659F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_rl2",
+                CubeListBuilder.create()
+                        .texOffs(41, 97)
+                        .addBox(-2F, 0F, -2F, 4, 6, 4),
+                PartPose.offsetAndRotation(5.2F, 22.5F, -1F, -1.570796F, 0F, 0.3490659F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_rl3",
+                CubeListBuilder.create()
+                        .texOffs(44, 107)
+                        .addBox(-2F, 0F, -3F, 4, 2, 5),
+                PartPose.offsetAndRotation(5.5F, 22F, -6F, -1.375609F, 0F, 0.3490659F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_rr1",
+                CubeListBuilder.create()
+                        .texOffs(10, 83)
+                        .addBox(-2.5F, 0F, -2.5F, 4, 8, 6),
+                PartPose.offsetAndRotation(-3F, 21F, 5F, -1.396263F, 0.3490659F, -0.3490659F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_rr2",
+                CubeListBuilder.create()
+                        .texOffs(7, 97)
+                        .addBox(-2F, 0F, -2F, 4, 6, 4),
+                PartPose.offsetAndRotation(-5.2F, 22.5F, -1F, -1.570796F, 0F, -0.3490659F)
+        );
+        root.addOrReplaceChild(
+                "c_leg_rr3",
+                CubeListBuilder.create()
+                        .texOffs(2, 107)
+                        .addBox(-2F, 0F, -3F, 4, 2, 5),
+                PartPose.offsetAndRotation(-5.5F, 22F, -6F, -1.375609F, 0F, -0.3490659F)
+        );
+
+        // ----------------------------------------------------------------------
+        // Saddle & Bag (all fours)
+        // ----------------------------------------------------------------------
+
+        root.addOrReplaceChild(
+                "saddle",
+                CubeListBuilder.create()
+                        .texOffs(36, 114)
+                        .addBox(-4F, -0.5F, -3F, 8, 2, 6),
+                PartPose.offset(0F, 4F, -2F)
+        );
+        root.addOrReplaceChild(
+                "saddle_back",
+                CubeListBuilder.create()
+                        .texOffs(20, 108)
+                        .addBox(-4F, -0.2F, 2.9F, 8, 2, 4),
+                PartPose.offsetAndRotation(0F, 4F, -2F, 0.10088F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "saddle_front",
+                CubeListBuilder.create()
+                        .texOffs(36, 122)
+                        .addBox(-2.5F, -1F, -3F, 5, 2, 3),
+                PartPose.offsetAndRotation(0F, 4F, -2F, -0.1850049F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "bag",
+                CubeListBuilder.create()
+                        .texOffs(0, 114)
+                        .addBox(-5F, -3F, -2.5F, 10, 2, 5),
+                PartPose.offsetAndRotation(0F, 7F, 7F, -0.4363323F, 0F, 0F)
+        );
+
+        // ----------------------------------------------------------------------
+        // Saddle & Bag ("sitting" pose)
+        // ----------------------------------------------------------------------
+
+        root.addOrReplaceChild(
+                "bag_sitted",
+                CubeListBuilder.create()
+                        .texOffs(0, 114)
+                        .addBox(-5F, -3F, -2.5F, 10, 2, 5),
+                PartPose.offsetAndRotation(0F, 17F, 8F, -1.570796F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "saddle_sitted",
+                CubeListBuilder.create()
+                        .texOffs(36, 114)
+                        .addBox(-4F, -0.5F, -3F, 8, 2, 6),
+                PartPose.offsetAndRotation(0F, 7.5F, 6.5F, -0.9686577F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "saddle_back_sitted",
+                CubeListBuilder.create()
+                        .texOffs(20, 108)
+                        .addBox(-4F, -0.3F, 2.9F, 8, 2, 4),
+                PartPose.offsetAndRotation(0F, 7.5F, 6.5F, -0.9162979F, 0F, 0F)
+        );
+        root.addOrReplaceChild(
+                "saddle_front_sitted",
+                CubeListBuilder.create()
+                        .texOffs(36, 122)
+                        .addBox(-2.5F, -1F, -3F, 5, 2, 3),
+                PartPose.offsetAndRotation(0F, 7.5F, 6.5F, -1.151917F, 0F, 0F)
+        );
+
+        return LayerDefinition.create(mesh, 128, 128);
+    }
+
+    /**
+     * Called from the renderer to capture bearState & attackSwing
+     */
     public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.entitybear = entityIn;
-        this.bearstate = entitybear.getBearState();
-        this.attackSwing = entitybear.getAttackSwing();
+        this.entityBear = entityIn;
+        this.bearState = entityBear.getBearState();
+        this.attackSwing = entityBear.getAttackSwing();
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        boolean openMouth = (entitybear.mouthCounter != 0);
-        boolean chested = entitybear.getIsChested();
-        boolean saddled = entitybear.getIsRideable();
+    public void setupAnim(
+            @NotNull T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // Store the entity reference
+        this.entityBear = entity;
+        this.bearState = entity.getBearState();
+        this.attackSwing = entity.getAttackSwing();
 
-        if (bearstate == 0) { //in fours
-            if (openMouth) {
-                this.MouthOpen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            } else {
-                this.Mouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            }
+        // Calculate common leg swings:
+        float lLegRotX = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
+        float rLegRotX = Mth.cos((limbSwing * 0.6662F) + (float) Math.PI) * 0.8F * limbSwingAmount;
+        float xAngle   = headPitch * Mth.DEG_TO_RAD;
+        float yAngle   = netHeadYaw * Mth.DEG_TO_RAD;
+
+        // First, default‐hide everything. We'll enable visibility on‐the‐fly below.
+        setAllVisible(false);
+
+        if (this.bearState == 0) {
+            // ─────────────────────────────────────
+            // On All Fours
+            // ─────────────────────────────────────
+            boolean openMouth = (entity.mouthCounter != 0);
+            boolean chested   = entity.getIsChested();
+            boolean saddled   = entity.getIsRideable();
+
+            // Head + look angles:
+            this.head.xRot      = 0.1502636F + xAngle;
+            this.head.yRot      = yAngle;
+            this.snout.xRot     = 0.1502636F + xAngle;
+            this.snout.yRot     = yAngle;
+            this.mouth.xRot     = -0.0068161F + xAngle;
+            this.mouth.yRot     = yAngle;
+            this.mouthOpen.xRot = 0.534236F + xAngle;
+            this.mouthOpen.yRot = yAngle;
+            this.lEar.xRot      = 0.1502636F + xAngle;
+            this.lEar.yRot      = -0.3490659F + yAngle;
+            this.rEar.xRot      = 0.1502636F + xAngle;
+            this.rEar.yRot      = 0.3490659F + yAngle;
+
+            // Leg swings:
+            this.legFL1.xRot = 0.2617994F + lLegRotX;
+            this.legFL2.xRot = lLegRotX;
+            this.legFL3.xRot = lLegRotX;
+
+            this.legRR1.xRot = -0.1745329F + lLegRotX;
+            this.legRR2.xRot = lLegRotX;
+            this.legRR3.xRot = lLegRotX;
+
+            this.legFR1.xRot = 0.2617994F + rLegRotX;
+            this.legFR2.xRot = rLegRotX;
+            this.legFR3.xRot = rLegRotX;
+
+            this.legRL1.xRot = -0.1745329F + rLegRotX;
+            this.legRL2.xRot = rLegRotX;
+            this.legRL3.xRot = rLegRotX;
+
+            // Tail wag (subtle)
+            this.tail.zRot = lLegRotX * 0.2F;
+
+            // Make visible:
+            this.head.visible      = true;
+            (openMouth ? this.mouthOpen : this.mouth).visible = true;
+            this.lEar.visible      = true;
+            this.rEar.visible      = true;
+            this.snout.visible     = true;
+            this.neck.visible      = true;
+            this.abdomen.visible   = true;
+            this.torso.visible     = true;
+            this.tail.visible      = true;
+
+            this.legFR1.visible  = true;
+            this.legFR2.visible  = true;
+            this.legFR3.visible  = true;
+            this.legFL1.visible  = true;
+            this.legFL2.visible  = true;
+            this.legFL3.visible  = true;
+            this.legRL1.visible  = true;
+            this.legRL2.visible  = true;
+            this.legRL3.visible  = true;
+            this.legRR1.visible  = true;
+            this.legRR2.visible  = true;
+            this.legRR3.visible  = true;
+
             if (saddled) {
-                Saddle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                SaddleBack.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                SaddleFront.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.saddle.visible      = true;
+                this.saddleBack.visible  = true;
+                this.saddleFront.visible = true;
             }
             if (chested) {
-                Bag.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            }
-            this.LegFR1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Snout.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.REar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Abdomen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Torso.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegRR3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegRR1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegRR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegFR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegFR3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegFL1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegFL3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegFL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegRL1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegRL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LegRL3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        } else if (bearstate == 1) {
-            this.BHead.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BSnout.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            if (openMouth) {
-                this.BMouthOpen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            } else {
-                this.BMouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.bag.visible = true;
             }
 
-            this.BNeck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BREar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BTorso.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BAbdomen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BTail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegFL1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegFL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegFL3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegFR1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegFR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegFR3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegRL1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegRL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegRL3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegRR1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegRR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.BLegRR3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        } else if (bearstate == 2) { //sited
-            if (openMouth) {
-                this.CMouthOpen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            } else {
-                this.CMouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            }
+        } else if (this.bearState == 1) {
+            // ─────────────────────────────────────
+            // Standing Up (Biped)
+            // ─────────────────────────────────────
+            boolean openMouth = (entity.mouthCounter != 0);
+
+            // Head + look:
+            this.bHead.xRot      = -0.0242694F - xAngle;
+            this.bHead.yRot      = yAngle;
+            this.bSnout.xRot     = -0.0242694F - xAngle;
+            this.bSnout.yRot     = yAngle;
+            this.bMouth.xRot     = -0.08726F - xAngle;
+            this.bMouth.yRot     = yAngle;
+            this.bMouthOpen.xRot = 0.5235988F - xAngle;
+            this.bMouthOpen.yRot = yAngle;
+            this.bLEar.xRot      = -0.0242694F - xAngle;
+            this.bLEar.yRot      = -0.3490659F + yAngle;
+            this.bREar.xRot      = -0.0242694F - xAngle;
+            this.bREar.yRot      = 0.3490659F + yAngle;
+
+            // "Breathing" subtle Z‐axis swings on front legs:
+            float breathing = Mth.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
+            this.bLegFR1.zRot = 0.2617994F + breathing;
+            this.bLegFR2.zRot = breathing;
+            this.bLegFR3.zRot = breathing;
+            this.bLegFL1.zRot = -0.2617994F - breathing;
+            this.bLegFL2.zRot = -breathing;
+            this.bLegFL3.zRot = -breathing;
+
+            // Attack swing layering on front legs:
+            this.bLegFL1.xRot = 0.2617994F + attackSwing;
+            this.bLegFL2.xRot = -0.5576792F + attackSwing;
+            this.bLegFL3.xRot = 2.007645F + attackSwing;
+            this.bLegFR1.xRot = 0.2617994F + attackSwing;
+            this.bLegFR2.xRot = -0.5576792F + attackSwing;
+            this.bLegFR3.xRot = 2.007645F + attackSwing;
+
+            // Rear‐leg walking animation:
+            this.bLegRR1.xRot = -0.1745329F + lLegRotX;
+            this.bLegRR2.xRot = lLegRotX;
+            this.bLegRR3.xRot = lLegRotX;
+            this.bLegRL1.xRot = -0.5235988F + rLegRotX;
+            this.bLegRL2.xRot = rLegRotX;
+            this.bLegRL3.xRot = rLegRotX;
+
+            // Make visible:
+            this.bHead.visible      = true;
+            (openMouth ? this.bMouthOpen : this.bMouth).visible = true;
+            this.bSnout.visible     = true;
+            this.bLEar.visible      = true;
+            this.bREar.visible      = true;
+            this.bNeck.visible      = true;
+            this.bTorso.visible     = true;
+            this.bAbdomen.visible   = true;
+            this.bTail.visible      = true;
+            this.bLegFL1.visible    = true;
+            this.bLegFL2.visible    = true;
+            this.bLegFL3.visible    = true;
+            this.bLegFR1.visible    = true;
+            this.bLegFR2.visible    = true;
+            this.bLegFR3.visible    = true;
+            this.bLegRL1.visible    = true;
+            this.bLegRL2.visible    = true;
+            this.bLegRL3.visible    = true;
+            this.bLegRR1.visible    = true;
+            this.bLegRR2.visible    = true;
+            this.bLegRR3.visible    = true;
+
+        } else if (this.bearState == 2) {
+            // ─────────────────────────────────────
+            // Sitting
+            // ─────────────────────────────────────
+            boolean openMouth = (entity.mouthCounter != 0);
+            boolean chested   = entity.getIsChested();
+            boolean saddled   = entity.getIsRideable();
+
+            // Head + look:
+            this.cHead.xRot      = 0.1502636F + xAngle;
+            this.cHead.yRot      = yAngle;
+            this.cSnout.xRot     = 0.1502636F + xAngle;
+            this.cSnout.yRot     = yAngle;
+            this.cMouth.xRot     = -0.0068161F + xAngle;
+            this.cMouth.yRot     = yAngle;
+            this.cMouthOpen.xRot = 0.3665191F + xAngle;
+            this.cMouthOpen.yRot = yAngle;
+            this.cLEar.xRot      = 0.1502636F + xAngle;
+            this.cLEar.yRot      = -0.3490659F + yAngle;
+            this.cREar.xRot      = 0.1502636F + xAngle;
+            this.cREar.yRot      = 0.3490659F + yAngle;
+
+            // Make visible:
+            this.cHead.visible      = true;
+            (openMouth ? this.cMouthOpen : this.cMouth).visible = true;
+            this.cSnout.visible     = true;
+            this.cLEar.visible      = true;
+            this.cREar.visible      = true;
+            this.cNeck.visible      = true;
+            this.cTorso.visible     = true;
+            this.cAbdomen.visible   = true;
+            this.cTail.visible      = true;
+            this.cLegFL1.visible    = true;
+            this.cLegFL2.visible    = true;
+            this.cLegFL3.visible    = true;
+            this.cLegFR1.visible    = true;
+            this.cLegFR2.visible    = true;
+            this.cLegFR3.visible    = true;
+            this.cLegRL1.visible    = true;
+            this.cLegRL2.visible    = true;
+            this.cLegRL3.visible    = true;
+            this.cLegRR1.visible    = true;
+            this.cLegRR2.visible    = true;
+            this.cLegRR3.visible    = true;
+
             if (saddled) {
-                SaddleSitted.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                SaddleBackSitted.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                SaddleFrontSitted.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.saddleSitted.visible       = true;
+                this.saddleBackSitted.visible   = true;
+                this.saddleFrontSitted.visible  = true;
             }
             if (chested) {
-                BagSitted.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.bagSitted.visible = true;
             }
-            this.CHead.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CSnout.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CREar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CNeck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CTorso.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CAbdomen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CTail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegFL1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegFL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegFL3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegFR1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegFR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegFR3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegRL1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegRL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegRL3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegRR1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegRR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.CLegRR3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         }
-
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
+    @Override
+    public void renderToBuffer(
+            @NotNull PoseStack poseStack,
+            @NotNull VertexConsumer buffer,
+            int packedLight,
+            int packedOverlay,
+            float red,
+            float green,
+            float blue,
+            float alpha
+    ) {
+        // Simply render every child of root; invisible parts will skip themselves.
+        this.root.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float LLegRotX = MathHelper.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
-        float RLegRotX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        float XAngle = (headPitch / 57.29578F);
-        float YAngle = netHeadYaw / 57.29578F;
+    /**
+     * Helper to set all ModelParts' visible=false at the start of each frame.
+     */
+    private void setAllVisible(boolean visible) {
+        head.visible             = visible;
+        mouth.visible            = visible;
+        mouthOpen.visible        = visible;
+        lEar.visible             = visible;
+        rEar.visible             = visible;
+        snout.visible            = visible;
+        neck.visible             = visible;
+        abdomen.visible          = visible;
+        torso.visible            = visible;
+        tail.visible             = visible;
+        legFL1.visible           = visible;
+        legFL2.visible           = visible;
+        legFL3.visible           = visible;
+        legFR1.visible           = visible;
+        legFR2.visible           = visible;
+        legFR3.visible           = visible;
+        legRL1.visible           = visible;
+        legRL2.visible           = visible;
+        legRL3.visible           = visible;
+        legRR1.visible           = visible;
+        legRR2.visible           = visible;
+        legRR3.visible           = visible;
 
-        if (this.bearstate == 0) {
-            this.Head.rotateAngleX = 0.1502636F + XAngle;
-            this.Head.rotateAngleY = YAngle;
+        bHead.visible            = visible;
+        bSnout.visible           = visible;
+        bMouth.visible           = visible;
+        bMouthOpen.visible       = visible;
+        bNeck.visible            = visible;
+        bLEar.visible            = visible;
+        bREar.visible            = visible;
+        bTorso.visible           = visible;
+        bAbdomen.visible         = visible;
+        bTail.visible            = visible;
+        bLegFL1.visible          = visible;
+        bLegFL2.visible          = visible;
+        bLegFL3.visible          = visible;
+        bLegFR1.visible          = visible;
+        bLegFR2.visible          = visible;
+        bLegFR3.visible          = visible;
+        bLegRL1.visible          = visible;
+        bLegRL2.visible          = visible;
+        bLegRL3.visible          = visible;
+        bLegRR1.visible          = visible;
+        bLegRR2.visible          = visible;
+        bLegRR3.visible          = visible;
 
-            this.Snout.rotateAngleX = 0.1502636F + XAngle;
-            this.Snout.rotateAngleY = YAngle;
+        cHead.visible            = visible;
+        cSnout.visible           = visible;
+        cMouth.visible           = visible;
+        cMouthOpen.visible       = visible;
+        cLEar.visible            = visible;
+        cREar.visible            = visible;
+        cNeck.visible            = visible;
+        cTorso.visible           = visible;
+        cAbdomen.visible         = visible;
+        cTail.visible            = visible;
+        cLegFL1.visible          = visible;
+        cLegFL2.visible          = visible;
+        cLegFL3.visible          = visible;
+        cLegFR1.visible          = visible;
+        cLegFR2.visible          = visible;
+        cLegFR3.visible          = visible;
+        cLegRL1.visible          = visible;
+        cLegRL2.visible          = visible;
+        cLegRL3.visible          = visible;
+        cLegRR1.visible          = visible;
+        cLegRR2.visible          = visible;
+        cLegRR3.visible          = visible;
 
-            this.Mouth.rotateAngleX = -0.0068161F + XAngle;
-            this.Mouth.rotateAngleY = YAngle;
-
-            this.MouthOpen.rotateAngleX = 0.534236F + XAngle;
-            this.MouthOpen.rotateAngleY = YAngle;
-
-            this.LEar.rotateAngleX = 0.1502636F + XAngle;
-            this.LEar.rotateAngleY = -0.3490659F + YAngle;
-
-            this.REar.rotateAngleX = 0.1502636F + XAngle;
-            this.REar.rotateAngleY = 0.3490659F + YAngle;
-
-            this.LegFL1.rotateAngleX = 0.2617994F + LLegRotX;
-            this.LegFL2.rotateAngleX = LLegRotX;
-            this.LegFL3.rotateAngleX = LLegRotX;
-
-            this.LegRR1.rotateAngleX = -0.1745329F + LLegRotX;
-            this.LegRR2.rotateAngleX = LLegRotX;
-            this.LegRR3.rotateAngleX = LLegRotX;
-
-            this.LegFR1.rotateAngleX = 0.2617994F + RLegRotX;
-            this.LegFR2.rotateAngleX = RLegRotX;
-            this.LegFR3.rotateAngleX = RLegRotX;
-
-            this.LegRL1.rotateAngleX = -0.1745329F + RLegRotX;
-            this.LegRL2.rotateAngleX = RLegRotX;
-            this.LegRL3.rotateAngleX = RLegRotX;
-        } else if (this.bearstate == 1) {
-
-            this.BHead.rotateAngleX = -0.0242694F - XAngle;
-            this.BHead.rotateAngleY = YAngle;
-
-            this.BSnout.rotateAngleX = -0.0242694F - XAngle;
-            this.BSnout.rotateAngleY = YAngle;
-
-            this.BMouth.rotateAngleX = -0.08726F - XAngle;
-            this.BMouth.rotateAngleY = YAngle;
-
-            this.BMouthOpen.rotateAngleX = 0.5235988F - XAngle;
-            this.BMouthOpen.rotateAngleY = YAngle;
-
-            this.BLEar.rotateAngleX = -0.0242694F - XAngle;
-            this.BLEar.rotateAngleY = -0.3490659F + YAngle;
-
-            this.BREar.rotateAngleX = -0.0242694F - XAngle;
-            this.BREar.rotateAngleY = 0.3490659F + YAngle;
-
-            /*
-             * Arm breathing movement
-             */
-            float breathing = MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
-            this.BLegFR1.rotateAngleZ = 0.2617994F + breathing;
-            this.BLegFR2.rotateAngleZ = breathing;
-            this.BLegFR3.rotateAngleZ = breathing;
-            this.BLegFL1.rotateAngleZ = -0.2617994F - breathing;
-            this.BLegFL2.rotateAngleZ = -breathing;
-            this.BLegFL3.rotateAngleZ = -breathing;
-
-            this.BLegFL1.rotateAngleX = 0.2617994F + attackSwing;
-            this.BLegFL2.rotateAngleX = -0.5576792F + attackSwing;
-            this.BLegFL3.rotateAngleX = 2.007645F + attackSwing;
-
-            this.BLegFR1.rotateAngleX = 0.2617994F + attackSwing;
-            this.BLegFR2.rotateAngleX = -0.5576792F + attackSwing;
-            this.BLegFR3.rotateAngleX = 2.007645F + attackSwing;
-
-            this.BLegRR1.rotateAngleX = -0.1745329F + LLegRotX;
-            this.BLegRR2.rotateAngleX = LLegRotX;
-            this.BLegRR3.rotateAngleX = LLegRotX;
-
-            this.BLegRL1.rotateAngleX = -0.5235988F + RLegRotX;
-            this.BLegRL2.rotateAngleX = RLegRotX;
-            this.BLegRL3.rotateAngleX = RLegRotX;
-        } else if (this.bearstate == 2) {
-            this.CHead.rotateAngleX = 0.1502636F + XAngle;
-            this.CHead.rotateAngleY = YAngle;
-
-            this.CSnout.rotateAngleX = 0.1502636F + XAngle;
-            this.CSnout.rotateAngleY = YAngle;
-
-            this.CMouth.rotateAngleX = -0.0068161F + XAngle;
-            this.CMouth.rotateAngleY = YAngle;
-
-            this.CMouthOpen.rotateAngleX = 0.3665191F + XAngle;
-            this.CMouthOpen.rotateAngleY = YAngle;
-
-            this.CLEar.rotateAngleX = 0.1502636F + XAngle;
-            this.CLEar.rotateAngleY = -0.3490659F + YAngle;
-
-            this.CREar.rotateAngleX = 0.1502636F + XAngle;
-            this.CREar.rotateAngleY = 0.3490659F + YAngle;
-        }
-
-        this.Tail.rotateAngleZ = LLegRotX * 0.2F;
+        saddle.visible            = visible;
+        saddleBack.visible        = visible;
+        saddleFront.visible       = visible;
+        bag.visible               = visible;
+        saddleSitted.visible      = visible;
+        saddleBackSitted.visible  = visible;
+        saddleFrontSitted.visible = visible;
+        bagSitted.visible         = visible;
     }
 }

@@ -11,28 +11,29 @@ import drzhark.mocreatures.entity.hunter.MoCEntityBigCat;
 import drzhark.mocreatures.entity.passive.MoCEntityHorse;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.monster.MonsterEntity;
-import net.minecraft.entity.monster.SkeletonEntity;
-import net.minecraft.entity.monster.ZombieEntity;
-import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.entity.passive.IronGolemEntity;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Cow;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -43,31 +44,34 @@ public class MoCEntityWWolf extends MoCEntityMob {
     public int mouthCounter;
     public int tailCounter;
 
-    public MoCEntityWWolf(EntityType<? extends MoCEntityWWolf> type, World world) {
+    public MoCEntityWWolf(EntityType<? extends MoCEntityWWolf> type, Level world) {
         super(type, world);
         //setSize(0.8F, 1.1F);
         setAdult(true);
-        experienceValue = 5;
+        this.xpReward = 5;
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new MoCEntityWWolf.AIWolfAttack(this, 1.0D, false));
-        this.goalSelector.addGoal(8, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new MoCEntityWWolf.AIWolfTarget<>(this, PlayerEntity.class, false));
-        this.targetSelector.addGoal(3, new MoCEntityWWolf.AIWolfTarget<>(this, IronGolemEntity.class, true));
+        this.targetSelector.addGoal(2, new MoCEntityWWolf.AIWolfTarget<>(this, Player.class, false));
+        this.targetSelector.addGoal(3, new MoCEntityWWolf.AIWolfTarget<>(this, IronGolem.class, true));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityMob.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 15.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.3D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.5D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityMob.createAttributes()
+                .add(Attributes.MAX_HEALTH, 15.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.3D)
+                .add(Attributes.ATTACK_DAMAGE, 3.5D);
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(4) + 1);
+            setTypeMoC(this.random.nextInt(4) + 1);
         }
     }
 
@@ -99,7 +103,7 @@ public class MoCEntityWWolf extends MoCEntityMob {
     public void tick() {
         super.tick();
 
-        if (this.rand.nextInt(200) == 0) {
+        if (this.random.nextInt(200) == 0) {
             moveTail();
         }
 
@@ -114,19 +118,23 @@ public class MoCEntityWWolf extends MoCEntityMob {
 
     @Override
     public boolean checkSpawningBiome() {
-        int i = MathHelper.floor(this.getPosX());
-        int j = MathHelper.floor(getBoundingBox().minY);
-        int k = MathHelper.floor(this.getPosZ());
+        int i = Mth.floor(this.getX());
+        int j = Mth.floor(getBoundingBox().minY);
+        int k = Mth.floor(this.getZ());
 
-        RegistryKey<Biome> biome = MoCTools.biomeKind(this.world, new BlockPos(i, j, k));
-        if (BiomeDictionary.hasType(biome, Type.SNOWY)) {
+        ResourceKey<Biome> biome = MoCTools.biomeKind(this.level(), new BlockPos(i, j, k));
+        
+        // Simple check based on biome path instead of BiomeDictionary
+        String biomePath = biome.location().getPath();
+        if (biomePath.contains("snow") || biomePath.contains("frozen") || biomePath.contains("ice") || biomePath.contains("cold")) {
             setTypeMoC(3);
         }
+        
         selectType();
         return true;
     }
 
-    public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, IServerWorld world, SpawnReason reason, BlockPos pos, Random randomIn) {
+    public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, ServerLevel world, MobSpawnType reason, BlockPos pos, Random randomIn) {
         return MoCEntityMob.getCanSpawnHere(type, world, reason, pos, randomIn) && world.canSeeSky(new BlockPos(pos));
     }
 
@@ -134,17 +142,19 @@ public class MoCEntityWWolf extends MoCEntityMob {
     public LivingEntity getClosestTarget(Entity entity, double d) {
         double d1 = -1D;
         LivingEntity entityliving = null;
-        List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this, getBoundingBox().grow(d));
+        List<Entity> list = this.level().getEntitiesOfClass(Entity.class, this.getBoundingBox().inflate(d), 
+            e -> e instanceof LivingEntity && e != entity && e != entity.getVehicle() && !(e instanceof Player) 
+                && !(e instanceof Monster) && !(e instanceof MoCEntityBigCat) && !(e instanceof MoCEntityBear) 
+                && !(e instanceof Cow) && !((e instanceof Wolf) && !(MoCreatures.proxy.attackWolves))
+                && !((e instanceof MoCEntityHorse) && !(MoCreatures.proxy.attackHorses)));
+                
         for (Entity entity1 : list) {
-            if (!(entity1 instanceof LivingEntity) || (entity1 == entity) || (entity1 == entity.getRidingEntity())
-                    || (entity1 == entity.getRidingEntity()) || (entity1 instanceof PlayerEntity) || (entity1 instanceof MonsterEntity)
-                    || (entity1 instanceof MoCEntityBigCat) || (entity1 instanceof MoCEntityBear) || (entity1 instanceof CowEntity)
-                    || ((entity1 instanceof WolfEntity) && !(MoCreatures.proxy.attackWolves))
-                    || ((entity1 instanceof MoCEntityHorse) && !(MoCreatures.proxy.attackHorses))) {
+            if (!(entity1 instanceof LivingEntity)) {
                 continue;
             }
-            double d2 = entity1.getDistanceSq(entity.getPosX(), entity.getPosY(), entity.getPosZ());
-            if (((d < 0.0D) || (d2 < (d * d))) && ((d1 == -1D) || (d2 < d1)) && ((LivingEntity) entity1).canEntityBeSeen(entity)) {
+            
+            double d2 = entity1.distanceToSqr(entity.getX(), entity.getY(), entity.getZ());
+            if (((d < 0.0D) || (d2 < (d * d))) && ((d1 == -1D) || (d2 < d1)) && ((LivingEntity) entity1).hasLineOfSight(entity)) {
                 d1 = d2;
                 entityliving = (LivingEntity) entity1;
             }
@@ -170,46 +180,46 @@ public class MoCEntityWWolf extends MoCEntityMob {
         return MoCSoundEvents.ENTITY_WOLF_AMBIENT.get();
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.WILD_WOLF;
     }
 
     @Override
-    public void updatePassenger(Entity passenger) {
-        double dist = (0.1D);
-        double newPosX = this.getPosX() + (dist * Math.sin(this.renderYawOffset / 57.29578F));
-        double newPosZ = this.getPosZ() - (dist * Math.cos(this.renderYawOffset / 57.29578F));
-        passenger.setPosition(newPosX, this.getPosY() + getMountedYOffset() + passenger.getYOffset(), newPosZ);
-        passenger.rotationYaw = this.rotationYaw;
+    protected void positionRider(Entity passenger, Entity.MoveFunction moveFunction) {
+        if (this.hasPassenger(passenger)) {
+            double dist = 0.1D;
+            double newPosX = this.getX() + (dist * Math.sin(this.getYRot() / 57.29578F));
+            double newPosZ = this.getZ() - (dist * Math.cos(this.getYRot() / 57.29578F));
+            double newPosY = this.getY() + this.getPassengersRidingOffset() + passenger.getMyRidingOffset();
+            
+            moveFunction.accept(passenger, newPosX, newPosY, newPosZ);
+            passenger.setYRot(this.getYRot());
+        }
     }
 
     @Override
-    public double getMountedYOffset() {
-        return (this.getHeight() * 0.75D) - 0.1D;
+    public double getPassengersRidingOffset() {
+        return (this.getBbHeight() * 0.75D) - 0.1D;
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
-        if (!this.world.isRemote && !this.isBeingRidden() && this.rand.nextInt(100) == 0) {
-            List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this, getBoundingBox().grow(4D, 2D, 4D));
-            for (Entity entity : list) {
-                if (!(entity instanceof MonsterEntity)) {
-                    continue;
-                }
-                MonsterEntity entitymob = (MonsterEntity) entity;
-                if (entitymob.getRidingEntity() == null
-                        && (entitymob instanceof SkeletonEntity || entitymob instanceof ZombieEntity || entitymob instanceof MoCEntitySilverSkeleton)) {
-                    entitymob.startRiding(this);
-                    break;
-                }
+    public void aiStep() {
+        super.aiStep();
+        if (!this.level().isClientSide() && !this.isVehicle() && this.random.nextInt(100) == 0) {
+            List<Monster> list = this.level().getEntitiesOfClass(Monster.class, this.getBoundingBox().inflate(4D, 2D, 4D), 
+                e -> e.getVehicle() == null && (e instanceof Skeleton || e instanceof Zombie || e instanceof MoCEntitySilverSkeleton));
+                
+            for (Monster monster : list) {
+                monster.startRiding(this);
+                break;
             }
         }
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.945F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.945F;
     }
 
     static class AIWolfAttack extends MeleeAttackGoal {
@@ -218,20 +228,20 @@ public class MoCEntityWWolf extends MoCEntityMob {
         }
 
         @Override
-        public boolean shouldContinueExecuting() {
-            float f = this.attacker.getBrightness();
+        public boolean canContinueToUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
 
-            if (f >= 0.5F && this.attacker.getRNG().nextInt(100) == 0) {
-                this.attacker.setAttackTarget(null);
+            if (f >= 0.5F && this.mob.getRandom().nextInt(100) == 0) {
+                this.mob.setTarget(null);
                 return false;
             } else {
-                return super.shouldContinueExecuting();
+                return super.canContinueToUse();
             }
         }
 
         @Override
         protected double getAttackReachSqr(LivingEntity attackTarget) {
-            return 4.0F + attackTarget.getWidth();
+            return 4.0F + attackTarget.getBbWidth();
         }
     }
 
@@ -241,9 +251,9 @@ public class MoCEntityWWolf extends MoCEntityMob {
         }
 
         @Override
-        public boolean shouldExecute() {
-            float f = this.goalOwner.getBrightness();
-            return f < 0.5F && super.shouldExecute();
+        public boolean canUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
+            return f < 0.5F && super.canUse();
         }
     }
 }

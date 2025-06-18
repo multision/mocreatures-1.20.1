@@ -3,94 +3,195 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.item.MoCEntityKittyBed;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-
+/**
+ * Port of MoCModelKittyBed (1.16.5) to Minecraft 1.20.1.
+ */
+@OnlyIn(Dist.CLIENT)
 public class MoCModelKittyBed<T extends MoCEntityKittyBed> extends EntityModel<T> {
+
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "kitty_bed"), "main"
+    );
 
     public boolean hasMilk;
     public boolean hasFood;
     public boolean pickedUp;
     public float milklevel;
-    ModelRenderer TableL;
-    ModelRenderer TableR;
-    ModelRenderer Table_B;
-    ModelRenderer FoodT;
-    ModelRenderer FoodTraySide;
-    ModelRenderer FoodTraySideB;
-    ModelRenderer FoodTraySideC;
-    ModelRenderer FoodTraySideD;
-    ModelRenderer Milk;
-    ModelRenderer PetFood;
-    ModelRenderer Bottom;
 
-    public MoCModelKittyBed() {
+    private final ModelPart TableL;
+    private final ModelPart TableR;
+    private final ModelPart Table_B;
+    private final ModelPart FoodT;
+    private final ModelPart FoodTraySide;
+    private final ModelPart FoodTraySideB;
+    private final ModelPart FoodTraySideC;
+    private final ModelPart FoodTraySideD;
+    private final ModelPart Milk;
+    private final ModelPart PetFood;
+    private final ModelPart Bottom;
+
+    public MoCModelKittyBed(ModelPart root) {
+        this.TableL         = root.getChild("TableL");
+        this.TableR         = root.getChild("TableR");
+        this.Table_B        = root.getChild("Table_B");
+        this.FoodT          = root.getChild("FoodT");
+        this.FoodTraySide   = root.getChild("FoodTraySide");
+        this.FoodTraySideB  = root.getChild("FoodTraySideB");
+        this.FoodTraySideC  = root.getChild("FoodTraySideC");
+        this.FoodTraySideD  = root.getChild("FoodTraySideD");
+        this.Milk           = root.getChild("Milk");
+        this.PetFood        = root.getChild("PetFood");
+        this.Bottom         = root.getChild("Bottom");
+    }
+
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh     = new MeshDefinition();
+        PartDefinition root     = mesh.getRoot();
         float limbSwing = 0.0F;
-        this.TableL = new ModelRenderer(this, 30, 8);
-        this.TableL.addBox(-8F, 0.0F, 7F, 16, 6, 1, limbSwing);
-        this.TableL.setRotationPoint(0.0F, 18F, 0.0F);
-        this.TableR = new ModelRenderer(this, 30, 8);
-        this.TableR.addBox(-8F, 18F, -8F, 16, 6, 1, limbSwing);
-        this.TableR.setRotationPoint(0.0F, 0.0F, 0.0F);
-        this.Table_B = new ModelRenderer(this, 30, 0);
-        this.Table_B.addBox(-8F, -3F, 0.0F, 16, 6, 1, limbSwing);
-        this.Table_B.setRotationPoint(8F, 21F, 0.0F);
-        this.Table_B.rotateAngleY = 1.5708F;
-        this.FoodT = new ModelRenderer(this, 14, 0);
-        this.FoodT.addBox(1.0F, 1.0F, 1.0F, 4, 1, 4, limbSwing);
-        this.FoodT.setRotationPoint(-16F, 22F, 0.0F);
-        this.FoodTraySide = new ModelRenderer(this, 0, 0);
-        this.FoodTraySide.addBox(-16F, 21F, 5F, 5, 3, 1, limbSwing);
-        this.FoodTraySide.setRotationPoint(0.0F, 0.0F, 0.0F);
-        this.FoodTraySideB = new ModelRenderer(this, 0, 0);
-        this.FoodTraySideB.addBox(-15F, 21F, 0.0F, 5, 3, 1, limbSwing);
-        this.FoodTraySideB.setRotationPoint(0.0F, 0.0F, 0.0F);
-        this.FoodTraySideC = new ModelRenderer(this, 0, 0);
-        this.FoodTraySideC.addBox(-3F, -1F, 0.0F, 5, 3, 1, limbSwing);
-        this.FoodTraySideC.setRotationPoint(-16F, 22F, 2.0F);
-        this.FoodTraySideC.rotateAngleY = 1.5708F;
-        this.FoodTraySideD = new ModelRenderer(this, 0, 0);
-        this.FoodTraySideD.addBox(-3F, -1F, 0.0F, 5, 3, 1, limbSwing);
-        this.FoodTraySideD.setRotationPoint(-11F, 22F, 3F);
-        this.FoodTraySideD.rotateAngleY = 1.5708F;
-        this.Milk = new ModelRenderer(this, 14, 9);
-        this.Milk.addBox(0.0F, 0.0F, 0.0F, 4, 1, 4, limbSwing);
-        this.Milk.setRotationPoint(-15F, 21F, 1.0F);
-        this.PetFood = new ModelRenderer(this, 0, 9);
-        this.PetFood.addBox(0.0F, 0.0F, 0.0F, 4, 1, 4, limbSwing);
-        this.PetFood.setRotationPoint(-15F, 21F, 1.0F);
-        this.Bottom = new ModelRenderer(this, 16, 15);
-        this.Bottom.addBox(-10F, 0.0F, -7F, 16, 1, 14, limbSwing);
-        this.Bottom.setRotationPoint(2.0F, 23F, 0.0F);
+
+        // Left table side
+        root.addOrReplaceChild("TableL",
+                CubeListBuilder.create()
+                        .texOffs(30, 8)
+                        .addBox(-8F, 0F, 7F, 16, 6, 1, new CubeDeformation(limbSwing)),
+                PartPose.offset(0F, 18F, 0F)
+        );
+
+        // Right table side
+        root.addOrReplaceChild("TableR",
+                CubeListBuilder.create()
+                        .texOffs(30, 8)
+                        .addBox(-8F, 18F, -8F, 16, 6, 1, new CubeDeformation(limbSwing)),
+                PartPose.offset(0F, 0F, 0F)
+        );
+
+        // Back table side, rotated 90° around Y
+        root.addOrReplaceChild("Table_B",
+                CubeListBuilder.create()
+                        .texOffs(30, 0)
+                        .addBox(-8F, -3F, 0F, 16, 6, 1, new CubeDeformation(limbSwing)),
+                PartPose.offsetAndRotation(8F, 21F, 0F, 0F, (float)Math.PI / 2F, 0F)
+        );
+
+        // Food tray top
+        root.addOrReplaceChild("FoodT",
+                CubeListBuilder.create()
+                        .texOffs(14, 0)
+                        .addBox(1F, 1F, 1F, 4, 1, 4, new CubeDeformation(limbSwing)),
+                PartPose.offset(-16F, 22F, 0F)
+        );
+
+        // Food tray sides
+        root.addOrReplaceChild("FoodTraySide",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-16F, 21F, 5F, 5, 3, 1, new CubeDeformation(limbSwing)),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        root.addOrReplaceChild("FoodTraySideB",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-15F, 21F, 0F, 5, 3, 1, new CubeDeformation(limbSwing)),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        root.addOrReplaceChild("FoodTraySideC",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-3F, -1F, 0F, 5, 3, 1, new CubeDeformation(limbSwing)),
+                PartPose.offsetAndRotation(-16F, 22F, 2F, 0F, (float)Math.PI / 2F, 0F)
+        );
+        root.addOrReplaceChild("FoodTraySideD",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-3F, -1F, 0F, 5, 3, 1, new CubeDeformation(limbSwing)),
+                PartPose.offsetAndRotation(-11F, 22F, 3F, 0F, (float)Math.PI / 2F, 0F)
+        );
+
+        // Milk container (cube)
+        root.addOrReplaceChild("Milk",
+                CubeListBuilder.create()
+                        .texOffs(14, 9)
+                        .addBox(0F, 0F, 0F, 4, 1, 4, new CubeDeformation(limbSwing)),
+                PartPose.offset(-15F, 21F, 1F)
+        );
+
+        // Pet food block (same initial pivot)
+        root.addOrReplaceChild("PetFood",
+                CubeListBuilder.create()
+                        .texOffs(0, 9)
+                        .addBox(0F, 0F, 0F, 4, 1, 4, new CubeDeformation(limbSwing)),
+                PartPose.offset(-15F, 21F, 1F)
+        );
+
+        // Bottom platform
+        root.addOrReplaceChild("Bottom",
+                CubeListBuilder.create()
+                        .texOffs(16, 15)
+                        .addBox(-10F, 0F, -7F, 16, 1, 14, new CubeDeformation(limbSwing)),
+                PartPose.offset(2F, 23F, 0F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
     @Override
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
+    public void setupAnim(T entityIn,
+                          float limbSwing,
+                          float limbSwingAmount,
+                          float ageInTicks,
+                          float netHeadYaw,
+                          float headPitch) {
+        // KittyBed has no animations; we only read entity state.
+        this.hasMilk   = entityIn.getHasMilk();
+        this.hasFood   = entityIn.getHasFood();
+        this.pickedUp  = entityIn.getPickedUp();
+        this.milklevel = entityIn.milkLevel;
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+    public void renderToBuffer(PoseStack matrixStackIn,
+                               VertexConsumer bufferIn,
+                               int packedLightIn,
+                               int packedOverlayIn,
+                               float red,
+                               float green,
+                               float blue,
+                               float alpha) {
+        // Always render table surfaces and bottom
         this.TableL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         this.TableR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         this.Table_B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
         this.Bottom.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+
         if (!this.pickedUp) {
+            // Render food tray and sides
             this.FoodT.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
             this.FoodTraySide.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
             this.FoodTraySideB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
             this.FoodTraySideC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
             this.FoodTraySideD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+
+            // If milk present, adjust Milk pivot Y and render
             if (this.hasMilk) {
-                this.Milk.rotationPointY = 21F + this.milklevel;
+                this.Milk.y = 21F + this.milklevel;
                 this.Milk.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
             }
+            // If pet food present, adjust PetFood pivot Y and render
             if (this.hasFood) {
-                this.PetFood.rotationPointY = 21F + this.milklevel;
+                this.PetFood.y = 21F + this.milklevel;
                 this.PetFood.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
             }
         }

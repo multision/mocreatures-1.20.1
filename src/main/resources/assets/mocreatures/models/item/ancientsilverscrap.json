@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/ancient_silver_scrap"
+    "layer0": "mocreatures:item/ancient_silver_scrap"
   }
 }

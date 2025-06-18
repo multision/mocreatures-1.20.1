@@ -4,44 +4,58 @@
 package drzhark.mocreatures.block;
 
 import drzhark.mocreatures.init.MoCBlocks;
-import net.minecraft.block.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.FlowersFeature;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.ToolType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.GrassBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.MushroomBlock;
+import net.minecraftforge.common.IPlantable;
 
 import java.util.List;
-import java.util.Random;
 
-public class MoCBlockGrass extends GrassBlock implements IGrowable {
+public class MoCBlockGrass extends GrassBlock implements BonemealableBlock {
 
-    public MoCBlockGrass(AbstractBlock.Properties properties) {
-        super(properties.tickRandomly().harvestLevel(0).harvestTool(ToolType.SHOVEL).sound(SoundType.PLANT));
+    public MoCBlockGrass(BlockBehaviour.Properties properties) {
+        super(properties
+                .mapColor(MapColor.GRASS)
+                .randomTicks()
+                .strength(0.6F)
+                .sound(SoundType.GRASS));
     }
 
-    public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
-        if (!worldIn.isRemote) {
-            if (!worldIn.isAreaLoaded(pos, 3)) return;
-            if (worldIn.getLight(pos.up()) < 4 && worldIn.getBlockState(pos.up()).getOpacity(worldIn, pos.up()) > 2) {
-                if (this == MoCBlocks.wyvgrass) worldIn.setBlockState(pos, MoCBlocks.wyvdirt.getDefaultState());
-            } else {
-                if (worldIn.getLight(pos.up()) >= 9) {
-                    for (int i = 0; i < 4; ++i) {
-                        BlockPos blockpos = pos.add(random.nextInt(3) - 1, random.nextInt(5) - 3, random.nextInt(3) - 1);
+    @Override
+    public void randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+        if (!world.isAreaLoaded(pos, 3)) return;
 
-                        if (blockpos.getY() >= 0 && blockpos.getY() < 256 && !worldIn.isBlockLoaded(blockpos)) {
-                            return;
-                        }
+        if (world.getMaxLocalRawBrightness(pos.above()) < 4 &&
+                world.getBlockState(pos.above()).getLightBlock(world, pos.above()) > 2) {
+            if (this == MoCBlocks.wyvgrass.get()) {
+                world.setBlockAndUpdate(pos, MoCBlocks.wyvdirt.get().defaultBlockState());
+            }
+        } else {
+            if (world.getMaxLocalRawBrightness(pos.above()) >= 9) {
+                for (int i = 0; i < 4; ++i) {
+                    BlockPos blockpos = pos.offset(random.nextInt(3) - 1, random.nextInt(5) - 3, random.nextInt(3) - 1);
+                    if (!world.isLoaded(blockpos)) continue;
 
-                        BlockState iblockstate = worldIn.getBlockState(blockpos.up());
-                        BlockState iblockstate1 = worldIn.getBlockState(blockpos);
+                    BlockState stateAbove = world.getBlockState(blockpos.above());
+                    BlockState targetState = world.getBlockState(blockpos);
 
-                        if (iblockstate1.getBlock() == MoCBlocks.wyvdirt && worldIn.getLight(blockpos.up()) >= 4 && iblockstate.getOpacity(worldIn, pos.up()) <= 2) {
-                            worldIn.setBlockState(blockpos, MoCBlocks.wyvgrass.getDefaultState());
-                        }
+                    if (targetState.is(MoCBlocks.wyvdirt.get()) &&
+                            world.getMaxLocalRawBrightness(blockpos.above()) >= 4 &&
+                            stateAbove.getLightBlock(world, blockpos.above()) <= 2) {
+                        world.setBlockAndUpdate(blockpos, MoCBlocks.wyvgrass.get().defaultBlockState());
                     }
                 }
             }
@@ -49,60 +63,79 @@ public class MoCBlockGrass extends GrassBlock implements IGrowable {
     }
 
     @Override
-    public boolean canGrow(IBlockReader worldIn, BlockPos pos, BlockState state, boolean isClient) {
+    public boolean isValidBonemealTarget(LevelReader world, BlockPos pos, BlockState state, boolean isClient) {
         return true;
     }
 
     @Override
-    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
+    public boolean isBonemealSuccess(Level world, RandomSource random, BlockPos pos, BlockState state) {
         return true;
     }
 
     @Override
-    public void grow(ServerWorld worldIn, Random rand, BlockPos pos, BlockState state) {
-        BlockPos blockpos = pos.up();
+    public void performBonemeal(ServerLevel world, RandomSource random, BlockPos pos, BlockState state) {
+        BlockPos above = pos.above();
 
-        if (this == MoCBlocks.wyvgrass) {
+        if (this == MoCBlocks.wyvgrass.get()) {
             for (int i = 0; i < 128; ++i) {
-                BlockPos blockpos1 = blockpos;
+                BlockPos spawnPos = above;
                 int j = 0;
 
-                while (true) {
-                    if (j >= i / 16) {
-                        if (worldIn.isAirBlock(blockpos1)) {
-                            if (rand.nextInt(8) == 0) {
-                                List<ConfiguredFeature<?, ?>> list = worldIn.getBiome(blockpos1).getGenerationSettings().getFlowerFeatures();
-                                if (list.isEmpty()) {
-                                    continue;
-                                }
+                while (j < i / 16) {
+                    spawnPos = spawnPos.offset(random.nextInt(3) - 1,
+                            (random.nextInt(3) - 1) * random.nextInt(3) / 2,
+                            random.nextInt(3) - 1);
 
-                                ConfiguredFeature<?, ?> configuredfeature = list.get(0);
-                                FlowersFeature flowersfeature = (FlowersFeature)configuredfeature.feature;
-                                BlockState blockstate1 = flowersfeature.getFlowerToPlace(rand, blockpos1, configuredfeature.getConfig());
-                                if (blockstate1.isValidPosition(worldIn, blockpos1)) {
-                                    worldIn.setBlockState(blockpos1, blockstate1, 3);
-                                }
-                            } else {
-                                BlockState iblockstate1 = MoCBlocks.tallWyvgrass.getDefaultState();
-
-                                if (((MoCBlockTallGrass) MoCBlocks.tallWyvgrass).isValidGround(iblockstate1, worldIn, blockpos1)) {
-                                    worldIn.setBlockState(blockpos1, iblockstate1, 3);
-                                }
-                            }
-                        }
-
-                        break;
-                    }
-
-                    blockpos1 = blockpos1.add(rand.nextInt(3) - 1, (rand.nextInt(3) - 1) * rand.nextInt(3) / 2, rand.nextInt(3) - 1);
-
-                    if (worldIn.getBlockState(blockpos1.down()).getBlock() != MoCBlocks.wyvgrass || worldIn.getBlockState(blockpos1).isNormalCube(worldIn, blockpos1)) {
+                    if (!world.getBlockState(spawnPos.below()).is(MoCBlocks.wyvgrass.get()) ||
+                            world.getBlockState(spawnPos).isCollisionShapeFullBlock(world, spawnPos)) {
                         break;
                     }
 
                     ++j;
                 }
+
+                if (world.getBlockState(spawnPos).isAir()) {
+                    if (random.nextInt(24) == 0) {
+                        // Chance to spawn mushrooms
+                        if (random.nextBoolean()) {
+                            world.setBlock(spawnPos, Blocks.BROWN_MUSHROOM.defaultBlockState(), 3);
+                        } else {
+                            world.setBlock(spawnPos, Blocks.RED_MUSHROOM.defaultBlockState(), 3);
+                        }
+                    } else if (random.nextInt(8) == 0) {
+                        // Reduced chance for vanilla flowers
+                        List<ConfiguredFeature<?, ?>> flowers = world.getBiome(spawnPos).value().getGenerationSettings().getFlowerFeatures();
+                        if (!flowers.isEmpty()) {
+                            // Check if a vanilla grass would be placed and replace with tall wyvgrass
+                            ConfiguredFeature<?, ?> feature = flowers.get(0);
+                            BlockState beforeState = world.getBlockState(spawnPos);
+                            feature.place(world, world.getChunkSource().getGenerator(), random, spawnPos);
+                            BlockState afterState = world.getBlockState(spawnPos);
+                            
+                            // If vanilla features replaced with something we don't want, use our block instead
+                            if (afterState.is(Blocks.GRASS) || afterState.is(Blocks.TALL_GRASS)) {
+                                world.setBlock(spawnPos, MoCBlocks.tallWyvgrass.get().defaultBlockState(), 3);
+                            }
+                        }
+                    } else {
+                        // Mostly tall wyvgrass
+                        BlockState tallState = MoCBlocks.tallWyvgrass.get().defaultBlockState();
+                        if (((MoCBlockTallGrass) MoCBlocks.tallWyvgrass.get()).canSurvive(tallState, world, spawnPos)) {
+                            world.setBlock(spawnPos, tallState, 3);
+                        }
+                    }
+                }
             }
         }
+    }
+    
+    // Allow mushrooms to grow on this block
+    @Override
+    public boolean canSustainPlant(BlockState state, BlockGetter world, BlockPos pos, Direction facing, IPlantable plantable) {
+        BlockState plantState = plantable.getPlant(world, pos.relative(facing));
+        if (plantState.getBlock() instanceof MushroomBlock) {
+            return true;
+        }
+        return super.canSustainPlant(state, world, pos, facing, plantable);
     }
 }

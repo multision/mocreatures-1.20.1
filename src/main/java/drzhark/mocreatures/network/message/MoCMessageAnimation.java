@@ -4,10 +4,10 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.IMoCEntity;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -21,23 +21,27 @@ public class MoCMessageAnimation {
         this.animationType = animationType;
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeInt(this.entityId);
         buffer.writeInt(this.animationType);
     }
 
-    public MoCMessageAnimation(ByteBuf buffer) {
+    public MoCMessageAnimation(FriendlyByteBuf buffer) {
         this.entityId = buffer.readInt();
         this.animationType = buffer.readInt();
     }
 
-    public static boolean onMessage(MoCMessageAnimation message, Supplier<NetworkEvent.Context> ctx) {
+    public static void onMessage(MoCMessageAnimation message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.level != null) {
+                Entity entity = minecraft.level.getEntity(message.entityId);
+                if (entity instanceof IMoCEntity) {
+                    ((IMoCEntity) entity).performAnimation(message.animationType);
+                }
+            }
+        });
         ctx.get().setPacketHandled(true);
-        Entity ent = Minecraft.getInstance().player.world.getEntityByID(message.entityId);
-        if (ent instanceof IMoCEntity) {
-            ((IMoCEntity) ent).performAnimation(message.animationType);
-        }
-        return true;
     }
 
     @Override

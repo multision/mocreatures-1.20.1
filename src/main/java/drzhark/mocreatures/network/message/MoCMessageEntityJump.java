@@ -4,8 +4,9 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.IMoCEntity;
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -14,18 +15,25 @@ public class MoCMessageEntityJump {
     public MoCMessageEntityJump() {
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
+        // No data to encode
     }
 
-    public MoCMessageEntityJump(ByteBuf buffer) {
+    public MoCMessageEntityJump(FriendlyByteBuf buffer) {
+        // No data to decode
     }
 
-    public static boolean onMessage(MoCMessageEntityJump message, Supplier<NetworkEvent.Context> ctx) {
+    public static void onMessage(MoCMessageEntityJump message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            // This is a server-side message handler
+            if (ctx.get().getSender() != null) {
+                Entity vehicle = ctx.get().getSender().getVehicle();
+                if (vehicle instanceof IMoCEntity) {
+                    ((IMoCEntity) vehicle).makeEntityJump();
+                }
+            }
+        });
         ctx.get().setPacketHandled(true);
-        if (ctx.get().getSender().getRidingEntity() instanceof IMoCEntity) {
-            ((IMoCEntity) ctx.get().getSender().getRidingEntity()).makeEntityJump();
-        }
-        return true;
     }
 
     @Override

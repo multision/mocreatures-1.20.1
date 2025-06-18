@@ -3,43 +3,50 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import drzhark.mocreatures.entity.item.MoCEntityThrowableRock;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.resources.ResourceLocation;
+import com.mojang.math.Axis;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderTRock extends EntityRenderer<MoCEntityThrowableRock> {
 
-    public MoCRenderTRock(EntityRendererManager renderManagerIn) {
+    public MoCRenderTRock(EntityRendererProvider.Context renderManagerIn) {
         super(renderManagerIn);
-        this.shadowSize = 0.5F;
+        this.shadowRadius = 0.5F;
     }
 
     @Override
-    public void render(MoCEntityThrowableRock entitytrock, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
-        BlockRendererDispatcher blockrendererdispatcher = Minecraft.getInstance().getBlockRendererDispatcher();
-        matrixStackIn.push();
-        //matrixStackIn.translate(-0.5F, -0.55F, 0.5F);
-        matrixStackIn.translate(-0.5F, 0.25F, -0.5F);
-        matrixStackIn.rotate(Vector3f.YN.rotationDegrees(((100 - entitytrock.acceleration) / 10F) * 36F));
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        blockrendererdispatcher.renderBlock(entitytrock.getState(), matrixStackIn, bufferIn, packedLightIn, OverlayTexture.NO_OVERLAY);
-        matrixStackIn.pop();
+    public void render(MoCEntityThrowableRock entitytrock, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLightIn) {
+        poseStack.pushPose();
+        //poseStack.translate(-0.5F, -0.55F, 0.5F);
+        poseStack.translate(-0.5F, 0.25F, -0.5F);
+        poseStack.mulPose(Axis.YN.rotationDegrees(((100 - entitytrock.acceleration) / 10F) * 36F));
+        RenderSystem.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
+        
+        // Render the block state
+        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(
+            entitytrock.getState(), 
+            poseStack, 
+            buffer, 
+            packedLightIn,
+            OverlayTexture.NO_OVERLAY
+        );
+        
+        poseStack.popPose();
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityThrowableRock par1Entity) {
-        return AtlasTexture.LOCATION_BLOCKS_TEXTURE;
+    public ResourceLocation getTextureLocation(MoCEntityThrowableRock par1Entity) {
+        return TextureAtlas.LOCATION_BLOCKS;
     }
 }

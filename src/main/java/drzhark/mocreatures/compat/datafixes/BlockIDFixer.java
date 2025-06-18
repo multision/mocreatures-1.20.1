@@ -7,17 +7,19 @@ import com.mojang.datafixers.DataFix;
 import com.mojang.datafixers.TypeRewriteRule;
 import com.mojang.datafixers.schemas.Schema;
 import drzhark.mocreatures.MoCConstants;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.MissingMappingsEvent;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("removal")
 public class BlockIDFixer extends DataFix {
     private static final Map<ResourceLocation, ResourceLocation> BLOCK_NAME_MAPPINGS = new HashMap<>();
 
@@ -42,30 +44,30 @@ public class BlockIDFixer extends DataFix {
     }
 
     @SubscribeEvent
-    public void missingBlockMapping(RegistryEvent.MissingMappings<Block> event) {
-        for (RegistryEvent.MissingMappings.Mapping<Block> entry : event.getAllMappings()) {
-            ResourceLocation oldName = entry.key;
+    public void onMissingBlockMappings(MissingMappingsEvent event) {
+        event.getMappings(ForgeRegistries.BLOCKS.getRegistryKey(), MoCConstants.MOD_ID).forEach(mapping -> {
+            ResourceLocation oldName = mapping.getKey();
             ResourceLocation newName = BLOCK_NAME_MAPPINGS.get(oldName);
             if (newName != null) {
                 Block newBlock = ForgeRegistries.BLOCKS.getValue(newName);
                 if (newBlock != null) {
-                    entry.remap(newBlock);
+                    mapping.remap(newBlock);
                 }
             }
-        }
+        });
     }
 
     @SubscribeEvent
-    public void missingItemBlockMapping(RegistryEvent.MissingMappings<Item> event) {
-        for (RegistryEvent.MissingMappings.Mapping<Item> entry : event.getAllMappings()) {
-            ResourceLocation oldName = entry.key;
+    public void onMissingItemMappings(MissingMappingsEvent event) {
+        event.getMappings(ForgeRegistries.ITEMS.getRegistryKey(), MoCConstants.MOD_ID).forEach(mapping -> {
+            ResourceLocation oldName = mapping.getKey();
             ResourceLocation newName = BLOCK_NAME_MAPPINGS.get(oldName);
             if (newName != null) {
                 Item newItem = ForgeRegistries.ITEMS.getValue(newName);
                 if (newItem != null) {
-                    entry.remap(newItem);
+                    mapping.remap(newItem);
                 }
             }
-        }
+        });
     }
 }

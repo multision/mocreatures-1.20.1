@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/essence_light"
+    "layer0": "mocreatures:item/essence_light"
   }
 }

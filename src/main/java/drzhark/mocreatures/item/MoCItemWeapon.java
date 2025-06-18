@@ -1,35 +1,24 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.item;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import drzhark.mocreatures.MoCreatures;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.WebBlock;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.IItemTier;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -38,156 +27,116 @@ import java.util.List;
 
 public class MoCItemWeapon extends MoCItem {
 
-    private final IItemTier material;
+    private final Tier material;
     private final float attackDamage;
     private int specialWeaponType = 0;
     private final Multimap<Attribute, AttributeModifier> attributeModifiers;
 
-    public MoCItemWeapon(Item.Properties properties, String name, IItemTier par2ToolMaterial) {
-        super(properties.maxStackSize(1).maxDamage(par2ToolMaterial.getMaxUses()), name);
-        this.material = par2ToolMaterial;
-        this.attackDamage = 3F + par2ToolMaterial.getAttackDamage();
+    public MoCItemWeapon(Item.Properties properties, Tier material) {
+        super(properties.stacksTo(1).durability(material.getUses()));
+        this.material = material;
+        this.attackDamage = 3F + material.getAttackDamageBonus();
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
-        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", (double)this.attackDamage, AttributeModifier.Operation.ADDITION));
+        builder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", this.attackDamage, AttributeModifier.Operation.ADDITION));
         this.attributeModifiers = builder.build();
     }
 
-    public MoCItemWeapon(Item.Properties properties, String name, IItemTier par2ToolMaterial, int damageType) {
-        this(properties, name, par2ToolMaterial);
+    public MoCItemWeapon(Item.Properties properties, Tier material, int damageType) {
+        this(properties, material);
         this.specialWeaponType = damageType;
     }
 
     public float getAttackDamage() {
-        return this.material.getAttackDamage();
+        return this.material.getAttackDamageBonus();
     }
 
-    public float getStrVsBlock(ItemStack stack, BlockState state) {
-        if (state.getBlock() instanceof WebBlock) {
+    public float getDestroySpeed(ItemStack stack, BlockState state) {
+        if (state.is(Blocks.COBWEB)) {
             return 15.0F;
         } else {
-            Material material = state.getMaterial();
-            return material != Material.PLANTS && material != Material.TALL_PLANTS && material != Material.CORAL && material != Material.LEAVES && material != Material.GOURD ? 1.0F : 1.5F;
+            //Material material = state.getMaterial();
+            //return (material != Material.PLANT && material != Material.REPLACEABLE_PLANT && material != Material.CORAL && material != Material.LEAVES && material != Material.VEGETABLE) ? 1.0F : 1.5F;
+            return 1.5F;
         }
     }
 
     @Override
-    public boolean hitEntity(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (MoCreatures.proxy.weaponEffects) {
-            int timer = 10; // In seconds
+            int timer = 10; // seconds
             switch (this.specialWeaponType) {
-                case 1: // Poison 2
-                    target.addPotionEffect(new EffectInstance(Effects.POISON, timer * 20, 1));
-                    break;
-                case 2: // Slowness
-                    target.addPotionEffect(new EffectInstance(Effects.SLOWNESS, timer * 20, 0));
-                    break;
-                case 3: // Fire
-                    target.setFire(timer);
-                    break;
-                case 4: // Weakness (Nausea for players)
-                    target.addPotionEffect(new EffectInstance(target instanceof PlayerEntity ? Effects.NAUSEA : Effects.WEAKNESS, timer * 20, 0));
-                    break;
-                case 5: // Wither (Blindness for players)
-                    target.addPotionEffect(new EffectInstance(target instanceof PlayerEntity ? Effects.BLINDNESS : Effects.WITHER, timer * 20, 0));
-                    break;
-                default:
-                    break;
+                case 1 -> target.addEffect(new MobEffectInstance(MobEffects.POISON, timer * 20, 1));
+                case 2 -> target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, timer * 20, 0));
+                case 3 -> target.setSecondsOnFire(timer);
+                case 4 -> {
+                    if (target instanceof Player)
+                        target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, timer * 20, 0));
+                    else
+                        target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, timer * 20, 0));
+                }
+                case 5 -> {
+                    if (target instanceof Player)
+                        target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, timer * 20, 0));
+                    else
+                        target.addEffect(new MobEffectInstance(MobEffects.WITHER, timer * 20, 0));
+                }
             }
         }
 
-        stack.damageItem(1, attacker, (entity) -> {
-            entity.sendBreakAnimation(EquipmentSlotType.MAINHAND);
-        });
+        stack.hurtAndBreak(1, attacker, (e) -> e.broadcastBreakEvent(EquipmentSlot.MAINHAND));
         return true;
     }
 
-    /**
-     * Called whenever this item is equipped and the right mouse button is
-     * pressed. Args: itemStack, world, entityPlayer
-     */
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity player, Hand hand) {
-        final ItemStack stack = player.getHeldItem(hand);
-        player.setActiveHand(hand);
-        return new ActionResult<>(ActionResultType.SUCCESS, stack);
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        final ItemStack stack = player.getItemInHand(hand);
+        player.startUsingItem(hand);
+        return InteractionResultHolder.success(stack);
     }
 
-    /**
-     * Returns if the item (tool) can harvest results from the block type.
-     */
-    @Override
+    // TODO: Cobweb harvesting
+    /*@Override
     public boolean canHarvestBlock(BlockState state) {
-        return state.getBlock() instanceof WebBlock;
-    }
+        return state.is(Blocks.COBWEB);
+    }*/
 
-    /**
-     * Return the enchantability factor of the item, most of the time is based
-     * on material.
-     */
     @Override
-    public int getItemEnchantability() {
-        return this.material.getEnchantability();
+    public int getEnchantmentValue() {
+        return this.material.getEnchantmentValue();
     }
 
-    /**
-     * Called when a Block is destroyed using this Item. Return true to trigger the "Use Item" statistic.
-     */
-    public boolean onBlockDestroyed(ItemStack stack, World worldIn, BlockState state, BlockPos pos, LivingEntity playerIn) {
-        if (!worldIn.isRemote && state.getBlockHardness(worldIn, pos) != 0.0F) {
-            stack.damageItem(1, playerIn, (entity) -> {
-                entity.sendBreakAnimation(EquipmentSlotType.MAINHAND);
-            });
+    @Override
+    public boolean mineBlock(ItemStack stack, Level world, BlockState state, net.minecraft.core.BlockPos pos, LivingEntity entity) {
+        if (!world.isClientSide && state.getDestroySpeed(world, pos) != 0.0F) {
+            stack.hurtAndBreak(1, entity, (e) -> e.broadcastBreakEvent(EquipmentSlot.MAINHAND));
         }
-
         return true;
     }
 
-    /**
-     * Return the name for this tool's material.
-     */
     public String getToolMaterialName() {
         return this.material.toString();
     }
 
-    /**
-     * Return whether this item is repairable in an anvil.
-     *
-     * @param toRepair The ItemStack to be repaired
-     * @param repair   The ItemStack that should repair this Item (leather for leather armor, etc.)
-     */
-    public boolean getIsRepairable(ItemStack toRepair, ItemStack repair) {
-        return this.material.getRepairMaterial().test(repair) || super.getIsRepairable(toRepair, repair);
+    @Override
+    public boolean isValidRepairItem(ItemStack toRepair, ItemStack repair) {
+        return this.material.getRepairIngredient().test(repair) || super.isValidRepairItem(toRepair, repair);
     }
 
-    /**
-     * Gets a map of item attribute modifiers, used by SwordItem to increase hit damage.
-     */
-    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot) {
-        return equipmentSlot == EquipmentSlotType.MAINHAND ? this.attributeModifiers : super.getAttributeModifiers(equipmentSlot);
+    @Override
+    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot slot) {
+        return slot == EquipmentSlot.MAINHAND ? this.attributeModifiers : super.getDefaultAttributeModifiers(slot);
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         if (MoCreatures.proxy.weaponEffects) {
             switch (this.specialWeaponType) {
-                case 1: // Poison 2
-                    tooltip.add(new TranslationTextComponent("info.mocreatures.stingdefault1").setStyle(Style.EMPTY.setFormatting(TextFormatting.BLUE)));
-                    break;
-                case 2: // Slowness
-                    tooltip.add(new TranslationTextComponent("info.mocreatures.stingdefault2").setStyle(Style.EMPTY.setFormatting(TextFormatting.BLUE)));
-                    break;
-                case 3: // Fire
-                    tooltip.add(new TranslationTextComponent("info.mocreatures.stingdefault3").setStyle(Style.EMPTY.setFormatting(TextFormatting.BLUE)));
-                    break;
-                case 4: // Weakness (Nausea for players)
-                    tooltip.add(new TranslationTextComponent("info.mocreatures.stingdefault4").setStyle(Style.EMPTY.setFormatting(TextFormatting.BLUE)));
-                    break;
-                case 5: // Wither (Blindness for players)
-                    tooltip.add(new TranslationTextComponent("info.mocreatures.stingdefault5").setStyle(Style.EMPTY.setFormatting(TextFormatting.BLUE)));
-                    break;
-                default:
-                    break;
+                case 1 -> tooltip.add(Component.translatable("info.mocreatures.stingdefault1").withStyle(ChatFormatting.BLUE));
+                case 2 -> tooltip.add(Component.translatable("info.mocreatures.stingdefault2").withStyle(ChatFormatting.BLUE));
+                case 3 -> tooltip.add(Component.translatable("info.mocreatures.stingdefault3").withStyle(ChatFormatting.BLUE));
+                case 4 -> tooltip.add(Component.translatable("info.mocreatures.stingdefault4").withStyle(ChatFormatting.BLUE));
+                case 5 -> tooltip.add(Component.translatable("info.mocreatures.stingdefault5").withStyle(ChatFormatting.BLUE));
             }
         }
     }

@@ -1,6 +1,6 @@
 {
   "parent": "item/handheld",
   "textures": {
-    "layer0": "mocreatures:items/nunchaku"
+    "layer0": "mocreatures:item/nunchaku"
   }
 }

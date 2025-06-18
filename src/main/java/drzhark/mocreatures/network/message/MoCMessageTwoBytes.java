@@ -4,10 +4,10 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.hostile.MoCEntityGolem;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -26,25 +26,26 @@ public class MoCMessageTwoBytes {
         this.value = value;
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeInt(this.entityId);
         buffer.writeByte(this.slot);
         buffer.writeByte(this.value);
     }
 
-    public MoCMessageTwoBytes(ByteBuf buffer) {
+    public MoCMessageTwoBytes(FriendlyByteBuf buffer) {
         this.entityId = buffer.readInt();
         this.slot = buffer.readByte();
         this.value = buffer.readByte();
     }
 
-    public static boolean onMessage(MoCMessageTwoBytes message, Supplier<NetworkEvent.Context> ctx) {
+    public static void onMessage(MoCMessageTwoBytes message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Entity ent = Minecraft.getInstance().player.level().getEntity(message.entityId);
+            if (ent instanceof MoCEntityGolem) {
+                ((MoCEntityGolem) ent).saveGolemCube(message.slot, message.value);
+            }
+        });
         ctx.get().setPacketHandled(true);
-        Entity ent = Minecraft.getInstance().player.world.getEntityByID(message.entityId);
-        if (ent instanceof MoCEntityGolem) {
-            ((MoCEntityGolem) ent).saveGolemCube(message.slot, message.value);
-        }
-        return true;
     }
 
     @Override

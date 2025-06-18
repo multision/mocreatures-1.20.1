@@ -7,14 +7,17 @@ import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.entity.MoCEntityInsect;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
@@ -22,9 +25,16 @@ public class MoCEntityFly extends MoCEntityInsect {
 
     private int soundCount;// = 50;
 
-    public MoCEntityFly(EntityType<? extends MoCEntityFly> type, World world) {
+    public MoCEntityFly(EntityType<? extends MoCEntityFly> type, Level world) {
         super(type, world);
         this.texture = "fly.png";
+    }
+
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 10.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.FLYING_SPEED, 0.25D);
     }
 
     @Override
@@ -33,13 +43,13 @@ public class MoCEntityFly extends MoCEntityInsect {
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
 
-        if (!this.world.isRemote) {
+        if (!this.level().isClientSide()) {
             if (getIsFlying() && --this.soundCount == -1) {
-                PlayerEntity ep = this.world.getClosestPlayer(this, 5D);
-                if (ep != null) {
+                Player player = this.level().getNearestPlayer(this, 5D);
+                if (player != null) {
                     MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_FLY_AMBIENT.get());
                     this.soundCount = 55;
                 }
@@ -58,7 +68,9 @@ public class MoCEntityFly extends MoCEntityInsect {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.FLY;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.FLY;
     }
 
     @Override
@@ -71,8 +83,11 @@ public class MoCEntityFly extends MoCEntityInsect {
         return true;
     }
 
+    /**
+     * Custom method for fly movement speed calculation
+     */
     @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         if (getIsFlying()) {
             return 0.2F;
         }

@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/heart_darkness"
+    "layer0": "mocreatures:item/heart_darkness"
   }
 }

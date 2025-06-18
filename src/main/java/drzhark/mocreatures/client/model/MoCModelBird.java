@@ -1,83 +1,154 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.passive.MoCEntityBird;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class MoCModelBird<T extends MoCEntityBird> extends EntityModel<T> {
 
-    public ModelRenderer head;
-    public ModelRenderer body;
-    public ModelRenderer leftleg;
-    public ModelRenderer rightleg;
-    public ModelRenderer rwing;
-    public ModelRenderer lwing;
-    public ModelRenderer beak;
-    public ModelRenderer tail;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION =
+            new ModelLayerLocation(new ResourceLocation("mocreatures", "bird"), "main");
 
-    public MoCModelBird() {
-        byte byte0 = 16;
-        this.head = new ModelRenderer(this, 0, 0);
-        this.head.addBox(-1.5F, -3F, -2F, 3, 3, 3, 0.0F);
-        this.head.setRotationPoint(0.0F, -1 + byte0, -4F);
-        this.beak = new ModelRenderer(this, 14, 0);
-        this.beak.addBox(-0.5F, -1.5F, -3F, 1, 1, 2, 0.0F);
-        this.beak.setRotationPoint(0.0F, -1 + byte0, -4F);
-        this.body = new ModelRenderer(this, 0, 9);
-        this.body.addBox(-2F, -4F, -3F, 4, 8, 4, 0.0F);
-        this.body.setRotationPoint(0.0F, byte0, 0.0F);
-        this.body.rotateAngleX = 1.047198F;
-        this.leftleg = new ModelRenderer(this, 26, 0);
-        this.leftleg.addBox(-1F, 0.0F, -4F, 3, 4, 3);
-        this.leftleg.setRotationPoint(-2F, 3 + byte0, 1.0F);
-        this.rightleg = new ModelRenderer(this, 26, 0);
-        this.rightleg.addBox(-1F, 0.0F, -4F, 3, 4, 3);
-        this.rightleg.setRotationPoint(1.0F, 3 + byte0, 1.0F);
-        this.rwing = new ModelRenderer(this, 24, 13);
-        this.rwing.addBox(-1F, 0.0F, -3F, 1, 5, 5);
-        this.rwing.setRotationPoint(-2F, -2 + byte0, 0.0F);
-        this.lwing = new ModelRenderer(this, 24, 13);
-        this.lwing.addBox(0.0F, 0.0F, -3F, 1, 5, 5);
-        this.lwing.setRotationPoint(2.0F, -2 + byte0, 0.0F);
-        this.tail = new ModelRenderer(this, 0, 23);
-        this.tail.addBox(-6F, 5F, 2.0F, 4, 1, 4, 0.0F);
-        this.tail.setRotationPoint(4F, -3 + byte0, 0.0F);
-        this.tail.rotateAngleX = 0.261799F;
+    private final ModelPart head;
+    private final ModelPart beak;
+    private final ModelPart body;
+    private final ModelPart leftLeg;
+    private final ModelPart rightLeg;
+    private final ModelPart rWing;
+    private final ModelPart lWing;
+    private final ModelPart tail;
+
+    public MoCModelBird(ModelPart root) {
+        this.head     = root.getChild("head");
+        this.beak     = root.getChild("beak");
+        this.body     = root.getChild("body");
+        this.leftLeg  = root.getChild("leftleg");
+        this.rightLeg = root.getChild("rightleg");
+        this.rWing    = root.getChild("rwing");
+        this.lWing    = root.getChild("lwing");
+        this.tail     = root.getChild("tail");
+    }
+
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // head (no initial rotation)
+        root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1.5F, -3F, -2F, 3, 3, 3),
+                PartPose.offset(0F, 15F, -4F)
+        );
+
+        // beak (attached at same pivot as head)
+        root.addOrReplaceChild("beak",
+                CubeListBuilder.create()
+                        .texOffs(14, 0)
+                        .addBox(-0.5F, -1.5F, -3F, 1, 1, 2),
+                PartPose.offset(0F, 15F, -4F)
+        );
+
+        // body, rotated ~60° (1.047198 radians) around X
+        root.addOrReplaceChild("body",
+                CubeListBuilder.create()
+                        .texOffs(0, 9)
+                        .addBox(-2F, -4F, -3F, 4, 8, 4),
+                PartPose.offsetAndRotation(0F, 16F, 0F, 1.047198F, 0F, 0F)
+        );
+
+        // left leg
+        root.addOrReplaceChild("leftleg",
+                CubeListBuilder.create()
+                        .texOffs(26, 0)
+                        .addBox(-1F, 0F, -4F, 3, 4, 3),
+                PartPose.offset(-2F, 19F, 1F)
+        );
+
+        // right leg
+        root.addOrReplaceChild("rightleg",
+                CubeListBuilder.create()
+                        .texOffs(26, 0)
+                        .addBox(-1F, 0F, -4F, 3, 4, 3),
+                PartPose.offset(1F, 19F, 1F)
+        );
+
+        // right wing
+        root.addOrReplaceChild("rwing",
+                CubeListBuilder.create()
+                        .texOffs(24, 13)
+                        .addBox(-1F, 0F, -3F, 1, 5, 5),
+                PartPose.offset(-2F, 14F, 0F)
+        );
+
+        // left wing
+        root.addOrReplaceChild("lwing",
+                CubeListBuilder.create()
+                        .texOffs(24, 13)
+                        .addBox(0F, 0F, -3F, 1, 5, 5),
+                PartPose.offset(2F, 14F, 0F)
+        );
+
+        // tail, rotated ~15° (0.261799 radians) around X
+        root.addOrReplaceChild("tail",
+                CubeListBuilder.create()
+                        .texOffs(0, 23)
+                        .addBox(-6F, 5F, 2F, 4, 1, 4),
+                PartPose.offsetAndRotation(4F, 13F, 0F, 0.261799F, 0F, 0F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.beak.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.leftleg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.rightleg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.rwing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.lwing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        beak.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        leftLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        rightLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        rWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        lWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
     @Override
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.head.rotateAngleX = -(headPitch / 2.0F / 57.29578F);
-        //head.rotateAngleY = netHeadYaw / 2.0F / 57.29578F; //fixed SMP bug
-        this.head.rotateAngleY = netHeadYaw / 57.29578F;
-        this.beak.rotateAngleY = this.head.rotateAngleY;
+    public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount,
+                          float ageInTicks, float netHeadYaw, float headPitch) {
+        // Head pitch / yaw. Original did: head.rotateAngleX = -(headPitch/2)/57.29578
+        head.xRot = -(headPitch * 0.5F) * Mth.DEG_TO_RAD;
+        head.yRot = netHeadYaw * Mth.DEG_TO_RAD;
+        // beak follows head's Y rotation
+        beak.yRot = head.yRot;
 
-        if (entityIn.isOnAir() && entityIn.getRidingEntity() == null) {
-            this.leftleg.rotateAngleX = 1.4F;
-            this.rightleg.rotateAngleX = 1.4F;
+        // If flying (in air and not riding), legs tuck straight out at ~1.4 rad:
+        if (entityIn.isOnAir() && entityIn.getVehicle() == null) {
+            leftLeg.xRot = 1.4F;
+            rightLeg.xRot = 1.4F;
         } else {
-            this.leftleg.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * limbSwingAmount;
-            this.rightleg.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * limbSwingAmount;
+            // Otherwise trot animation:
+            leftLeg.xRot = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount;
+            rightLeg.xRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * limbSwingAmount;
         }
-        this.rwing.rotateAngleZ = ageInTicks;
-        this.lwing.rotateAngleZ = -ageInTicks;
+
+        // Wings flap continuously:
+        float wingRot = ageInTicks;
+        rWing.zRot = wingRot;
+        lWing.zRot = -wingRot;
     }
 }

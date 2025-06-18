@@ -1,0 +1,36 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": "#forge:is_sandy",
+  "spawners": [
+    {
+      "type": "mocreatures:snake",
+      "weight": 10,
+      "minCount": 1,
+      "maxCount": 2
+    },
+    {
+      "type": "mocreatures:dirt_scorpion",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 2
+    },
+    {
+      "type": "mocreatures:filch_lizard",
+      "weight": 10,
+      "minCount": 1,
+      "maxCount": 2
+    },
+    {
+      "type": "mocreatures:mini_golem",
+      "weight": 5,
+      "minCount": 1,
+      "maxCount": 2
+    },
+    {
+      "type": "mocreatures:big_golem",
+      "weight": 3,
+      "minCount": 1,
+      "maxCount": 1
+    }
+  ]
+} 

@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:blocks/tall_grass_wyvern"
+    "layer0": "mocreatures:block/tall_grass_wyvern"
   }
 }

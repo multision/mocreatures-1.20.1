@@ -5,15 +5,13 @@ package drzhark.mocreatures.entity.aquatic;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityCod extends MoCEntityMediumFish {
 
-    public MoCEntityCod(EntityType<? extends MoCEntityCod> type, World world) {
+    public MoCEntityCod(EntityType<? extends MoCEntityCod> type, Level world) {
         super(type, world);
         this.setTypeMoC(2);
     }
@@ -23,7 +21,8 @@ public class MoCEntityCod extends MoCEntityMediumFish {
         return MoCreatures.proxy.getModelTexture("mediumfish_cod.png");
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.COD;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.COD;
     }
 }

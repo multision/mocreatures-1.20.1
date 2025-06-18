@@ -1,13 +1,15 @@
 package drzhark.mocreatures.util;
 
-import net.minecraft.item.Item;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.Tags.IOptionalNamedTag;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 public class MoCTags {
     public static class Items {
-        public static final IOptionalNamedTag<Item> COOKED_FISHES = ItemTags.createOptional(new ResourceLocation("forge", "cooked_fishes"));
-        public static final IOptionalNamedTag<Item> RAW_FISHES = ItemTags.createOptional(new ResourceLocation("forge", "raw_fishes"));
+        @SuppressWarnings("removal")
+        public static final TagKey<Item> COOKED_FISHES = TagKey.create(Registries.ITEM, new ResourceLocation("forge", "cooked_fishes"));
+        @SuppressWarnings("removal")
+        public static final TagKey<Item> RAW_FISHES = TagKey.create(Registries.ITEM, new ResourceLocation("forge", "raw_fishes"));
     }
 }

@@ -10,16 +10,17 @@ import drzhark.mocreatures.init.MoCSoundEvents;
 import drzhark.mocreatures.network.MoCMessageHandler;
 import drzhark.mocreatures.network.message.MoCMessageAnimation;
 import drzhark.mocreatures.network.message.MoCMessageExplode;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.passive.IronGolemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.PacketDistributor;
 
 public class MoCEntityOgre extends MoCEntityMob {
 
@@ -30,42 +31,44 @@ public class MoCEntityOgre extends MoCEntityMob {
     public int attackCounter;
     private int movingHead;
 
-    public MoCEntityOgre(EntityType<? extends MoCEntityOgre> type, World world) {
+    public MoCEntityOgre(EntityType<? extends MoCEntityOgre> type, Level world) {
         super(type, world);
         //setSize(1.8F, 3.05F);
-        experienceValue = 12;
+        this.xpReward = 12;
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new MoCEntityOgre.AIOgreAttack(this, 1.25D, false));
-        this.goalSelector.addGoal(8, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new MoCEntityOgre.AIOgreTarget<>(this, PlayerEntity.class, false));
-        this.targetSelector.addGoal(3, new MoCEntityOgre.AIOgreTarget<>(this, IronGolemEntity.class, true));
+        this.targetSelector.addGoal(2, new MoCEntityOgre.AIOgreTarget<>(this, Player.class, false));
+        this.targetSelector.addGoal(3, new MoCEntityOgre.AIOgreTarget<>(this, IronGolem.class, true));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityMob.registerAttributes().createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D).createMutableAttribute(Attributes.KNOCKBACK_RESISTANCE, 1.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityMob.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D);
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(2) + 1);
+            setTypeMoC(this.random.nextInt(2) + 1);
         }
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource damagesource, float i) {
-        if (super.attackEntityFrom(damagesource, i)) {
-            Entity entity = damagesource.getTrueSource();
-            if (entity != null && this.isRidingOrBeingRiddenBy(entity)) {
+    public boolean hurt(DamageSource damagesource, float damage) {
+        if (super.hurt(damagesource, damage)) {
+            Entity entity = damagesource.getEntity();
+            if (entity != null && this.isVehicle() && this.hasPassenger(entity)) {
                 return true;
             }
-            if ((entity != this) && (this.world.getDifficulty().getId() > 0) && entity instanceof LivingEntity) {
-                setAttackTarget((LivingEntity) entity);
+            if ((entity != this) && (this.level().getDifficulty().getId() > 0) && entity instanceof LivingEntity) {
+                setTarget((LivingEntity) entity);
                 return true;
             } else {
                 return false;
@@ -77,7 +80,7 @@ public class MoCEntityOgre extends MoCEntityMob {
 
     @Override
     public boolean shouldAttackPlayers() {
-        return (this.getBrightness() < 0.5F) && super.shouldAttackPlayers();
+        return (this.getLightLevelDependentMagicValue() < 0.5F) && super.shouldAttackPlayers();
     }
 
     @Override
@@ -111,15 +114,15 @@ public class MoCEntityOgre extends MoCEntityMob {
     }
 
     @Override
-    public void livingTick() {
-        if (!this.world.isRemote) {
+    public void aiStep() {
+        if (!this.level().isClientSide()) {
             if (this.smashCounter > 0 && ++this.smashCounter > 10) {
                 this.smashCounter = 0;
                 performDestroyBlastAttack();
-                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getPosX(), this.getPosY(), this.getPosZ(), 64, this.world.getDimensionKey())), new MoCMessageExplode(this.getEntityId()));
+                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageExplode(this.getId()));
             }
 
-            if ((this.getAttackTarget() != null) && (this.rand.nextInt(40) == 0) && this.smashCounter == 0 && this.attackCounter == 0) {
+            if ((this.getTarget() != null) && (this.random.nextInt(40) == 0) && this.smashCounter == 0 && this.attackCounter == 0) {
                 startDestroyBlast();
             }
         }
@@ -136,7 +139,7 @@ public class MoCEntityOgre extends MoCEntityMob {
                 this.armToAnimate = 0;
             }
         }
-        super.livingTick();
+        super.aiStep();
     }
 
     /**
@@ -144,7 +147,7 @@ public class MoCEntityOgre extends MoCEntityMob {
      */
     protected void startDestroyBlast() {
         this.smashCounter = 1;
-        MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getPosX(), this.getPosY(), this.getPosZ(), 64, this.world.getDimensionKey())), new MoCMessageAnimation(this.getEntityId(), 3));
+        MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageAnimation(this.getId(), 3));
     }
 
     /**
@@ -154,26 +157,26 @@ public class MoCEntityOgre extends MoCEntityMob {
         if (this.deathTime > 0) {
             return;
         }
-        MoCTools.destroyBlast(this, this.getPosX(), this.getPosY() + 1.0D, this.getPosZ(), getDestroyForce(), isFireStarter());
+        MoCTools.destroyBlast(this, this.getX(), this.getY() + 1.0D, this.getZ(), getDestroyForce(), isFireStarter());
     }
 
     /**
      * Starts attack counters and synchronizes animations with clients
      */
     protected void startArmSwingAttack() {
-        if (!this.world.isRemote) {
+        if (!this.level().isClientSide()) {
             if (this.smashCounter != 0)
                 return;
 
-            boolean leftArmW = (getTypeMoC() == 2 || getTypeMoC() == 4 || getTypeMoC() == 6) && this.rand.nextInt(2) == 0;
+            boolean leftArmW = (getTypeMoC() == 2 || getTypeMoC() == 4 || getTypeMoC() == 6) && this.random.nextInt(2) == 0;
 
             this.attackCounter = 1;
             if (leftArmW) {
                 this.armToAnimate = 1;
-                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getPosX(), this.getPosY(), this.getPosZ(), 64, this.world.getDimensionKey())), new MoCMessageAnimation(this.getEntityId(), 1));
+                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageAnimation(this.getId(), 1));
             } else {
                 this.armToAnimate = 2;
-                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getPosX(), this.getPosY(), this.getPosZ(), 64, this.world.getDimensionKey())), new MoCMessageAnimation(this.getEntityId(), 2));
+                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageAnimation(this.getId(), 2));
             }
         }
     }
@@ -193,20 +196,21 @@ public class MoCEntityOgre extends MoCEntityMob {
             return 1;
         }
 
-        if (this.rand.nextInt(60) == 0) {
-            this.movingHead = this.rand.nextInt(2) + 2; //randomly changes the focus head, returns 2 or 3
+        if (this.random.nextInt(60) == 0) {
+            this.movingHead = this.random.nextInt(2) + 2; //randomly changes the focus head, returns 2 or 3
         }
         return this.movingHead;
     }
 
     @Override
-    public boolean attackEntityAsMob(Entity entityIn) {
+    public boolean doHurtTarget(Entity target) {
         startArmSwingAttack();
-        return super.attackEntityAsMob(entityIn);
+        return super.doHurtTarget(target);
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.91F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions dimensions) {
+        return this.getBbHeight() * 0.91F;
     }
 
     static class AIOgreAttack extends MeleeAttackGoal {
@@ -215,32 +219,32 @@ public class MoCEntityOgre extends MoCEntityMob {
         }
 
         @Override
-        public boolean shouldContinueExecuting() {
-            float f = this.attacker.getBrightness();
+        public boolean canContinueToUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
 
-            if (f >= 0.5F && this.attacker.getRNG().nextInt(100) == 0) {
-                this.attacker.setAttackTarget(null);
+            if (f >= 0.5F && this.mob.getRandom().nextInt(100) == 0) {
+                this.mob.setTarget(null);
                 return false;
             } else {
-                return super.shouldContinueExecuting();
+                return super.canContinueToUse();
             }
         }
 
         @Override
         protected double getAttackReachSqr(LivingEntity attackTarget) {
-            return 4.0F + attackTarget.getWidth();
+            return 4.0F + attackTarget.getBbWidth();
         }
     }
 
-    static class AIOgreTarget<T extends LivingEntity> extends NearestAttackableTargetGoal<T> {
+    static class AIOgreTarget<T extends LivingEntity> extends net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<T> {
         public AIOgreTarget(MoCEntityOgre ogre, Class<T> classTarget, boolean checkSight) {
             super(ogre, classTarget, checkSight);
         }
 
         @Override
-        public boolean shouldExecute() {
-            float f = this.goalOwner.getBrightness();
-            return f < 0.5F && super.shouldExecute();
+        public boolean canUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
+            return f < 0.5F && super.canUse();
         }
     }
 }

@@ -3,37 +3,37 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.entity.MoCEntityInsect;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.model.EntityModel;
+import com.mojang.math.Axis;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderInsect<T extends MoCEntityInsect, M extends EntityModel<T>> extends MoCRenderMoC<T, M> {
 
-    public MoCRenderInsect(EntityRendererManager renderManagerIn, M modelbase) {
+    public MoCRenderInsect(EntityRendererProvider.Context renderManagerIn, M modelbase) {
         super(renderManagerIn, modelbase, 0.0F);
 
     }
 
     @Override
-    protected void preRenderCallback(T entityinsect, MatrixStack matrixStackIn, float par2) {
+    protected void scale(T entityinsect, PoseStack poseStack, float par2) {
         if (entityinsect.climbing()) {
-            rotateAnimal(entityinsect, matrixStackIn);
+            rotateAnimal(entityinsect, poseStack);
         }
 
-        stretch(entityinsect, matrixStackIn);
+        stretch(entityinsect, poseStack);
     }
 
-    protected void rotateAnimal(T entityinsect, MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.XN.rotationDegrees(90F));
+    protected void rotateAnimal(T entityinsect, PoseStack poseStack) {
+        poseStack.mulPose(Axis.XN.rotationDegrees(90F));
     }
 
-    protected void stretch(T entityinsect, MatrixStack matrixStackIn) {
+    protected void stretch(T entityinsect, PoseStack poseStack) {
         float sizeFactor = entityinsect.getSizeFactor();
-        matrixStackIn.scale(sizeFactor, sizeFactor, sizeFactor);
+        poseStack.scale(sizeFactor, sizeFactor, sizeFactor);
     }
 }

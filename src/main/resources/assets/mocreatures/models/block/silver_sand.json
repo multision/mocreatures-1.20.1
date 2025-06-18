@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "mocreatures:blocks/sand_silver"
+    "all": "mocreatures:block/sand_silver"
   }
 }

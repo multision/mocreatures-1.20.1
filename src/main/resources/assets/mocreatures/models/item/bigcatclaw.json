@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/big_cat_claw"
+    "layer0": "mocreatures:item/big_cat_claw"
   }
 }

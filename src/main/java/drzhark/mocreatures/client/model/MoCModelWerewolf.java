@@ -3,531 +3,690 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.hostile.MoCEntityWerewolf;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelWerewolf<T extends MoCEntityWerewolf> extends EntityModel<T> {
 
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "werewolf"), "main"
+    );
+
+    private final ModelPart Head;
+    private final ModelPart Nose;
+    private final ModelPart Snout;
+    private final ModelPart TeethU;
+    private final ModelPart TeethL;
+    private final ModelPart Mouth;
+    private final ModelPart LEar;
+    private final ModelPart REar;
+    private final ModelPart Neck;
+    private final ModelPart Neck2;
+    private final ModelPart SideburnL;
+    private final ModelPart SideburnR;
+    private final ModelPart Chest;
+    private final ModelPart Abdomen;
+    private final ModelPart TailA;
+    private final ModelPart TailB;
+    private final ModelPart TailC;
+    private final ModelPart TailD;
+    private final ModelPart RLegA;
+    private final ModelPart RFoot;
+    private final ModelPart RLegB;
+    private final ModelPart RLegC;
+    private final ModelPart LLegA;
+    private final ModelPart LFoot;
+    private final ModelPart LLegB;
+    private final ModelPart LLegC;
+    private final ModelPart RArmA;
+    private final ModelPart RArmB;
+    private final ModelPart RArmC;
+    private final ModelPart RHand;
+    private final ModelPart LArmA;
+    private final ModelPart LArmB;
+    private final ModelPart LArmC;
+    private final ModelPart LHand;
+    private final ModelPart RFinger1;
+    private final ModelPart RFinger2;
+    private final ModelPart RFinger3;
+    private final ModelPart RFinger4;
+    private final ModelPart RFinger5;
+    private final ModelPart LFinger1;
+    private final ModelPart LFinger2;
+    private final ModelPart LFinger3;
+    private final ModelPart LFinger4;
+    private final ModelPart LFinger5;
+
+    // This flag controls “hunched” posture
     public boolean hunched;
-    ModelRenderer Head;
-    ModelRenderer Nose;
-    ModelRenderer Snout;
-    ModelRenderer TeethU;
-    ModelRenderer TeethL;
-    ModelRenderer Mouth;
-    ModelRenderer LEar;
-    ModelRenderer REar;
-    ModelRenderer Neck;
-    ModelRenderer Neck2;
-    ModelRenderer SideburnL;
-    ModelRenderer SideburnR;
-    ModelRenderer Chest;
-    ModelRenderer Abdomen;
-    ModelRenderer TailA;
-    ModelRenderer TailC;
-    ModelRenderer TailB;
-    ModelRenderer TailD;
-    ModelRenderer RLegA;
-    ModelRenderer RFoot;
-    ModelRenderer RLegB;
-    ModelRenderer RLegC;
-    ModelRenderer LLegB;
-    ModelRenderer LFoot;
-    ModelRenderer LLegC;
-    ModelRenderer LLegA;
-    ModelRenderer RArmB;
-    ModelRenderer RArmC;
-    ModelRenderer LArmB;
-    ModelRenderer RHand;
-    ModelRenderer RArmA;
-    ModelRenderer LArmA;
-    ModelRenderer LArmC;
-    ModelRenderer LHand;
-    ModelRenderer RFinger1;
-    ModelRenderer RFinger2;
-    ModelRenderer RFinger3;
-    ModelRenderer RFinger4;
-    ModelRenderer RFinger5;
-    ModelRenderer LFinger1;
-    ModelRenderer LFinger2;
-    ModelRenderer LFinger3;
-    ModelRenderer LFinger4;
-    ModelRenderer LFinger5;
 
-    public MoCModelWerewolf() {
-        this.textureWidth = 64;
-        this.textureHeight = 128;
+    public MoCModelWerewolf(ModelPart root) {
+        this.Head      = root.getChild("Head");
+        this.Nose      = root.getChild("Nose");
+        this.Snout     = root.getChild("Snout");
+        this.TeethU    = root.getChild("TeethU");
+        this.TeethL    = root.getChild("TeethL");
+        this.Mouth     = root.getChild("Mouth");
+        this.LEar      = root.getChild("LEar");
+        this.REar      = root.getChild("REar");
+        this.Neck      = root.getChild("Neck");
+        this.Neck2     = root.getChild("Neck2");
+        this.SideburnL = root.getChild("SideburnL");
+        this.SideburnR = root.getChild("SideburnR");
+        this.Chest     = root.getChild("Chest");
+        this.Abdomen   = root.getChild("Abdomen");
+        this.TailA     = root.getChild("TailA");
+        this.TailB     = root.getChild("TailB");
+        this.TailC     = root.getChild("TailC");
+        this.TailD     = root.getChild("TailD");
+        this.RLegA     = root.getChild("RLegA");
+        this.RFoot     = root.getChild("RFoot");
+        this.RLegB     = root.getChild("RLegB");
+        this.RLegC     = root.getChild("RLegC");
+        this.LLegA     = root.getChild("LLegA");
+        this.LFoot     = root.getChild("LFoot");
+        this.LLegB     = root.getChild("LLegB");
+        this.LLegC     = root.getChild("LLegC");
+        this.RArmA     = root.getChild("RArmA");
+        this.RArmB     = root.getChild("RArmB");
+        this.RArmC     = root.getChild("RArmC");
+        this.RHand     = root.getChild("RHand");
+        this.LArmA     = root.getChild("LArmA");
+        this.LArmB     = root.getChild("LArmB");
+        this.LArmC     = root.getChild("LArmC");
+        this.LHand     = root.getChild("LHand");
+        this.RFinger1  = root.getChild("RFinger1");
+        this.RFinger2  = root.getChild("RFinger2");
+        this.RFinger3  = root.getChild("RFinger3");
+        this.RFinger4  = root.getChild("RFinger4");
+        this.RFinger5  = root.getChild("RFinger5");
+        this.LFinger1  = root.getChild("LFinger1");
+        this.LFinger2  = root.getChild("LFinger2");
+        this.LFinger3  = root.getChild("LFinger3");
+        this.LFinger4  = root.getChild("LFinger4");
+        this.LFinger5  = root.getChild("LFinger5");
+    }
 
-        this.Head = new ModelRenderer(this, 0, 0);
-        this.Head.addBox(-4F, -3F, -6F, 8, 8, 6);
-        this.Head.setRotationPoint(0F, -8F, -6F);
-        this.Head.setTextureSize(64, 128);
+    /**
+     * Builds the LayerDefinition for this werewolf model.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh    = new MeshDefinition();
+        PartDefinition part    = mesh.getRoot();
 
-        this.Nose = new ModelRenderer(this, 44, 33);
-        this.Nose.addBox(-1.5F, -1.7F, -12.3F, 3, 2, 7);
-        this.Nose.setRotationPoint(0F, -8F, -6F);
-        setRotation(this.Nose, 0.2792527F, 0F, 0F);
+        // HEAD
+        part.addOrReplaceChild("Head",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-4F, -3F, -6F, 8, 8, 6),
+                PartPose.offset(0F, -8F, -6F)
+        );
 
-        this.Snout = new ModelRenderer(this, 0, 25);
-        this.Snout.addBox(-2F, 2F, -12F, 4, 2, 6);
-        this.Snout.setRotationPoint(0F, -8F, -6F);
+        // NOSE (initial X‐rotation: 0.2792527F)
+        part.addOrReplaceChild("Nose",
+                CubeListBuilder.create()
+                        .texOffs(44, 33)
+                        .addBox(-1.5F, -1.7F, -12.3F, 3, 2, 7),
+                PartPose.offsetAndRotation(0F, -8F, -6F, 0.2792527F, 0F, 0F)
+        );
 
-        this.TeethU = new ModelRenderer(this, 46, 18);
-        this.TeethU.addBox(-2F, 4.01F, -12F, 4, 2, 5);
-        this.TeethU.setRotationPoint(0F, -8F, -6F);
+        // SNOUT
+        part.addOrReplaceChild("Snout",
+                CubeListBuilder.create()
+                        .texOffs(0, 25)
+                        .addBox(-2F, 2F, -12F, 4, 2, 6),
+                PartPose.offset(0F, -8F, -6F)
+        );
 
-        this.TeethL = new ModelRenderer(this, 20, 109);
-        this.TeethL.addBox(-1.5F, -12.5F, 2.01F, 3, 5, 2);
-        this.TeethL.setRotationPoint(0F, -8F, -6F);
-        setRotation(this.TeethL, 2.530727F, 0F, 0F);
+        // TEETHU
+        part.addOrReplaceChild("TeethU",
+                CubeListBuilder.create()
+                        .texOffs(46, 18)
+                        .addBox(-2F, 4.01F, -12F, 4, 2, 5),
+                PartPose.offset(0F, -8F, -6F)
+        );
 
-        this.Mouth = new ModelRenderer(this, 42, 69);
-        this.Mouth.addBox(-1.5F, -12.5F, 0F, 3, 9, 2);
-        this.Mouth.setRotationPoint(0F, -8F, -6F);
-        setRotation(this.Mouth, 2.530727F, 0F, 0F);
+        // TEETHL (initial X‐rotation: 2.530727F)
+        part.addOrReplaceChild("TeethL",
+                CubeListBuilder.create()
+                        .texOffs(20, 109)
+                        .addBox(-1.5F, -12.5F, 2.01F, 3, 5, 2),
+                PartPose.offsetAndRotation(0F, -8F, -6F, 2.530727F, 0F, 0F)
+        );
 
-        this.LEar = new ModelRenderer(this, 13, 14);
-        this.LEar.addBox(0.5F, -7.5F, -1F, 3, 5, 1);
-        this.LEar.setRotationPoint(0F, -8F, -6F);
-        setRotation(this.LEar, 0F, 0F, 0.1745329F);
+        // MOUTH (initial X‐rotation: 2.530727F)
+        part.addOrReplaceChild("Mouth",
+                CubeListBuilder.create()
+                        .texOffs(42, 69)
+                        .addBox(-1.5F, -12.5F, 0F, 3, 9, 2),
+                PartPose.offsetAndRotation(0F, -8F, -6F, 2.530727F, 0F, 0F)
+        );
 
-        this.REar = new ModelRenderer(this, 22, 0);
-        this.REar.addBox(-3.5F, -7.5F, -1F, 3, 5, 1);
-        this.REar.setRotationPoint(0F, -8F, -6F);
-        setRotation(this.REar, 0F, 0F, -0.1745329F);
+        // LEAR (initial Z‐rotation: 0.1745329F)
+        part.addOrReplaceChild("LEar",
+                CubeListBuilder.create()
+                        .texOffs(13, 14)
+                        .addBox(0.5F, -7.5F, -1F, 3, 5, 1),
+                PartPose.offsetAndRotation(0F, -8F, -6F, 0F, 0F, 0.1745329F)
+        );
 
-        this.Neck = new ModelRenderer(this, 28, 0);
-        this.Neck.addBox(-3.5F, -3F, -7F, 7, 8, 7);
-        this.Neck.setRotationPoint(0F, -5F, -2F);
-        setRotation(this.Neck, -0.6025001F, 0F, 0F);
+        // REAR (initial Z‐rotation: -0.1745329F)
+        part.addOrReplaceChild("REar",
+                CubeListBuilder.create()
+                        .texOffs(22, 0)
+                        .addBox(-3.5F, -7.5F, -1F, 3, 5, 1),
+                PartPose.offsetAndRotation(0F, -8F, -6F, 0F, 0F, -0.1745329F)
+        );
 
-        this.Neck2 = new ModelRenderer(this, 0, 14);
-        this.Neck2.addBox(-1.5F, -2F, -5F, 3, 4, 7);
-        this.Neck2.setRotationPoint(0F, -1F, -6F);
-        setRotation(this.Neck2, -0.4537856F, 0F, 0F);
+        // NECK (initial X‐rotation: -0.6025001F)
+        part.addOrReplaceChild("Neck",
+                CubeListBuilder.create()
+                        .texOffs(28, 0)
+                        .addBox(-3.5F, -3F, -7F, 7, 8, 7),
+                PartPose.offsetAndRotation(0F, -5F, -2F, -0.6025001F, 0F, 0F)
+        );
 
-        this.SideburnL = new ModelRenderer(this, 28, 33);
-        this.SideburnL.addBox(3F, 0F, -2F, 2, 6, 6);
-        this.SideburnL.setRotationPoint(0F, -8F, -6F);
-        setRotation(this.SideburnL, -0.2094395F, 0.418879F, -0.0872665F);
+        // NECK2 (initial X‐rotation: -0.4537856F)
+        part.addOrReplaceChild("Neck2",
+                CubeListBuilder.create()
+                        .texOffs(0, 14)
+                        .addBox(-1.5F, -2F, -5F, 3, 4, 7),
+                PartPose.offsetAndRotation(0F, -1F, -6F, -0.4537856F, 0F, 0F)
+        );
 
-        this.SideburnR = new ModelRenderer(this, 28, 45);
-        this.SideburnR.addBox(-5F, 0F, -2F, 2, 6, 6);
-        this.SideburnR.setRotationPoint(0F, -8F, -6F);
-        setRotation(this.SideburnR, -0.2094395F, -0.418879F, 0.0872665F);
+        // SIDEBURNL (initial X: -0.2094395F, Y: 0.418879F, Z: -0.0872665F)
+        part.addOrReplaceChild("SideburnL",
+                CubeListBuilder.create()
+                        .texOffs(28, 33)
+                        .addBox(3F, 0F, -2F, 2, 6, 6),
+                PartPose.offsetAndRotation(0F, -8F, -6F, -0.2094395F, 0.418879F, -0.0872665F)
+        );
 
-        this.Chest = new ModelRenderer(this, 20, 15);
-        this.Chest.addBox(-4F, 0F, -7F, 8, 8, 10);
-        this.Chest.setRotationPoint(0F, -6F, -2.5F);
-        setRotation(this.Chest, 0.641331F, 0F, 0F);
+        // SIDEBURNR (initial X: -0.2094395F, Y: -0.418879F, Z: 0.0872665F)
+        part.addOrReplaceChild("SideburnR",
+                CubeListBuilder.create()
+                        .texOffs(28, 45)
+                        .addBox(-5F, 0F, -2F, 2, 6, 6),
+                PartPose.offsetAndRotation(0F, -8F, -6F, -0.2094395F, -0.418879F, 0.0872665F)
+        );
 
-        this.Abdomen = new ModelRenderer(this, 0, 40);
-        this.Abdomen.addBox(-3F, -8F, -8F, 6, 14, 8);
-        this.Abdomen.setRotationPoint(0F, 4.5F, 5F);
-        setRotation(this.Abdomen, 0.2695449F, 0F, 0F);
+        // CHEST (initial X: 0.641331F)
+        part.addOrReplaceChild("Chest",
+                CubeListBuilder.create()
+                        .texOffs(20, 15)
+                        .addBox(-4F, 0F, -7F, 8, 8, 10),
+                PartPose.offsetAndRotation(0F, -6F, -2.5F, 0.641331F, 0F, 0F)
+        );
 
-        this.TailA = new ModelRenderer(this, 52, 42);
-        this.TailA.addBox(-1.5F, -1F, -2F, 3, 4, 3);
-        this.TailA.setRotationPoint(0F, 9.5F, 6F);
-        setRotation(this.TailA, 1.064651F, 0F, 0F);
+        // ABDOMEN (initial X: 0.2695449F)
+        part.addOrReplaceChild("Abdomen",
+                CubeListBuilder.create()
+                        .texOffs(0, 40)
+                        .addBox(-3F, -8F, -8F, 6, 14, 8),
+                PartPose.offsetAndRotation(0F, 4.5F, 5F, 0.2695449F, 0F, 0F)
+        );
 
-        this.TailC = new ModelRenderer(this, 48, 59);
-        this.TailC.addBox(-2F, 6.8F, -4.6F, 4, 6, 4);
-        this.TailC.setRotationPoint(0F, 9.5F, 6F);
-        setRotation(this.TailC, 1.099557F, 0F, 0F);
+        // TAILA (initial X: 1.064651F)
+        part.addOrReplaceChild("TailA",
+                CubeListBuilder.create()
+                        .texOffs(52, 42)
+                        .addBox(-1.5F, -1F, -2F, 3, 4, 3),
+                PartPose.offsetAndRotation(0F, 9.5F, 6F, 1.064651F, 0F, 0F)
+        );
 
-        this.TailB = new ModelRenderer(this, 48, 49);
-        this.TailB.addBox(-2F, 2F, -2F, 4, 6, 4);
-        this.TailB.setRotationPoint(0F, 9.5F, 6F);
-        setRotation(this.TailB, 0.7504916F, 0F, 0F);
+        // TAILB (initial X: 0.7504916F)
+        part.addOrReplaceChild("TailB",
+                CubeListBuilder.create()
+                        .texOffs(48, 49)
+                        .addBox(-2F, 2F, -2F, 4, 6, 4),
+                PartPose.offsetAndRotation(0F, 9.5F, 6F, 0.7504916F, 0F, 0F)
+        );
 
-        this.TailD = new ModelRenderer(this, 52, 69);
-        this.TailD.addBox(-1.5F, 9.8F, -4.1F, 3, 5, 3);
-        this.TailD.setRotationPoint(0F, 9.5F, 6F);
-        setRotation(this.TailD, 1.099557F, 0F, 0F);
+        // TAILC (initial X: 1.099557F, Y‐offset 6.8F, Z‐offset -4.6F relative)
+        part.addOrReplaceChild("TailC",
+                CubeListBuilder.create()
+                        .texOffs(48, 59)
+                        .addBox(-2F, 6.8F, -4.6F, 4, 6, 4),
+                PartPose.offsetAndRotation(0F, 9.5F, 6F, 1.099557F, 0F, 0F)
+        );
 
-        this.RLegA = new ModelRenderer(this, 12, 64);
-        this.RLegA.addBox(-2.5F, -1.5F, -3.5F, 3, 8, 5);
-        this.RLegA.setRotationPoint(-3F, 9.5F, 3F);
-        setRotation(this.RLegA, -0.8126625F, 0F, 0F);
+        // TAILD (initial X: 1.099557F, offsets 9.8F, -4.1F)
+        part.addOrReplaceChild("TailD",
+                CubeListBuilder.create()
+                        .texOffs(52, 69)
+                        .addBox(-1.5F, 9.8F, -4.1F, 3, 5, 3),
+                PartPose.offsetAndRotation(0F, 9.5F, 6F, 1.099557F, 0F, 0F)
+        );
 
-        this.RFoot = new ModelRenderer(this, 14, 93);
-        this.RFoot.addBox(-2.506667F, 12.5F, -5F, 3, 2, 3);
-        this.RFoot.setRotationPoint(-3F, 9.5F, 3F);
+        // RIGHT LEG A (initial X: -0.8126625F)
+        part.addOrReplaceChild("RLegA",
+                CubeListBuilder.create()
+                        .texOffs(12, 64)
+                        .addBox(-2.5F, -1.5F, -3.5F, 3, 8, 5),
+                PartPose.offsetAndRotation(-3F, 9.5F, 3F, -0.8126625F, 0F, 0F)
+        );
 
-        this.RLegB = new ModelRenderer(this, 14, 76);
-        this.RLegB.addBox(-1.9F, 4.2F, 0.5F, 2, 2, 5);
-        this.RLegB.setRotationPoint(-3F, 9.5F, 3F);
-        setRotation(this.RLegB, -0.8445741F, 0F, 0F);
+        // R FOOT (no initial rotation)
+        part.addOrReplaceChild("RFoot",
+                CubeListBuilder.create()
+                        .texOffs(14, 93)
+                        .addBox(-2.506667F, 12.5F, -5F, 3, 2, 3),
+                PartPose.offset(-3F, 9.5F, 3F)
+        );
 
-        this.RLegC = new ModelRenderer(this, 14, 83);
-        this.RLegC.addBox(-2F, 6.2F, 0.5F, 2, 8, 2);
-        this.RLegC.setRotationPoint(-3F, 9.5F, 3F);
-        setRotation(this.RLegC, -0.2860688F, 0F, 0F);
+        // RIGHT LEG B (initial X: -0.8445741F)
+        part.addOrReplaceChild("RLegB",
+                CubeListBuilder.create()
+                        .texOffs(14, 76)
+                        .addBox(-1.9F, 4.2F, 0.5F, 2, 2, 5),
+                PartPose.offsetAndRotation(-3F, 9.5F, 3F, -0.8445741F, 0F, 0F)
+        );
 
-        this.LLegB = new ModelRenderer(this, 0, 76);
-        this.LLegB.addBox(-0.1F, 4.2F, 0.5F, 2, 2, 5);
-        this.LLegB.setRotationPoint(3F, 9.5F, 3F);
-        setRotation(this.LLegB, -0.8445741F, 0F, 0F);
+        // RIGHT LEG C (initial X: -0.2860688F)
+        part.addOrReplaceChild("RLegC",
+                CubeListBuilder.create()
+                        .texOffs(14, 83)
+                        .addBox(-2F, 6.2F, 0.5F, 2, 8, 2),
+                PartPose.offsetAndRotation(-3F, 9.5F, 3F, -0.2860688F, 0F, 0F)
+        );
 
-        this.LFoot = new ModelRenderer(this, 0, 93);
-        this.LFoot.addBox(-0.5066667F, 12.5F, -5F, 3, 2, 3);
-        this.LFoot.setRotationPoint(3F, 9.5F, 3F);
+        // LEFT LEG B (initial X: -0.8445741F)
+        part.addOrReplaceChild("LLegB",
+                CubeListBuilder.create()
+                        .texOffs(0, 76)
+                        .addBox(-0.1F, 4.2F, 0.5F, 2, 2, 5),
+                PartPose.offsetAndRotation(3F, 9.5F, 3F, -0.8445741F, 0F, 0F)
+        );
 
-        this.LLegC = new ModelRenderer(this, 0, 83);
-        this.LLegC.addBox(0F, 6.2F, 0.5F, 2, 8, 2);
-        this.LLegC.setRotationPoint(3F, 9.5F, 3F);
-        setRotation(this.LLegC, -0.2860688F, 0F, 0F);
+        // L FOOT
+        part.addOrReplaceChild("LFoot",
+                CubeListBuilder.create()
+                        .texOffs(0, 93)
+                        .addBox(-0.5066667F, 12.5F, -5F, 3, 2, 3),
+                PartPose.offset(3F, 9.5F, 3F)
+        );
 
-        this.LLegA = new ModelRenderer(this, 0, 64);
-        this.LLegA.addBox(-0.5F, -1.5F, -3.5F, 3, 8, 5);
-        this.LLegA.setRotationPoint(3F, 9.5F, 3F);
-        setRotation(this.LLegA, -0.8126625F, 0F, 0F);
+        // LEFT LEG C (initial X: -0.2860688F)
+        part.addOrReplaceChild("LLegC",
+                CubeListBuilder.create()
+                        .texOffs(0, 83)
+                        .addBox(0F, 6.2F, 0.5F, 2, 8, 2),
+                PartPose.offsetAndRotation(3F, 9.5F, 3F, -0.2860688F, 0F, 0F)
+        );
 
-        this.RArmB = new ModelRenderer(this, 48, 77);
-        this.RArmB.addBox(-3.5F, 1F, -1.5F, 4, 8, 4);
-        this.RArmB.setRotationPoint(-4F, -4F, -2F);
-        setRotation(this.RArmB, 0.2617994F, 0F, 0.3490659F);
+        // LEFT LEG A (initial X: -0.8126625F)
+        part.addOrReplaceChild("LLegA",
+                CubeListBuilder.create()
+                        .texOffs(0, 64)
+                        .addBox(-0.5F, -1.5F, -3.5F, 3, 8, 5),
+                PartPose.offsetAndRotation(3F, 9.5F, 3F, -0.8126625F, 0F, 0F)
+        );
 
-        this.RArmC = new ModelRenderer(this, 48, 112);
-        this.RArmC.addBox(-6F, 5F, 3F, 4, 7, 4);
-        this.RArmC.setRotationPoint(-4F, -4F, -2F);
-        setRotation(this.RArmC, -0.3490659F, 0F, 0F);
+        // RIGHT ARM B (initial X: 0.2617994F, Z: 0.3490659F)
+        part.addOrReplaceChild("RArmB",
+                CubeListBuilder.create()
+                        .texOffs(48, 77)
+                        .addBox(-3.5F, 1F, -1.5F, 4, 8, 4),
+                PartPose.offsetAndRotation(-4F, -4F, -2F, 0.2617994F, 0F, 0.3490659F)
+        );
 
-        this.LArmB = new ModelRenderer(this, 48, 89);
-        this.LArmB.addBox(-0.5F, 1F, -1.5F, 4, 8, 4);
-        this.LArmB.setRotationPoint(4F, -4F, -2F);
-        setRotation(this.LArmB, 0.2617994F, 0F, -0.3490659F);
+        // RIGHT ARM C (initial X: -0.3490659F)
+        part.addOrReplaceChild("RArmC",
+                CubeListBuilder.create()
+                        .texOffs(48, 112)
+                        .addBox(-6F, 5F, 3F, 4, 7, 4),
+                PartPose.offsetAndRotation(-4F, -4F, -2F, -0.3490659F, 0F, 0F)
+        );
 
-        this.RHand = new ModelRenderer(this, 32, 118);
-        this.RHand.addBox(-6F, 12.5F, -1.5F, 4, 3, 4);
-        this.RHand.setRotationPoint(-4F, -4F, -2F);
+        // LEFT ARM B (initial X: 0.2617994F, Z: -0.3490659F)
+        part.addOrReplaceChild("LArmB",
+                CubeListBuilder.create()
+                        .texOffs(48, 89)
+                        .addBox(-0.5F, 1F, -1.5F, 4, 8, 4),
+                PartPose.offsetAndRotation(4F, -4F, -2F, 0.2617994F, 0F, -0.3490659F)
+        );
 
-        this.RArmA = new ModelRenderer(this, 0, 108);
-        this.RArmA.addBox(-5F, -3F, -2F, 5, 5, 5);
-        this.RArmA.setRotationPoint(-4F, -4F, -2F);
-        setRotation(this.RArmA, 0.6320364F, 0F, 0F);
+        // RIGHT HAND (no initial rotation)
+        part.addOrReplaceChild("RHand",
+                CubeListBuilder.create()
+                        .texOffs(32, 118)
+                        .addBox(-6F, 12.5F, -1.5F, 4, 3, 4),
+                PartPose.offset(-4F, -4F, -2F)
+        );
 
-        this.LArmA = new ModelRenderer(this, 0, 98);
-        this.LArmA.addBox(0F, -3F, -2F, 5, 5, 5);
-        this.LArmA.setRotationPoint(4F, -4F, -2F);
-        setRotation(this.LArmA, 0.6320364F, 0F, 0F);
+        // RIGHT ARM A (initial X: 0.6320364F)
+        part.addOrReplaceChild("RArmA",
+                CubeListBuilder.create()
+                        .texOffs(0, 108)
+                        .addBox(-5F, -3F, -2F, 5, 5, 5),
+                PartPose.offsetAndRotation(-4F, -4F, -2F, 0.6320364F, 0F, 0F)
+        );
 
-        this.LArmC = new ModelRenderer(this, 48, 101);
-        this.LArmC.addBox(2F, 5F, 3F, 4, 7, 4);
-        this.LArmC.setRotationPoint(4F, -4F, -2F);
-        setRotation(this.LArmC, -0.3490659F, 0F, 0F);
+        // LEFT ARM A (initial X: 0.6320364F)
+        part.addOrReplaceChild("LArmA",
+                CubeListBuilder.create()
+                        .texOffs(0, 98)
+                        .addBox(0F, -3F, -2F, 5, 5, 5),
+                PartPose.offsetAndRotation(4F, -4F, -2F, 0.6320364F, 0F, 0F)
+        );
 
-        this.LHand = new ModelRenderer(this, 32, 111);
-        this.LHand.addBox(2F, 12.5F, -1.5F, 4, 3, 4);
-        this.LHand.setRotationPoint(4F, -4F, -2F);
+        // LEFT ARM C (initial X: -0.3490659F)
+        part.addOrReplaceChild("LArmC",
+                CubeListBuilder.create()
+                        .texOffs(48, 101)
+                        .addBox(2F, 5F, 3F, 4, 7, 4),
+                PartPose.offsetAndRotation(4F, -4F, -2F, -0.3490659F, 0F, 0F)
+        );
 
-        this.RFinger1 = new ModelRenderer(this, 8, 120);
-        this.RFinger1.addBox(-0.5F, 0F, -0.5F, 1, 3, 1);
-        this.RFinger1.setRotationPoint(-6.5F, 11.5F, -0.5F);
+        // LEFT HAND (no initial rotation)
+        part.addOrReplaceChild("LHand",
+                CubeListBuilder.create()
+                        .texOffs(32, 111)
+                        .addBox(2F, 12.5F, -1.5F, 4, 3, 4),
+                PartPose.offset(4F, -4F, -2F)
+        );
 
-        this.RFinger1 = new ModelRenderer(this, 8, 120);
-        this.RFinger1.addBox(-3F, 15.5F, 1F, 1, 3, 1);
-        this.RFinger1.setRotationPoint(-4F, -4F, -2F);
+        // RIGHT FINGER 1 (attach under “RHand” region, no initial rotation)
+        part.addOrReplaceChild("RFinger1",
+                CubeListBuilder.create()
+                        .texOffs(8, 120)
+                        .addBox(-3F, 15.5F, 1F, 1, 3, 1),
+                PartPose.offset(-4F, -4F, -2F)
+        );
 
-        this.RFinger2 = new ModelRenderer(this, 12, 124);
-        this.RFinger2.addBox(-3.5F, 15.5F, -1.5F, 1, 3, 1);
-        this.RFinger2.setRotationPoint(-4F, -4F, -2F);
+        // RIGHT FINGER 2
+        part.addOrReplaceChild("RFinger2",
+                CubeListBuilder.create()
+                        .texOffs(12, 124)
+                        .addBox(-3.5F, 15.5F, -1.5F, 1, 3, 1),
+                PartPose.offset(-4F, -4F, -2F)
+        );
 
-        this.RFinger3 = new ModelRenderer(this, 12, 119);
-        this.RFinger3.addBox(-4.8F, 15.5F, -1.5F, 1, 4, 1);
-        this.RFinger3.setRotationPoint(-4F, -4F, -2F);
+        // RIGHT FINGER 3
+        part.addOrReplaceChild("RFinger3",
+                CubeListBuilder.create()
+                        .texOffs(12, 119)
+                        .addBox(-4.8F, 15.5F, -1.5F, 1, 4, 1),
+                PartPose.offset(-4F, -4F, -2F)
+        );
 
-        this.RFinger4 = new ModelRenderer(this, 16, 119);
-        this.RFinger4.addBox(-6F, 15.5F, -0.5F, 1, 4, 1);
-        this.RFinger4.setRotationPoint(-4F, -4F, -2F);
+        // RIGHT FINGER 4
+        part.addOrReplaceChild("RFinger4",
+                CubeListBuilder.create()
+                        .texOffs(16, 119)
+                        .addBox(-6F, 15.5F, -0.5F, 1, 4, 1),
+                PartPose.offset(-4F, -4F, -2F)
+        );
 
-        this.RFinger5 = new ModelRenderer(this, 16, 124);
-        this.RFinger5.addBox(-6F, 15.5F, 1F, 1, 3, 1);
-        this.RFinger5.setRotationPoint(-4F, -4F, -2F);
+        // RIGHT FINGER 5
+        part.addOrReplaceChild("RFinger5",
+                CubeListBuilder.create()
+                        .texOffs(16, 124)
+                        .addBox(-6F, 15.5F, 1F, 1, 3, 1),
+                PartPose.offset(-4F, -4F, -2F)
+        );
 
-        this.LFinger1 = new ModelRenderer(this, 8, 124);
-        this.LFinger1.addBox(2F, 15.5F, 1F, 1, 3, 1);
-        this.LFinger1.setRotationPoint(4F, -4F, -2F);
+        // LEFT FINGER 1
+        part.addOrReplaceChild("LFinger1",
+                CubeListBuilder.create()
+                        .texOffs(8, 124)
+                        .addBox(2F, 15.5F, 1F, 1, 3, 1),
+                PartPose.offset(4F, -4F, -2F)
+        );
 
-        this.LFinger2 = new ModelRenderer(this, 0, 124);
-        this.LFinger2.addBox(2.5F, 15.5F, -1.5F, 1, 3, 1);
-        this.LFinger2.setRotationPoint(4F, -4F, -2F);
+        // LEFT FINGER 2
+        part.addOrReplaceChild("LFinger2",
+                CubeListBuilder.create()
+                        .texOffs(0, 124)
+                        .addBox(2.5F, 15.5F, -1.5F, 1, 3, 1),
+                PartPose.offset(4F, -4F, -2F)
+        );
 
-        this.LFinger3 = new ModelRenderer(this, 0, 119);
-        this.LFinger3.addBox(3.8F, 15.5F, -1.5F, 1, 4, 1);
-        this.LFinger3.setRotationPoint(4F, -4F, -2F);
+        // LEFT FINGER 3
+        part.addOrReplaceChild("LFinger3",
+                CubeListBuilder.create()
+                        .texOffs(0, 119)
+                        .addBox(3.8F, 15.5F, -1.5F, 1, 4, 1),
+                PartPose.offset(4F, -4F, -2F)
+        );
 
-        this.LFinger4 = new ModelRenderer(this, 4, 119);
-        this.LFinger4.addBox(5F, 15.5F, -0.5F, 1, 4, 1);
-        this.LFinger4.setRotationPoint(4F, -4F, -2F);
+        // LEFT FINGER 4
+        part.addOrReplaceChild("LFinger4",
+                CubeListBuilder.create()
+                        .texOffs(4, 119)
+                        .addBox(5F, 15.5F, -0.5F, 1, 4, 1),
+                PartPose.offset(4F, -4F, -2F)
+        );
 
-        this.LFinger5 = new ModelRenderer(this, 4, 124);
-        this.LFinger5.addBox(5F, 15.5F, 1F, 1, 3, 1);
-        this.LFinger5.setRotationPoint(4F, -4F, -2F);
+        // LEFT FINGER 5
+        part.addOrReplaceChild("LFinger5",
+                CubeListBuilder.create()
+                        .texOffs(4, 124)
+                        .addBox(5F, 15.5F, 1F, 1, 3, 1),
+                PartPose.offset(4F, -4F, -2F)
+        );
 
+        return LayerDefinition.create(mesh, 64, 128);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Nose.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Snout.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TeethU.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TeethL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Mouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.REar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Neck2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.SideburnL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.SideburnR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Chest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Abdomen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TailA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TailC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TailB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TailD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLegA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLegB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLegC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLegB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLegC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLegA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RArmB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RArmC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LArmB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RHand.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RArmA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LArmA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LArmC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LHand.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFinger1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFinger2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFinger3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFinger4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFinger5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFinger1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFinger2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFinger3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFinger4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFinger5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Nose.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Snout.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.TeethU.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.TeethL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Mouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LEar.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.REar.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Neck.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Neck2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.SideburnL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.SideburnR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Chest.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Abdomen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.TailA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.TailB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.TailC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.TailD.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RLegA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RLegB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RLegC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LLegA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LLegB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LLegC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RArmA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RArmB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RArmC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RHand.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LArmA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LArmB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LArmC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LHand.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFinger1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFinger2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFinger3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFinger4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFinger5.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFinger1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFinger2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFinger3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFinger4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFinger5.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
+    @Override
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount,
+                          float ageInTicks, float netHeadYaw, float headPitch) {
+        float radianF      = 57.29578F;
+        float RLegXRot     = Mth.cos((limbSwing * 0.6662F) + (float) Math.PI) * 0.8F * limbSwingAmount;
+        float LLegXRot     = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-
-        float radianF = 57.29578F;
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
-
-        this.Head.rotateAngleY = netHeadYaw / radianF; //this moves head to left and right
-        //Head.rotateAngleX = headPitch / radianF; //this moves head up and down
+        // HEAD yaw
+        this.Head.yRot = netHeadYaw / radianF;
 
         if (!this.hunched) {
-            this.Head.rotationPointY = -8F;
-            this.Head.rotationPointZ = -6F;
-            this.Head.rotateAngleX = headPitch / radianF;
-            this.Neck.rotateAngleX = -34 / radianF;
-            this.Neck.rotationPointY = -5F;
-            this.Neck.rotationPointZ = -2F;
-            this.Neck2.rotationPointY = -1F;
-            this.Neck2.rotationPointZ = -6F;
-            this.Chest.rotationPointY = -6F;
-            this.Chest.rotationPointZ = -2.5F;
-            this.Chest.rotateAngleX = 36 / radianF;
-            this.Abdomen.rotateAngleX = 15 / radianF;
-            this.LLegA.rotationPointZ = 3F;
+            // Normal posture
+            this.Head.setPos(0F, -8F, -6F);
+            this.Head.xRot = headPitch / radianF;
 
-            this.LArmA.rotationPointY = -4F;
-            this.LArmA.rotationPointZ = -2F;
+            this.Neck.xRot        = -34F / radianF;
+            this.Neck.setPos(0F, -5F, -2F);
 
-            this.TailA.rotationPointY = 9.5F;
-            this.TailA.rotationPointZ = 6F;
+            this.Neck2.setPos(0F, -1F, -6F);
 
+            this.Chest.setPos(0F, -6F, -2.5F);
+            this.Chest.xRot       = 36F / radianF;
+
+            this.Abdomen.xRot     = 15F / radianF;
+            this.LLegA.setPos(3F, 9.5F, 3F);
+
+            this.LArmA.setPos(4F, -4F, -2F);
+            this.LArmA.xRot       = 0.6320364F;
+
+            this.TailA.setPos(0F, 9.5F, 6F);
+            this.TailA.xRot       = 1.064651F;
         } else {
-            this.Head.rotationPointY = 0F;
-            this.Head.rotationPointZ = -11F;
-            this.Head.rotateAngleX = (15F + headPitch) / radianF;
+            // Hunched posture
+            this.Head.setPos(0F, 0F, -11F);
+            this.Head.xRot       = (15F + headPitch) / radianF;
 
-            this.Neck.rotateAngleX = -10 / radianF;
-            this.Neck.rotationPointY = 2F;
-            this.Neck.rotationPointZ = -6F;
-            this.Neck2.rotationPointY = 9F;
-            this.Neck2.rotationPointZ = -9F;
-            this.Chest.rotationPointY = 1F;
-            this.Chest.rotationPointZ = -7.5F;
-            this.Chest.rotateAngleX = 60 / radianF;
-            this.Abdomen.rotateAngleX = 75 / radianF;
-            this.LLegA.rotationPointZ = 7F;
-            this.LArmA.rotationPointY = 4.5F;
-            this.LArmA.rotationPointZ = -6F;
-            this.TailA.rotationPointY = 7.5F;
-            this.TailA.rotationPointZ = 10F;
+            this.Neck.xRot        = -10F / radianF;
+            this.Neck.setPos(0F, 2F, -6F);
 
+            this.Neck2.setPos(0F, 9F, -9F);
+
+            this.Chest.setPos(0F, 1F, -7.5F);
+            this.Chest.xRot       = 60F / radianF;
+
+            this.Abdomen.xRot     = 75F / radianF;
+            this.LLegA.setPos(3F, 9.5F, 7F);
+
+            this.LArmA.setPos(4F, 4.5F, -6F);
+            this.LArmA.xRot       = 0.6320364F;
+
+            this.TailA.setPos(0F, 7.5F, 10F);
+            this.TailA.xRot       = 1.064651F;
         }
 
-        this.Nose.rotationPointY = this.Head.rotationPointY;
-        this.Snout.rotationPointY = this.Head.rotationPointY;
-        this.TeethU.rotationPointY = this.Head.rotationPointY;
-        this.LEar.rotationPointY = this.Head.rotationPointY;
-        this.REar.rotationPointY = this.Head.rotationPointY;
-        this.TeethL.rotationPointY = this.Head.rotationPointY;
-        this.Mouth.rotationPointY = this.Head.rotationPointY;
-        this.SideburnL.rotationPointY = this.Head.rotationPointY;
-        this.SideburnR.rotationPointY = this.Head.rotationPointY;
+        // Propagate Head’s Y/X to facial parts
+        this.Nose.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.Snout.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.TeethU.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.TeethL.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.Mouth.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.LEar.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.REar.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.SideburnL.setPos(this.Head.x, this.Head.y, this.Head.z);
+        this.SideburnR.setPos(this.Head.x, this.Head.y, this.Head.z);
 
-        this.Nose.rotationPointZ = this.Head.rotationPointZ;
-        this.Snout.rotationPointZ = this.Head.rotationPointZ;
-        this.TeethU.rotationPointZ = this.Head.rotationPointZ;
-        this.LEar.rotationPointZ = this.Head.rotationPointZ;
-        this.REar.rotationPointZ = this.Head.rotationPointZ;
-        this.TeethL.rotationPointZ = this.Head.rotationPointZ;
-        this.Mouth.rotationPointZ = this.Head.rotationPointZ;
-        this.SideburnL.rotationPointZ = this.Head.rotationPointZ;
-        this.SideburnR.rotationPointZ = this.Head.rotationPointZ;
+        this.Nose.yRot   = this.Head.yRot;
+        this.Snout.yRot  = this.Head.yRot;
+        this.TeethU.yRot = this.Head.yRot;
+        this.TeethL.yRot = this.Head.yRot;
+        this.Mouth.yRot  = this.Head.yRot;
+        this.LEar.yRot   = this.Head.yRot;
+        this.REar.yRot   = this.Head.yRot;
 
-        this.LArmB.rotationPointY = this.LArmA.rotationPointY;
-        this.LArmC.rotationPointY = this.LArmA.rotationPointY;
-        this.LHand.rotationPointY = this.LArmA.rotationPointY;
-        this.LFinger1.rotationPointY = this.LArmA.rotationPointY;
-        this.LFinger2.rotationPointY = this.LArmA.rotationPointY;
-        this.LFinger3.rotationPointY = this.LArmA.rotationPointY;
-        this.LFinger4.rotationPointY = this.LArmA.rotationPointY;
-        this.LFinger5.rotationPointY = this.LArmA.rotationPointY;
-        this.RArmA.rotationPointY = this.LArmA.rotationPointY;
-        this.RArmB.rotationPointY = this.LArmA.rotationPointY;
-        this.RArmC.rotationPointY = this.LArmA.rotationPointY;
-        this.RHand.rotationPointY = this.LArmA.rotationPointY;
-        this.RFinger1.rotationPointY = this.LArmA.rotationPointY;
-        this.RFinger2.rotationPointY = this.LArmA.rotationPointY;
-        this.RFinger3.rotationPointY = this.LArmA.rotationPointY;
-        this.RFinger4.rotationPointY = this.LArmA.rotationPointY;
-        this.RFinger5.rotationPointY = this.LArmA.rotationPointY;
+        this.Nose.xRot   = 0.2792527F + this.Head.xRot;
+        this.Snout.xRot  = this.Head.xRot;
+        this.TeethU.xRot = this.Head.xRot;
+        this.TeethL.xRot = this.Head.xRot + 2.530727F;
+        this.Mouth.xRot  = this.Head.xRot + 2.530727F;
+        this.LEar.xRot   = this.Head.xRot;
+        this.REar.xRot   = this.Head.xRot;
 
-        this.LArmB.rotationPointZ = this.LArmA.rotationPointZ;
-        this.LArmC.rotationPointZ = this.LArmA.rotationPointZ;
-        this.LHand.rotationPointZ = this.LArmA.rotationPointZ;
-        this.LFinger1.rotationPointZ = this.LArmA.rotationPointZ;
-        this.LFinger2.rotationPointZ = this.LArmA.rotationPointZ;
-        this.LFinger3.rotationPointZ = this.LArmA.rotationPointZ;
-        this.LFinger4.rotationPointZ = this.LArmA.rotationPointZ;
-        this.LFinger5.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RArmA.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RArmB.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RArmC.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RHand.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RFinger1.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RFinger2.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RFinger3.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RFinger4.rotationPointZ = this.LArmA.rotationPointZ;
-        this.RFinger5.rotationPointZ = this.LArmA.rotationPointZ;
+        this.SideburnL.xRot = -0.2094395F + this.Head.xRot;
+        this.SideburnL.yRot =  0.418879F + this.Head.yRot;
+        this.SideburnR.xRot = -0.2094395F + this.Head.xRot;
+        this.SideburnR.yRot = -0.418879F + this.Head.yRot;
 
-        this.RLegA.rotationPointZ = this.LLegA.rotationPointZ;
-        this.RLegB.rotationPointZ = this.LLegA.rotationPointZ;
-        this.RLegC.rotationPointZ = this.LLegA.rotationPointZ;
-        this.RFoot.rotationPointZ = this.LLegA.rotationPointZ;
-        this.LLegB.rotationPointZ = this.LLegA.rotationPointZ;
-        this.LLegC.rotationPointZ = this.LLegA.rotationPointZ;
-        this.LFoot.rotationPointZ = this.LLegA.rotationPointZ;
+        // LEGS: Right
+        this.RLegA.xRot = -0.8126625F + RLegXRot;
+        this.RLegB.xRot = -0.8445741F + RLegXRot;
+        this.RLegC.xRot = -0.2860688F + RLegXRot;
+        this.RFoot.xRot = RLegXRot;
 
-        this.TailB.rotationPointY = this.TailA.rotationPointY;
-        this.TailB.rotationPointZ = this.TailA.rotationPointZ;
-        this.TailC.rotationPointY = this.TailA.rotationPointY;
-        this.TailC.rotationPointZ = this.TailA.rotationPointZ;
-        this.TailD.rotationPointY = this.TailA.rotationPointY;
-        this.TailD.rotationPointZ = this.TailA.rotationPointZ;
+        // LEGS: Left
+        this.LLegA.xRot = -0.8126625F + LLegXRot;
+        this.LLegB.xRot = -0.8445741F + LLegXRot;
+        this.LLegC.xRot = -0.2860688F + LLegXRot;
+        this.LFoot.xRot = LLegXRot;
 
-        this.Nose.rotateAngleY = this.Head.rotateAngleY;
-        this.Snout.rotateAngleY = this.Head.rotateAngleY;
-        this.TeethU.rotateAngleY = this.Head.rotateAngleY;
-        this.LEar.rotateAngleY = this.Head.rotateAngleY;
-        this.REar.rotateAngleY = this.Head.rotateAngleY;
-        this.TeethL.rotateAngleY = this.Head.rotateAngleY;
-        this.Mouth.rotateAngleY = this.Head.rotateAngleY;
+        // ARMS: oscillate Z slightly
+        float armZOsc = (float) (Math.cos(ageInTicks * 0.09F) * 0.05F);
+        this.RArmA.zRot = -armZOsc + 0.05F;
+        this.LArmA.zRot =  armZOsc - 0.05F;
 
-        this.TeethL.rotateAngleX = this.Head.rotateAngleX + 2.530727F;
-        this.Mouth.rotateAngleX = this.Head.rotateAngleX + 2.530727F;
+        // ARMS: match to opposite leg X‐rotation
+        this.RArmA.xRot = LLegXRot;
+        this.LArmA.xRot = RLegXRot;
 
-        this.SideburnL.rotateAngleX = -0.2094395F + this.Head.rotateAngleX;
-        this.SideburnL.rotateAngleY = 0.418879F + this.Head.rotateAngleY;
-        this.SideburnR.rotateAngleX = -0.2094395F + this.Head.rotateAngleX;
-        this.SideburnR.rotateAngleY = -0.418879F + this.Head.rotateAngleY;
+        // ARMS: propagate to B and C and hands/fingers
+        this.RArmB.zRot  = 0.3490659F + this.RArmA.zRot;
+        this.LArmB.zRot  = -0.3490659F + this.LArmA.zRot;
+        this.RArmB.xRot  = 0.2617994F + this.RArmA.xRot;
+        this.LArmB.xRot  = 0.2617994F + this.LArmA.xRot;
 
-        this.Nose.rotateAngleX = 0.2792527F + this.Head.rotateAngleX;
-        this.Snout.rotateAngleX = this.Head.rotateAngleX;
-        this.TeethU.rotateAngleX = this.Head.rotateAngleX;
+        this.RArmC.zRot = this.RArmA.zRot;
+        this.LArmC.zRot = this.LArmA.zRot;
+        this.RArmC.xRot = -0.3490659F + this.RArmA.xRot;
+        this.LArmC.xRot = -0.3490659F + this.LArmA.xRot;
 
-        this.LEar.rotateAngleX = this.Head.rotateAngleX;
-        this.REar.rotateAngleX = this.Head.rotateAngleX;
+        this.RHand.zRot = this.RArmA.zRot;
+        this.LHand.zRot = this.LArmA.zRot;
+        this.RHand.xRot = this.RArmA.xRot;
+        this.LHand.xRot = this.LArmA.xRot;
 
-        this.RLegA.rotateAngleX = -0.8126625F + RLegXRot;
-        this.RLegB.rotateAngleX = -0.8445741F + RLegXRot;
-        this.RLegC.rotateAngleX = -0.2860688F + RLegXRot;
-        this.RFoot.rotateAngleX = RLegXRot;
+        // FINGERS: match to corresponding hand X/Z
+        for (ModelPart finger : new ModelPart[] {RFinger1, RFinger2, RFinger3, RFinger4, RFinger5}) {
+            finger.xRot = this.RArmA.xRot;
+            finger.zRot = this.RArmA.zRot;
+            finger.setPos(this.RArmA.x, this.RArmA.y, this.RArmA.z);
+        }
+        for (ModelPart finger : new ModelPart[] {LFinger1, LFinger2, LFinger3, LFinger4, LFinger5}) {
+            finger.xRot = this.LArmA.xRot;
+            finger.zRot = this.LArmA.zRot;
+            finger.setPos(this.LArmA.x, this.LArmA.y, this.LArmA.z);
+        }
 
-        this.LLegA.rotateAngleX = -0.8126625F + LLegXRot;
-        this.LLegB.rotateAngleX = -0.8445741F + LLegXRot;
-        this.LLegC.rotateAngleX = -0.2860688F + LLegXRot;
-        this.LFoot.rotateAngleX = LLegXRot;
+        // SYNC other parts’ positions for symmetry:
+        // TailB, TailC, TailD follow TailA’s position each frame
+        this.TailB.setPos(this.TailA.x, this.TailA.y, this.TailA.z);
+        this.TailC.setPos(this.TailA.x, this.TailA.y, this.TailA.z);
+        this.TailD.setPos(this.TailA.x, this.TailA.y, this.TailA.z);
 
-        this.RArmA.rotateAngleZ = -(MathHelper.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
-        this.LArmA.rotateAngleZ = (MathHelper.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
-        this.RArmA.rotateAngleX = LLegXRot;//MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
-        this.LArmA.rotateAngleX = RLegXRot;//MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
+        // Arms and fingers for Right side already set; ensure Left matches where needed
+        this.RArmB.setPos(this.RArmA.x, this.RArmA.y, this.RArmA.z);
+        this.RArmC.setPos(this.RArmA.x, this.RArmA.y, this.RArmA.z);
+        this.RHand.setPos(this.RArmA.x, this.RArmA.y, this.RArmA.z);
+        this.RLegB.setPos(this.RLegA.x, this.RLegA.y, this.RLegA.z);
+        this.RLegC.setPos(this.RLegA.x, this.RLegA.y, this.RLegA.z);
+        this.RFoot.setPos(this.RLegA.x, this.RLegA.y, this.RLegA.z);
 
-        this.RArmB.rotateAngleZ = 0.3490659F + this.RArmA.rotateAngleZ;
-        this.LArmB.rotateAngleZ = -0.3490659F + this.LArmA.rotateAngleZ;
-        this.RArmB.rotateAngleX = 0.2617994F + this.RArmA.rotateAngleX;
-        this.LArmB.rotateAngleX = 0.2617994F + this.LArmA.rotateAngleX;
-
-        this.RArmC.rotateAngleZ = this.RArmA.rotateAngleZ;
-        this.LArmC.rotateAngleZ = this.LArmA.rotateAngleZ;
-        this.RArmC.rotateAngleX = -0.3490659F + this.RArmA.rotateAngleX;
-        this.LArmC.rotateAngleX = -0.3490659F + this.LArmA.rotateAngleX;
-
-        this.RHand.rotateAngleZ = this.RArmA.rotateAngleZ;
-        this.LHand.rotateAngleZ = this.LArmA.rotateAngleZ;
-        this.RHand.rotateAngleX = this.RArmA.rotateAngleX;
-        this.LHand.rotateAngleX = this.LArmA.rotateAngleX;
-
-        this.RFinger1.rotateAngleX = this.RArmA.rotateAngleX;
-        this.RFinger2.rotateAngleX = this.RArmA.rotateAngleX;
-        this.RFinger3.rotateAngleX = this.RArmA.rotateAngleX;
-        this.RFinger4.rotateAngleX = this.RArmA.rotateAngleX;
-        this.RFinger5.rotateAngleX = this.RArmA.rotateAngleX;
-
-        this.LFinger1.rotateAngleX = this.LArmA.rotateAngleX;
-        this.LFinger2.rotateAngleX = this.LArmA.rotateAngleX;
-        this.LFinger3.rotateAngleX = this.LArmA.rotateAngleX;
-        this.LFinger4.rotateAngleX = this.LArmA.rotateAngleX;
-        this.LFinger5.rotateAngleX = this.LArmA.rotateAngleX;
-
-        this.RFinger1.rotateAngleZ = this.RArmA.rotateAngleZ;
-        this.RFinger2.rotateAngleZ = this.RArmA.rotateAngleZ;
-        this.RFinger3.rotateAngleZ = this.RArmA.rotateAngleZ;
-        this.RFinger4.rotateAngleZ = this.RArmA.rotateAngleZ;
-        this.RFinger5.rotateAngleZ = this.RArmA.rotateAngleZ;
-
-        this.LFinger1.rotateAngleZ = this.LArmA.rotateAngleZ;
-        this.LFinger2.rotateAngleZ = this.LArmA.rotateAngleZ;
-        this.LFinger3.rotateAngleZ = this.LArmA.rotateAngleZ;
-        this.LFinger4.rotateAngleZ = this.LArmA.rotateAngleZ;
-        this.LFinger5.rotateAngleZ = this.LArmA.rotateAngleZ;
+        this.LArmB.setPos(this.LArmA.x, this.LArmA.y, this.LArmA.z);
+        this.LArmC.setPos(this.LArmA.x, this.LArmA.y, this.LArmA.z);
+        this.LHand.setPos(this.LArmA.x, this.LArmA.y, this.LArmA.z);
+        this.LLegB.setPos(this.LLegA.x, this.LLegA.y, this.LLegA.z);
+        this.LLegC.setPos(this.LLegA.x, this.LLegA.y, this.LLegA.z);
+        this.LFoot.setPos(this.LLegA.x, this.LLegA.y, this.LLegA.z);
     }
 }

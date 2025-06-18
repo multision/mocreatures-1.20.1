@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/pet_food"
+    "layer0": "mocreatures:item/pet_food"
   }
 }

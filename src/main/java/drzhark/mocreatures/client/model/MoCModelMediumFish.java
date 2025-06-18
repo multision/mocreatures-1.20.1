@@ -3,174 +3,388 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import com.mojang.math.Axis;
 import drzhark.mocreatures.entity.aquatic.MoCEntityMediumFish;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3f;
+
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * Ported from 1.16.5 → 1.20.1. All ModelRenderer fields are now ModelParts,
+ * built via createBodyLayer(). Animations have been moved into setupAnim(...),
+ * and render(...) is now renderToBuffer(...).
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelMediumFish<T extends MoCEntityMediumFish> extends EntityModel<T> {
+        
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "medium_fish"),
+            "main"
+    );
 
-    //fields
-    ModelRenderer Head;
-    ModelRenderer LowerHead;
-    ModelRenderer Nose;
-    ModelRenderer MouthBottom;
-    ModelRenderer MouthBottomB;
-    ModelRenderer Body;
-    ModelRenderer BackUp;
-    ModelRenderer BackDown;
-    ModelRenderer Tail;
-    ModelRenderer TailFin;
-    ModelRenderer RightPectoralFin;
-    ModelRenderer LeftPectoralFin;
-    ModelRenderer UpperFin;
-    ModelRenderer LowerFin;
-    ModelRenderer RightLowerFin;
-    ModelRenderer LeftLowerFin;
+    // ----------------------------------------------------------------
+    // 2) All ModelRenderer fields become ModelPart fields
+    // ----------------------------------------------------------------
+    private final ModelPart Head;
+    private final ModelPart LowerHead;
+    private final ModelPart Nose;
+    private final ModelPart MouthBottom;
+    private final ModelPart MouthBottomB;
+    private final ModelPart Body;
+    private final ModelPart BackUp;
+    private final ModelPart BackDown;
+    private final ModelPart Tail;
+    private final ModelPart TailFin;
+    private final ModelPart RightPectoralFin;
+    private final ModelPart LeftPectoralFin;
+    private final ModelPart UpperFin;
+    private final ModelPart LowerFin;
+    private final ModelPart RightLowerFin;
+    private final ModelPart LeftLowerFin;
+
+    // Store entity for offsets during render
     private MoCEntityMediumFish mediumFish;
 
-    public MoCModelMediumFish() {
-        this.textureWidth = 64;
-        this.textureHeight = 32;
-
-        this.Head = new ModelRenderer(this, 0, 10);
-        this.Head.addBox(-5F, 0F, -1.5F, 5, 3, 3);
-        this.Head.setRotationPoint(-8F, 6F, 0F);
-        setRotation(this.Head, 0F, 0F, -0.4461433F);
-
-        this.LowerHead = new ModelRenderer(this, 0, 16);
-        this.LowerHead.addBox(-4F, -3F, -1.5F, 4, 3, 3);
-        this.LowerHead.setRotationPoint(-8F, 12F, 0F);
-        setRotation(this.LowerHead, 0F, 0F, 0.3346075F);
-
-        this.Nose = new ModelRenderer(this, 14, 17);
-        this.Nose.addBox(-1F, -1F, -1F, 1, 3, 2);
-        this.Nose.setRotationPoint(-11F, 8.2F, 0F);
-        setRotation(this.Nose, 0F, 0F, 1.412787F);
-
-        this.MouthBottom = new ModelRenderer(this, 16, 10);
-        this.MouthBottom.addBox(-2F, -0.4F, -1F, 2, 1, 2);
-        this.MouthBottom.setRotationPoint(-11.5F, 10F, 0F);
-        setRotation(this.MouthBottom, 0F, 0F, 0.3346075F);
-
-        this.MouthBottomB = new ModelRenderer(this, 16, 13);
-        this.MouthBottomB.addBox(-1.5F, -2.4F, -0.5F, 1, 1, 1);
-        this.MouthBottomB.setRotationPoint(-11.5F, 10F, 0F);
-        setRotation(this.MouthBottomB, 0F, 0F, -0.7132579F);
-
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(0F, -3F, -2F, 9, 6, 4);
-        this.Body.setRotationPoint(-8F, 9F, 0F);
-
-        this.BackUp = new ModelRenderer(this, 26, 0);
-        this.BackUp.addBox(0F, 0F, -1.5F, 8, 3, 3);
-        this.BackUp.setRotationPoint(1F, 6F, 0F);
-        setRotation(this.BackUp, 0F, 0F, 0.1858931F);
-
-        this.BackDown = new ModelRenderer(this, 26, 6);
-        this.BackDown.addBox(0F, -3F, -1.5F, 8, 3, 3);
-        this.BackDown.setRotationPoint(1F, 12F, 0F);
-        setRotation(this.BackDown, 0F, 0F, -0.1919862F);
-
-        this.Tail = new ModelRenderer(this, 48, 0);
-        this.Tail.addBox(0F, -1.5F, -1F, 4, 3, 2);
-        this.Tail.setRotationPoint(8F, 9F, 0F);
-
-        this.TailFin = new ModelRenderer(this, 48, 5);
-        this.TailFin.addBox(3F, -5.3F, 0F, 5, 11, 0);
-        this.TailFin.setRotationPoint(8F, 9F, 0F);
-
-        this.RightPectoralFin = new ModelRenderer(this, 28, 12);
-        this.RightPectoralFin.addBox(0F, -2F, 0F, 5, 4, 0);
-        this.RightPectoralFin.setRotationPoint(-6.5F, 10F, 2F);
-        setRotation(this.RightPectoralFin, 0F, -0.8726646F, 0.185895F);
-
-        this.LeftPectoralFin = new ModelRenderer(this, 38, 12);
-        this.LeftPectoralFin.addBox(0F, -2F, 0F, 5, 4, 0);
-        this.LeftPectoralFin.setRotationPoint(-6.5F, 10F, -2F);
-        setRotation(this.LeftPectoralFin, 0F, 0.8726646F, 0.1858931F);
-
-        this.UpperFin = new ModelRenderer(this, 0, 22);
-        this.UpperFin.addBox(0F, -4F, 0F, 15, 4, 0);
-        this.UpperFin.setRotationPoint(-7F, 6F, 0F);
-        setRotation(this.UpperFin, 0F, 0F, 0.1047198F);
-
-        this.LowerFin = new ModelRenderer(this, 46, 20);
-        this.LowerFin.addBox(0F, 0F, 0F, 9, 4, 0);
-        this.LowerFin.setRotationPoint(0F, 12F, 0F);
-        setRotation(this.LowerFin, 0F, 0F, -0.1858931F);
-
-        this.RightLowerFin = new ModelRenderer(this, 28, 16);
-        this.RightLowerFin.addBox(0F, 0F, 0F, 9, 4, 0);
-        this.RightLowerFin.setRotationPoint(-7F, 12F, 1F);
-        setRotation(this.RightLowerFin, 0.5235988F, 0F, 0F);
-
-        this.LeftLowerFin = new ModelRenderer(this, 46, 16);
-        this.LeftLowerFin.addBox(0F, 0F, 0F, 9, 4, 0);
-        this.LeftLowerFin.setRotationPoint(-7F, 12F, -1F);
-        setRotation(this.LeftLowerFin, -0.5235988F, 0F, 0F);
+    public MoCModelMediumFish(ModelPart root) {
+        // Grab each child by the names used in createBodyLayer()
+        this.Head             = root.getChild("Head");
+        this.LowerHead        = root.getChild("LowerHead");
+        this.Nose             = root.getChild("Nose");
+        this.MouthBottom      = root.getChild("MouthBottom");
+        this.MouthBottomB     = root.getChild("MouthBottomB");
+        this.Body             = root.getChild("Body");
+        this.BackUp           = root.getChild("BackUp");
+        this.BackDown         = root.getChild("BackDown");
+        this.Tail             = root.getChild("Tail");
+        this.TailFin          = root.getChild("TailFin");
+        this.RightPectoralFin = root.getChild("RightPectoralFin");
+        this.LeftPectoralFin  = root.getChild("LeftPectoralFin");
+        this.UpperFin         = root.getChild("UpperFin");
+        this.LowerFin         = root.getChild("LowerFin");
+        this.RightLowerFin    = root.getChild("RightLowerFin");
+        this.LeftLowerFin     = root.getChild("LeftLowerFin");
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.mediumFish = entityIn;
+    /**
+     * Build the LayerDefinition (MeshDefinition → PartDefinition).
+     * Each child here matches one of the old ModelRenderer fields.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        //----------------------------------------------------------------
+        // Head (texture 0,10; box(-5,0,-1.5; 5x3x3); pivot(-8,6,0); rotate Z=-0.4461433)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Head",
+                CubeListBuilder.create()
+                        .texOffs(0, 10)
+                        .addBox(-5.0F, 0.0F, -1.5F, 5, 3, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -8.0F, 6.0F, 0.0F,   // offset
+                        0.0F, 0.0F, -0.4461433F  // xRot, yRot, zRot
+                )
+        );
+
+        //----------------------------------------------------------------
+        // LowerHead (texture 0,16; box(-4,-3,-1.5; 4x3x3); pivot(-8,12,0); rotate Z=0.3346075)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LowerHead",
+                CubeListBuilder.create()
+                        .texOffs(0, 16)
+                        .addBox(-4.0F, -3.0F, -1.5F, 4, 3, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -8.0F, 12.0F, 0.0F,
+                        0.0F, 0.0F, 0.3346075F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // Nose (texture 14,17; box(-1,-1,-1; 1x3x2); pivot(-11,8.2,0); rotate Z=1.412787)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Nose",
+                CubeListBuilder.create()
+                        .texOffs(14, 17)
+                        .addBox(-1.0F, -1.0F, -1.0F, 1, 3, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -11.0F, 8.2F, 0.0F,
+                        0.0F, 0.0F, 1.412787F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // MouthBottom (texture 16,10; box(-2,-0.4,-1; 2x1x2); pivot(-11.5,10,0); rotate Z=0.3346075)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "MouthBottom",
+                CubeListBuilder.create()
+                        .texOffs(16, 10)
+                        .addBox(-2.0F, -0.4F, -1.0F, 2, 1, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -11.5F, 10.0F, 0.0F,
+                        0.0F, 0.0F, 0.3346075F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // MouthBottomB (texture 16,13; box(-1.5,-2.4,-0.5; 1x1x1); pivot(-11.5,10,0); rotate Z=-0.7132579)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "MouthBottomB",
+                CubeListBuilder.create()
+                        .texOffs(16, 13)
+                        .addBox(-1.5F, -2.4F, -0.5F, 1, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -11.5F, 10.0F, 0.0F,
+                        0.0F, 0.0F, -0.7132579F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // Body (texture 0,0; box(0,-3,-2; 9x6x4); pivot(-8,9,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(0.0F, -3.0F, -2.0F, 9, 6, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(-8.0F, 9.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // BackUp (texture 26,0; box(0,0,-1.5; 8x3x3); pivot(1,6,0); rotate Z=0.1858931)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "BackUp",
+                CubeListBuilder.create()
+                        .texOffs(26, 0)
+                        .addBox(0.0F, 0.0F, -1.5F, 8, 3, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        1.0F, 6.0F, 0.0F,
+                        0.0F, 0.0F, 0.1858931F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // BackDown (texture 26,6; box(0,-3,-1.5; 8x3x3); pivot(1,12,0); rotate Z=-0.1919862)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "BackDown",
+                CubeListBuilder.create()
+                        .texOffs(26, 6)
+                        .addBox(0.0F, -3.0F, -1.5F, 8, 3, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        1.0F, 12.0F, 0.0F,
+                        0.0F, 0.0F, -0.1919862F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // Tail (texture 48,0; box(0,-1.5,-1; 4x3x2); pivot(8,9,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Tail",
+                CubeListBuilder.create()
+                        .texOffs(48, 0)
+                        .addBox(0.0F, -1.5F, -1.0F, 4, 3, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(8.0F, 9.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // TailFin (texture 48,5; box(3,-5.3,0; 5x11x0); pivot(8,9,0))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "TailFin",
+                CubeListBuilder.create()
+                        .texOffs(48, 5)
+                        .addBox(3.0F, -5.3F, 0.0F, 5, 11, 0, new CubeDeformation(0.0F)),
+                PartPose.offset(8.0F, 9.0F, 0.0F)
+        );
+
+        //----------------------------------------------------------------
+        // RightPectoralFin (texture 28,12; box(0,-2,0; 5x4x0); pivot(-6.5,10,2); rotate Y=-0.8726646, Z=0.185895)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightPectoralFin",
+                CubeListBuilder.create()
+                        .texOffs(28, 12)
+                        .addBox(0.0F, -2.0F, 0.0F, 5, 4, 0, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -6.5F, 10.0F, 2.0F,
+                        0.0F, -0.8726646F, 0.185895F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // LeftPectoralFin (texture 38,12; box(0,-2,0; 5x4x0); pivot(-6.5,10,-2); rotate Y=0.8726646, Z=0.1858931)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftPectoralFin",
+                CubeListBuilder.create()
+                        .texOffs(38, 12)
+                        .addBox(0.0F, -2.0F, 0.0F, 5, 4, 0, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -6.5F, 10.0F, -2.0F,
+                        0.0F, 0.8726646F, 0.1858931F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // UpperFin (texture 0,22; box(0,-4,0; 15x4x0); pivot(-7,6,0); rotate Z=0.1047198)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "UpperFin",
+                CubeListBuilder.create()
+                        .texOffs(0, 22)
+                        .addBox(0.0F, -4.0F, 0.0F, 15, 4, 0, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -7.0F, 6.0F, 0.0F,
+                        0.0F, 0.0F, 0.1047198F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // LowerFin (texture 46,20; box(0,0,0; 9x4x0); pivot(0,12,0); rotate Z=-0.1858931)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LowerFin",
+                CubeListBuilder.create()
+                        .texOffs(46, 20)
+                        .addBox(0.0F, 0.0F, 0.0F, 9, 4, 0, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        0.0F, 12.0F, 0.0F,
+                        0.0F, 0.0F, -0.1858931F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // RightLowerFin (texture 28,16; box(0,0,0; 9x4x0); pivot(-7,12,1); rotate X=0.5235988)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RightLowerFin",
+                CubeListBuilder.create()
+                        .texOffs(28, 16)
+                        .addBox(0.0F, 0.0F, 0.0F, 9, 4, 0, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -7.0F, 12.0F, 1.0F,
+                        0.5235988F, 0.0F, 0.0F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // LeftLowerFin (texture 46,16; box(0,0,0; 9x4x0); pivot(-7,12,-1); rotate X=-0.5235988)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LeftLowerFin",
+                CubeListBuilder.create()
+                        .texOffs(46, 16)
+                        .addBox(0.0F, 0.0F, 0.0F, 9, 4, 0, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -7.0F, 12.0F, -1.0F,
+                        -0.5235988F, 0.0F, 0.0F
+                )
+        );
+
+        // Finally, return a LayerDefinition with texture size 64×32
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
+    /**
+     * Capture the entity instance each frame. In 1.16.5 this was setLivingAnimations(...).
+     * In 1.20.1 we override prepareMobModel(...).
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        float yOffset = mediumFish.getAdjustedYOffset();
-        float xOffset = mediumFish.getAdjustedXOffset();
-        float zOffset = mediumFish.getAdjustedZOffset();
-        matrixStackIn.push();
-        matrixStackIn.translate(xOffset, yOffset, zOffset);
-        matrixStackIn.rotate(Vector3f.YP.rotationDegrees(90.0F));
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LowerHead.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Nose.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.MouthBottom.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.MouthBottomB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BackUp.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BackDown.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TailFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightPectoralFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftPectoralFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.UpperFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LowerFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightLowerFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftLowerFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        matrixStackIn.pop();
+    public void prepareMobModel(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
+        this.mediumFish = entity;
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
+    /**
+     * Copy the old setRotationAngles(...) logic here. Now called setupAnim(...)
+     */
+    @Override
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // tail movement: tail sway based on limbSwing & limbSwingAmount
+        float tailMov = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount * 0.6F;
+        float finMov  = Mth.cos(ageInTicks * 0.2F) * 0.4F;
+        float mouthMov= Mth.cos(ageInTicks * 0.3F) * 0.2F;
+
+        // apply to tail and tail fin
+        this.Tail.yRot     = tailMov;
+        this.TailFin.yRot  = tailMov;
+
+        // pectoral fins
+        this.LeftPectoralFin.yRot  = 0.8726646F + finMov;
+        this.RightPectoralFin.yRot = -0.8726646F - finMov;
+
+        // mouth movement
+        this.MouthBottom.zRot    = 0.3346075F + mouthMov;
+        this.MouthBottomB.zRot   = -0.7132579F + mouthMov;
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        /*
-         * limbSwing = distance walked limbSwingAmount = speed 0 - 1 ageInTicks = timer
-         */
-        //TailA.rotateAngleY = MathHelper.cos(ageInTicks * 0.7F);
-        float tailMov = MathHelper.cos(limbSwing * 0.6662F) * limbSwingAmount * 0.6F;
-        float finMov = MathHelper.cos(ageInTicks * 0.2F) * 0.4F;
-        float mouthMov = MathHelper.cos(ageInTicks * 0.3F) * 0.2F;
+    /**
+     * Render all parts, applying entity‐specific offsets and a 90° Y rotation.
+     */
+    @Override
+    public void renderToBuffer(
+            PoseStack        poseStack,
+            VertexConsumer   buffer,
+            int              packedLight,
+            int              packedOverlay,
+            float            red,
+            float            green,
+            float            blue,
+            float            alpha
+    ) {
+        // Get the adjusted offsets from the entity (same as old getAdjustedX/Y/ZOffset)
+        float yOffset = this.mediumFish.getAdjustedYOffset();
+        float xOffset = this.mediumFish.getAdjustedXOffset();
+        float zOffset = this.mediumFish.getAdjustedZOffset();
 
-        this.Tail.rotateAngleY = tailMov;
-        this.TailFin.rotateAngleY = tailMov;
+        poseStack.pushPose();
+        // translate
+        poseStack.translate(xOffset, yOffset, zOffset);
+        // rotate 90° around Y
+        poseStack.mulPose(Axis.YP.rotationDegrees(90.0F));
 
-        this.LeftPectoralFin.rotateAngleY = 0.8726646F + finMov;
-        this.RightPectoralFin.rotateAngleY = -0.8726646F - finMov;
+        // Render each part
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LowerHead.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Nose.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.MouthBottom.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.MouthBottomB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.BackUp.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.BackDown.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.TailFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightPectoralFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftPectoralFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.UpperFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LowerFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightLowerFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftLowerFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-        this.MouthBottom.rotateAngleZ = 0.3346075F + mouthMov;
-        this.MouthBottomB.rotateAngleZ = -0.7132579F + mouthMov;
-        //super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
+        poseStack.popPose();
     }
 }

@@ -3,100 +3,162 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.passive.MoCEntityTurtle;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
-
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 public class MoCModelTurtle<T extends MoCEntityTurtle> extends EntityModel<T> {
 
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "turtle"), "main"
+    );
+
+    private final ModelPart Shell;
+    private final ModelPart ShellUp;
+    private final ModelPart ShellTop;
+    private final ModelPart Belly;
+    private final ModelPart Leg1;
+    private final ModelPart Leg2;
+    private final ModelPart Leg3;
+    private final ModelPart Leg4;
+    private final ModelPart Head;
+    private final ModelPart Tail;
+    
     public boolean isHiding;
     public boolean upsidedown;
     public float swingProgress;
-    ModelRenderer Shell;
-    ModelRenderer ShellUp;
-    ModelRenderer ShellTop;
-    ModelRenderer Belly;
-    ModelRenderer Leg1;
-    ModelRenderer Leg2;
-    ModelRenderer Leg3;
-    ModelRenderer Leg4;
-    ModelRenderer Head;
-    ModelRenderer Tail;
-    private boolean turtleHat;
-    private boolean TMNT;
-    private boolean isSwimming;
+    public boolean turtleHat;
+    public boolean TMNT;
+    public boolean isSwimming;
 
-    public MoCModelTurtle() {
-        this.Shell = new ModelRenderer(this, 28, 0);
-        this.Shell.addBox(0F, 0F, 0F, 9, 1, 9);
-        this.Shell.setRotationPoint(-4.5F, 19F, -4.5F);
+    public MoCModelTurtle(ModelPart root) {
+        this.Shell = root.getChild("Shell");
+        this.ShellUp = root.getChild("ShellUp");
+        this.ShellTop = root.getChild("ShellTop");
+        this.Belly = root.getChild("Belly");
+        this.Leg1 = root.getChild("Leg1");
+        this.Leg2 = root.getChild("Leg2");
+        this.Leg3 = root.getChild("Leg3");
+        this.Leg4 = root.getChild("Leg4");
+        this.Head = root.getChild("Head");
+        this.Tail = root.getChild("Tail");
+    }
+    
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition part = mesh.getRoot();
 
-        this.ShellUp = new ModelRenderer(this, 0, 22);
-        this.ShellUp.addBox(0F, 0F, 0F, 8, 2, 8);
-        this.ShellUp.setRotationPoint(-4F, 17F, -4F);
+        // Shell (base)
+        part.addOrReplaceChild("Shell",
+                CubeListBuilder.create()
+                        .texOffs(28, 0)
+                        .addBox(0F, 0F, 0F, 9, 1, 9),
+                PartPose.offset(-4.5F, 19F, -4.5F)
+        );
 
-        this.ShellTop = new ModelRenderer(this, 40, 10);
-        this.ShellTop.addBox(0F, 0F, 0F, 6, 1, 6);
-        this.ShellTop.setRotationPoint(-3F, 16F, -3F);
+        // ShellUp (middle)
+        part.addOrReplaceChild("ShellUp",
+                CubeListBuilder.create()
+                        .texOffs(0, 22)
+                        .addBox(0F, 0F, 0F, 8, 2, 8),
+                PartPose.offset(-4F, 17F, -4F)
+        );
 
-        this.Belly = new ModelRenderer(this, 0, 12);
-        this.Belly.addBox(0F, 0F, 0F, 8, 1, 8);
-        this.Belly.setRotationPoint(-4F, 20F, -4F);
+        // ShellTop (top of shell, only shown if not TMNT)
+        part.addOrReplaceChild("ShellTop",
+                CubeListBuilder.create()
+                        .texOffs(40, 10)
+                        .addBox(0F, 0F, 0F, 6, 1, 6),
+                PartPose.offset(-3F, 16F, -3F)
+        );
 
-        this.Leg1 = new ModelRenderer(this, 0, 0);
-        this.Leg1.addBox(-1F, 0F, -1F, 2, 3, 2);
-        this.Leg1.setRotationPoint(3.5F, 20F, -3.5F);
+        // Belly
+        part.addOrReplaceChild("Belly",
+                CubeListBuilder.create()
+                        .texOffs(0, 12)
+                        .addBox(0F, 0F, 0F, 8, 1, 8),
+                PartPose.offset(-4F, 20F, -4F)
+        );
 
-        this.Leg2 = new ModelRenderer(this, 0, 9);
-        this.Leg2.addBox(-1F, 0F, -1F, 2, 3, 2);
-        this.Leg2.setRotationPoint(-3.5F, 20F, -3.5F);
+        // Leg1 (front right)
+        part.addOrReplaceChild("Leg1",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1F, 0F, -1F, 2, 3, 2),
+                PartPose.offset(3.5F, 20F, -3.5F)
+        );
 
-        this.Leg3 = new ModelRenderer(this, 0, 0);
-        this.Leg3.addBox(-1F, 0F, -1F, 2, 3, 2);
-        this.Leg3.setRotationPoint(3.5F, 20F, 3.5F);
+        // Leg2 (front left)
+        part.addOrReplaceChild("Leg2",
+                CubeListBuilder.create()
+                        .texOffs(0, 9)
+                        .addBox(-1F, 0F, -1F, 2, 3, 2),
+                PartPose.offset(-3.5F, 20F, -3.5F)
+        );
 
-        this.Leg4 = new ModelRenderer(this, 0, 9);
-        this.Leg4.addBox(-1F, 0F, -1F, 2, 3, 2);
-        this.Leg4.setRotationPoint(-3.5F, 20F, 3.5F);
+        // Leg3 (rear right)
+        part.addOrReplaceChild("Leg3",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1F, 0F, -1F, 2, 3, 2),
+                PartPose.offset(3.5F, 20F, 3.5F)
+        );
 
-        this.Head = new ModelRenderer(this, 10, 0);
-        this.Head.addBox(-1.5F, -1F, -4F, 3, 2, 4);
-        this.Head.setRotationPoint(0F, 20F, -4.5F);
+        // Leg4 (rear left)
+        part.addOrReplaceChild("Leg4",
+                CubeListBuilder.create()
+                        .texOffs(0, 9)
+                        .addBox(-1F, 0F, -1F, 2, 3, 2),
+                PartPose.offset(-3.5F, 20F, 3.5F)
+        );
 
-        this.Tail = new ModelRenderer(this, 0, 5);
-        this.Tail.addBox(-1F, -1F, 0F, 2, 1, 3);
-        this.Tail.setRotationPoint(0F, 21F, 4F);
+        // Head
+        part.addOrReplaceChild("Head",
+                CubeListBuilder.create()
+                        .texOffs(10, 0)
+                        .addBox(-1.5F, -1F, -4F, 3, 2, 4),
+                PartPose.offset(0F, 20F, -4.5F)
+        );
 
+        // Tail
+        part.addOrReplaceChild("Tail",
+                CubeListBuilder.create()
+                        .texOffs(0, 5)
+                        .addBox(-1F, -1F, 0F, 2, 1, 3),
+                PartPose.offset(0F, 21F, 4F)
+        );
+
+        // Texture size: width=64, height=32 (same as in 1.16.5)
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.TMNT = entityIn.isTMNT();
-        this.turtleHat = entityIn.getRidingEntity() != null;
-        this.isSwimming = entityIn.isInWater();
-    }
-
+    /**
+     * Replaces the old setLivingAnimations. Use this to pull boolean flags from the entity before animating.
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Shell.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.ShellUp.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        if (!this.TMNT) {
-            this.ShellTop.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-        this.Belly.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void prepareMobModel(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
+        this.TMNT = entity.isTMNT();
+        this.turtleHat = entity.getVehicle() != null;
+        this.isSwimming = entity.isInWater();
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        //super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
+    /**
+     * Replaces the old setRotationAngles. Called every tick to apply rotations/offsets to each ModelPart.
+     */
+    @Override
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        // ==== Upside-down logic ====
         if (this.upsidedown) {
             float f25 = this.swingProgress;
             float f26 = f25;
@@ -109,104 +171,88 @@ public class MoCModelTurtle<T extends MoCEntityTurtle> extends EntityModel<T> {
             if (f26 < -1.6F) {
                 f26 = -1.6F;
             }
-            this.Leg1.rotateAngleX = 0F - f26;
-            this.Leg2.rotateAngleX = 0F + f26;
-            this.Leg3.rotateAngleX = 0F + f26;
-            this.Leg4.rotateAngleX = 0F - f26;
-            this.Tail.rotateAngleY = 0F - f26;
+            this.Leg1.xRot = -f26;
+            this.Leg2.xRot =  f26;
+            this.Leg3.xRot =  f26;
+            this.Leg4.xRot = -f26;
+            this.Tail.yRot = -f26;
 
         } else if (this.turtleHat) {
-            this.Leg1.rotateAngleX = 0F;
-            this.Leg2.rotateAngleX = 0F;
-            this.Leg3.rotateAngleX = 0F;
-            this.Leg4.rotateAngleX = 0F;
-            this.Tail.rotateAngleY = 0F;
+            // Riding/hatch logic: all legs flat
+            this.Leg1.xRot = 0F;
+            this.Leg2.xRot = 0F;
+            this.Leg3.xRot = 0F;
+            this.Leg4.xRot = 0F;
+            this.Tail.yRot = 0F;
+
         } else if (this.isSwimming) {
-            float swimmLegs = MathHelper.cos(limbSwing * 0.5F) * 6.0F * limbSwingAmount;
-            this.Leg1.rotateAngleX = -1.2F;
-            this.Leg1.rotateAngleY = -1.2F + swimmLegs;
-            this.Leg2.rotateAngleX = -1.2F;
-            this.Leg2.rotateAngleY = 1.2F - swimmLegs;
-            this.Leg3.rotateAngleX = 1.2F;
-            this.Leg4.rotateAngleX = 1.2F;//swimmLegs;
-            this.Tail.rotateAngleY = 0F;
-        } else {
-            this.Leg1.rotateAngleX = MathHelper.cos(limbSwing * 2.0F) * 2.0F * limbSwingAmount;
-            this.Leg2.rotateAngleX = MathHelper.cos((limbSwing * 2.0F) + 3.141593F) * 2.0F * limbSwingAmount;
-            this.Leg3.rotateAngleX = MathHelper.cos((limbSwing * 2.0F) + 3.141593F) * 2.0F * limbSwingAmount;
-            this.Leg4.rotateAngleX = MathHelper.cos(limbSwing * 2.0F) * 2.0F * limbSwingAmount;
-            this.Tail.rotateAngleY = MathHelper.cos(limbSwing * 0.6662F) * 0.7F * limbSwingAmount;
+            // Swimming animation
+            float swimmLegs = Mth.cos(limbSwing * 0.5F) * 6.0F * limbSwingAmount;
+            this.Leg1.xRot = -1.2F;
+            this.Leg1.yRot = -1.2F + swimmLegs;
+            this.Leg2.xRot = -1.2F;
+            this.Leg2.yRot =  1.2F - swimmLegs;
+            this.Leg3.xRot =  1.2F;
+            this.Leg4.xRot =  1.2F;
+            this.Tail.yRot = 0F;
 
-            this.Leg1.rotateAngleY = 0F;
-            this.Leg2.rotateAngleY = 0F;
+        } else {
+            // Walking animation
+            this.Leg1.xRot = Mth.cos(limbSwing * 2.0F) * 2.0F * limbSwingAmount;
+            this.Leg2.xRot = Mth.cos((limbSwing * 2.0F) + (float)Math.PI) * 2.0F * limbSwingAmount;
+            this.Leg3.xRot = Mth.cos((limbSwing * 2.0F) + (float)Math.PI) * 2.0F * limbSwingAmount;
+            this.Leg4.xRot = Mth.cos(limbSwing * 2.0F) * 2.0F * limbSwingAmount;
+            this.Tail.yRot = Mth.cos(limbSwing * 0.6662F) * 0.7F * limbSwingAmount;
+
+            this.Leg1.yRot = 0F;
+            this.Leg2.yRot = 0F;
         }
 
+        // ==== Hiding vs. Normal posture ====
         if (this.isHiding && !this.isSwimming) {
-            this.Head.rotateAngleX = 0F;
-            this.Head.rotateAngleY = 0F;
+            // Legs pulled in
+            this.Head.xRot = 0F;
+            this.Head.yRot = 0F;
 
-            //Leg1.setRotationPoint(2.9F, 18.5F, -2.9F);
-            this.Leg1.rotationPointX = 2.9F;
-            this.Leg1.rotationPointY = 18.5F;
-            this.Leg1.rotationPointZ = -2.9F;
+            this.Leg1.setPos(2.9F, 18.5F, -2.9F);
+            this.Leg2.setPos(-2.9F, 18.5F, -2.9F);
+            this.Leg3.setPos(2.9F, 18.5F, 2.9F);
+            this.Leg4.setPos(-2.9F, 18.5F, 2.9F);
 
-            //Leg2.setRotationPoint(-2.9F, 18.5F, -2.9F);
-            this.Leg2.rotationPointX = -2.9F;
-            this.Leg2.rotationPointY = 18.5F;
-            this.Leg2.rotationPointZ = -2.9F;
+            this.Head.setPos(0F, 19.5F, -1F);
+            this.Tail.setPos(0F, 21F, 2F);
 
-            //Leg3.setRotationPoint(2.9F, 18.5F, 2.9F);
-            this.Leg3.rotationPointX = 2.9F;
-            this.Leg3.rotationPointY = 18.5F;
-            this.Leg3.rotationPointZ = 2.9F;
-
-            //Leg4.setRotationPoint(-2.9F, 18.5F, 2.9F);
-            this.Leg4.rotationPointX = -2.9F;
-            this.Leg4.rotationPointY = 18.5F;
-            this.Leg4.rotationPointZ = 2.9F;
-
-            //Head.setRotationPoint(0F, 20F, -1F);
-            //Head.rotationPointX = 0F;
-            this.Head.rotationPointY = 19.5F;
-            this.Head.rotationPointZ = -1F;
-
-            //Tail.setRotationPoint(0F, 21F, 2F);
-            //Tail.rotationPointX = 0F;
-            //Tail.rotationPointY = 21F;
-            this.Tail.rotationPointZ = 2F;
         } else {
-            this.Head.rotateAngleX = headPitch / 57.29578F;
-            this.Head.rotateAngleY = netHeadYaw / 57.29578F;
+            // Normal posture: head/legs/tail in standard places
+            this.Head.xRot = headPitch * ((float)Math.PI / 180F);
+            this.Head.yRot = netHeadYaw * ((float)Math.PI / 180F);
 
-            //Leg1.setRotationPoint(3.5F, 20F, -3.5F);
-            this.Leg1.rotationPointX = 3.5F;
-            this.Leg1.rotationPointY = 20F;
-            this.Leg1.rotationPointZ = -3.5F;
+            this.Leg1.setPos(3.5F, 20F, -3.5F);
+            this.Leg2.setPos(-3.5F, 20F, -3.5F);
+            this.Leg3.setPos(3.5F, 20F, 3.5F);
+            this.Leg4.setPos(-3.5F, 20F, 3.5F);
 
-            //Leg2.setRotationPoint(-3.5F, 20F, -3.5F);
-            this.Leg2.rotationPointX = -3.5F;
-            this.Leg2.rotationPointY = 20F;
-            this.Leg2.rotationPointZ = -3.5F;
-
-            //Leg3.setRotationPoint(3.5F, 20F, 3.5F);
-            this.Leg3.rotationPointX = 3.5F;
-            this.Leg3.rotationPointY = 20F;
-            this.Leg3.rotationPointZ = 3.5F;
-
-            //Leg4.setRotationPoint(-3.5F, 20F, 3.5F);
-            this.Leg4.rotationPointX = -3.5F;
-            this.Leg4.rotationPointY = 20F;
-            this.Leg4.rotationPointZ = 3.5F;
-
-            //Head.setRotationPoint(0F, 20F, -4.5F);
-            //Head.rotationPointX = 0F;
-            this.Head.rotationPointY = 20F;
-            this.Head.rotationPointZ = -4.5F;
-
-            //Tail.setRotationPoint(0F, 21F, 4F);
-            //Tail.rotationPointX = 0F;
-            //Tail.rotationPointY = 21F;
-            this.Tail.rotationPointZ = 4F;
+            this.Head.setPos(0F, 20F, -4.5F);
+            this.Tail.setPos(0F, 21F, 4F);
         }
+    }
+
+    /**
+     * Renders all the parts. Called by your renderer’s render() method.
+     */
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        this.Shell.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.ShellUp.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        if (!this.TMNT) {
+            this.ShellTop.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+        this.Belly.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

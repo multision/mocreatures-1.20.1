@@ -1,85 +1,44 @@
 package drzhark.mocreatures.client.model;
 
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import drzhark.mocreatures.entity.hostile.MoCEntityHorseMob;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public abstract class MoCModelAbstractHorse <T extends CreatureEntity> extends EntityModel<T> {
+public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityModel<T> {
 
-    ModelRenderer Head;
-    ModelRenderer UMouth;
-    ModelRenderer LMouth;
-    ModelRenderer UMouth2;
-    ModelRenderer LMouth2;
-    ModelRenderer Unicorn;
-    ModelRenderer Ear1;
-    ModelRenderer Ear2;
-    ModelRenderer MuleEarL;
-    ModelRenderer MuleEarR;
-    ModelRenderer Neck;
-    ModelRenderer HeadSaddle;
-    ModelRenderer Mane;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "horse"), "main");
 
-    ModelRenderer Body;
-    ModelRenderer TailA;
-    ModelRenderer TailB;
-    ModelRenderer TailC;
+    // ModelPart fields (matching 1.16 names, snake_case)
+    protected final ModelPart body;
+    protected final ModelPart tailA, tailB, tailC;
+    protected final ModelPart leg1A, leg1B, leg1C;
+    protected final ModelPart leg2A, leg2B, leg2C;
+    protected final ModelPart leg3A, leg3B, leg3C;
+    protected final ModelPart leg4A, leg4B, leg4C;
+    protected final ModelPart head, uMouth, lMouth, uMouth2, lMouth2, unicorn, ear1, ear2, muleEarL, muleEarR, neck;
+    protected final ModelPart bag1, bag2;
+    protected final ModelPart saddle, saddleB, saddleC, saddleL, saddleL2, saddleR, saddleR2, saddleMouthL, saddleMouthR,
+            saddleMouthLine, saddleMouthLineR, headSaddle;
+    protected final ModelPart mane;
+    protected final ModelPart midWing, innerWing, outerWing, innerWingR, midWingR, outerWingR;
+    protected final ModelPart butterflyL, butterflyR;
 
-    ModelRenderer Leg1A;
-    ModelRenderer Leg1B;
-    ModelRenderer Leg1C;
-
-    ModelRenderer Leg2A;
-    ModelRenderer Leg2B;
-    ModelRenderer Leg2C;
-
-    ModelRenderer Leg3A;
-    ModelRenderer Leg3B;
-    ModelRenderer Leg3C;
-
-    ModelRenderer Leg4A;
-    ModelRenderer Leg4B;
-    ModelRenderer Leg4C;
-
-    ModelRenderer Bag1;
-    ModelRenderer Bag2;
-
-    ModelRenderer Saddle;
-    ModelRenderer SaddleB;
-    ModelRenderer SaddleC;
-
-    ModelRenderer SaddleL;
-    ModelRenderer SaddleL2;
-
-    ModelRenderer SaddleR;
-    ModelRenderer SaddleR2;
-
-    ModelRenderer SaddleMouthL;
-    ModelRenderer SaddleMouthR;
-
-    ModelRenderer SaddleMouthLine;
-    ModelRenderer SaddleMouthLineR;
-
-    ModelRenderer MidWing;
-    ModelRenderer InnerWing;
-    ModelRenderer OuterWing;
-
-    ModelRenderer InnerWingR;
-    ModelRenderer MidWingR;
-    ModelRenderer OuterWingR;
-
-    ModelRenderer ButterflyL;
-    ModelRenderer ButterflyR;
-
-    //private float fMov1;
-    //private float fMov2;
-    //private boolean kneeSwitch;
+    // State flags (copied from 1.16)
     protected int type;
-
     protected boolean saddled;
     protected boolean rider;
     protected boolean flapwings;
@@ -90,858 +49,689 @@ public abstract class MoCModelAbstractHorse <T extends CreatureEntity> extends E
     protected boolean moveTail;
     protected boolean floating;
 
-    public MoCModelAbstractHorse() {
-        this.textureWidth = 128;
-        this.textureHeight = 128;
+    public MoCModelAbstractHorse(ModelPart root) {
+        this.body              = root.getChild("body");
+        this.tailA             = root.getChild("tailA");
+        this.tailB             = root.getChild("tailB");
+        this.tailC             = root.getChild("tailC");
 
-        this.Body = new ModelRenderer(this, 0, 34);
-        this.Body.addBox(-5F, -8F, -19F, 10, 10, 24);
-        this.Body.setRotationPoint(0F, 11F, 9F);
+        this.leg1A             = root.getChild("leg1A");
+        this.leg1B             = root.getChild("leg1B");
+        this.leg1C             = root.getChild("leg1C");
+        this.leg2A             = root.getChild("leg2A");
+        this.leg2B             = root.getChild("leg2B");
+        this.leg2C             = root.getChild("leg2C");
+        this.leg3A             = root.getChild("leg3A");
+        this.leg3B             = root.getChild("leg3B");
+        this.leg3C             = root.getChild("leg3C");
+        this.leg4A             = root.getChild("leg4A");
+        this.leg4B             = root.getChild("leg4B");
+        this.leg4C             = root.getChild("leg4C");
 
-        /*
-         * Tail = new ModelRenderer(this, 24, 0); Tail.addBox(-1.5F, -2F, 3F, 3,
-         * 4, 14); Tail.setRotationPoint(0F, 3F, 14F); setRotation(Tail,
-         * -1.134464F, 0F, 0F);
-         */
+        this.head              = root.getChild("head");
+        this.uMouth            = root.getChild("uMouth");
+        this.lMouth            = root.getChild("lMouth");
+        this.uMouth2           = root.getChild("uMouth2");
+        this.lMouth2           = root.getChild("lMouth2");
+        this.unicorn           = root.getChild("unicorn");
+        this.ear1              = root.getChild("ear1");
+        this.ear2              = root.getChild("ear2");
+        this.muleEarL          = root.getChild("muleEarL");
+        this.muleEarR          = root.getChild("muleEarR");
+        this.neck              = root.getChild("neck");
 
-        this.TailA = new ModelRenderer(this, 44, 0);
-        this.TailA.addBox(-1F, -1F, 0F, 2, 2, 3);
-        this.TailA.setRotationPoint(0F, 3F, 14F);
-        setRotation(this.TailA, -1.134464F, 0F, 0F);
+        this.bag1              = root.getChild("bag1");
+        this.bag2              = root.getChild("bag2");
 
-        this.TailB = new ModelRenderer(this, 38, 7);
-        this.TailB.addBox(-1.5F, -2F, 3F, 3, 4, 7);
-        this.TailB.setRotationPoint(0F, 3F, 14F);
-        setRotation(this.TailB, -1.134464F, 0F, 0F);
+        this.saddle            = root.getChild("saddle");
+        this.saddleB           = root.getChild("saddleB");
+        this.saddleC           = root.getChild("saddleC");
+        this.saddleL           = root.getChild("saddleL");
+        this.saddleL2          = root.getChild("saddleL2");
+        this.saddleR           = root.getChild("saddleR");
+        this.saddleR2          = root.getChild("saddleR2");
+        this.saddleMouthL      = root.getChild("saddleMouthL");
+        this.saddleMouthR      = root.getChild("saddleMouthR");
+        this.saddleMouthLine   = root.getChild("saddleMouthLine");
+        this.saddleMouthLineR  = root.getChild("saddleMouthLineR");
+        this.headSaddle        = root.getChild("headSaddle");
 
-        this.TailC = new ModelRenderer(this, 24, 3);
-        this.TailC.addBox(-1.5F, -4.5F, 9F, 3, 4, 7);
-        this.TailC.setRotationPoint(0F, 3F, 14F);
-        setRotation(this.TailC, -1.40215F, 0F, 0F);
+        this.mane              = root.getChild("mane");
 
-        this.Leg1A = new ModelRenderer(this, 78, 29);
-        this.Leg1A.addBox(-2.5F, -2F, -2.5F, 4, 9, 5);
-        this.Leg1A.setRotationPoint(4F, 9F, 11F);
+        this.midWing           = root.getChild("midWing");
+        this.innerWing         = root.getChild("innerWing");
+        this.outerWing         = root.getChild("outerWing");
+        this.innerWingR        = root.getChild("innerWingR");
+        this.midWingR          = root.getChild("midWingR");
+        this.outerWingR        = root.getChild("outerWingR");
 
-        this.Leg1B = new ModelRenderer(this, 78, 43);
-        this.Leg1B.addBox(-2F, 0F, -1.5F, 3, 5, 3);
-        this.Leg1B.setRotationPoint(4F, 16F, 11F);
-
-        this.Leg1C = new ModelRenderer(this, 78, 51);
-        this.Leg1C.addBox(-2.5F, 5.1F, -2F, 4, 3, 4);
-        this.Leg1C.setRotationPoint(4F, 16F, 11F);
-
-        this.Leg2A = new ModelRenderer(this, 96, 29);
-        this.Leg2A.addBox(-1.5F, -2F, -2.5F, 4, 9, 5);
-        this.Leg2A.setRotationPoint(-4F, 9F, 11F);
-
-        this.Leg2B = new ModelRenderer(this, 96, 43);
-        this.Leg2B.addBox(-1F, 0F, -1.5F, 3, 5, 3);
-        this.Leg2B.setRotationPoint(-4F, 16F, 11F);
-
-        this.Leg2C = new ModelRenderer(this, 96, 51);
-        this.Leg2C.addBox(-1.5F, 5.1F, -2F, 4, 3, 4);
-        this.Leg2C.setRotationPoint(-4F, 16F, 11F);
-
-        this.Leg3A = new ModelRenderer(this, 44, 29);
-        this.Leg3A.addBox(-1.9F, -1F, -2.1F, 3, 8, 4);
-        this.Leg3A.setRotationPoint(4F, 9F, -8F);
-
-        this.Leg3B = new ModelRenderer(this, 44, 41);
-        this.Leg3B.addBox(-1.9F, 0F, -1.6F, 3, 5, 3);
-        this.Leg3B.setRotationPoint(4F, 16F, -8F);
-
-        this.Leg3C = new ModelRenderer(this, 44, 51);
-        this.Leg3C.addBox(-2.4F, 5.1F, -2.1F, 4, 3, 4);
-        this.Leg3C.setRotationPoint(4F, 16F, -8F);
-
-        this.Leg4A = new ModelRenderer(this, 60, 29);
-        this.Leg4A.addBox(-1.1F, -1F, -2.1F, 3, 8, 4);
-        this.Leg4A.setRotationPoint(-4F, 9F, -8F);
-
-        this.Leg4B = new ModelRenderer(this, 60, 41);
-        this.Leg4B.addBox(-1.1F, 0F, -1.6F, 3, 5, 3);
-        this.Leg4B.setRotationPoint(-4F, 16F, -8F);
-
-        this.Leg4C = new ModelRenderer(this, 60, 51);
-        this.Leg4C.addBox(-1.6F, 5.1F, -2.1F, 4, 3, 4);
-        this.Leg4C.setRotationPoint(-4F, 16F, -8F);
-
-        this.Head = new ModelRenderer(this, 0, 0);
-        this.Head.addBox(-2.5F, -10F, -1.5F, 5, 5, 7);
-        this.Head.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.Head, 0.5235988F, 0F, 0F);
-
-        this.UMouth = new ModelRenderer(this, 24, 18);
-        this.UMouth.addBox(-2F, -10F, -7F, 4, 3, 6);
-        this.UMouth.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.UMouth, 0.5235988F, 0F, 0F);
-
-        this.LMouth = new ModelRenderer(this, 24, 27);
-        this.LMouth.addBox(-2F, -7F, -6.5F, 4, 2, 5);
-        this.LMouth.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.LMouth, 0.5235988F, 0F, 0F);
-
-        this.UMouth2 = new ModelRenderer(this, 24, 18);
-        this.UMouth2.addBox(-2F, -10F, -8F, 4, 3, 6);
-        this.UMouth2.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.UMouth2, 0.4363323F, 0F, 0F);
-
-        this.LMouth2 = new ModelRenderer(this, 24, 27);
-        this.LMouth2.addBox(-2F, -7F, -5.5F, 4, 2, 5);
-        this.LMouth2.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.LMouth2, 0.7853982F, 0F, 0F);
-
-        this.Unicorn = new ModelRenderer(this, 24, 0);
-        this.Unicorn.addBox(-0.5F, -18F, 2F, 1, 8, 1);
-        this.Unicorn.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.Unicorn, 0.5235988F, 0F, 0F);
-
-        this.Ear1 = new ModelRenderer(this, 0, 0);
-        this.Ear1.addBox(0.45F, -12F, 4F, 2, 3, 1);
-        this.Ear1.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.Ear1, 0.5235988F, 0F, 0F);
-
-        this.Ear2 = new ModelRenderer(this, 0, 0);
-        this.Ear2.addBox(-2.45F, -12F, 4F, 2, 3, 1);
-        this.Ear2.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.Ear2, 0.5235988F, 0F, 0F);
-
-        this.MuleEarL = new ModelRenderer(this, 0, 12);
-        this.MuleEarL.addBox(-2F, -16F, 4F, 2, 7, 1);
-        this.MuleEarL.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.MuleEarL, 0.5235988F, 0F, 0.2617994F);
-
-        this.MuleEarR = new ModelRenderer(this, 0, 12);
-        this.MuleEarR.addBox(0F, -16F, 4F, 2, 7, 1);
-        this.MuleEarR.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.MuleEarR, 0.5235988F, 0F, -0.2617994F);
-
-        this.Neck = new ModelRenderer(this, 0, 12);
-        this.Neck.addBox(-2.05F, -9.8F, -2F, 4, 14, 8);
-        this.Neck.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.Neck, 0.5235988F, 0F, 0F);
-
-        this.Bag1 = new ModelRenderer(this, 0, 34);
-        this.Bag1.addBox(-3F, 0F, 0F, 8, 8, 3);
-        this.Bag1.setRotationPoint(-7.5F, 3F, 10F);
-        setRotation(this.Bag1, 0F, 1.570796F, 0F);
-
-        this.Bag2 = new ModelRenderer(this, 0, 47);
-        this.Bag2.addBox(-3F, 0F, 0F, 8, 8, 3);
-        this.Bag2.setRotationPoint(4.5F, 3F, 10F);
-        setRotation(this.Bag2, 0F, 1.570796F, 0F);
-
-        this.Saddle = new ModelRenderer(this, 80, 0);
-        this.Saddle.addBox(-5F, 0F, -3F, 10, 1, 8);
-        this.Saddle.setRotationPoint(0F, 2F, 2F);
-
-        this.SaddleB = new ModelRenderer(this, 106, 9);
-        this.SaddleB.addBox(-1.5F, -1F, -3F, 3, 1, 2);
-        this.SaddleB.setRotationPoint(0F, 2F, 2F);
-
-        this.SaddleC = new ModelRenderer(this, 80, 9);
-        this.SaddleC.addBox(-4F, -1F, 3F, 8, 1, 2);
-        this.SaddleC.setRotationPoint(0F, 2F, 2F);
-
-        this.SaddleL2 = new ModelRenderer(this, 74, 0);
-        this.SaddleL2.addBox(-0.5F, 6F, -1F, 1, 2, 2);
-        this.SaddleL2.setRotationPoint(5F, 3F, 2F);
-
-        this.SaddleL = new ModelRenderer(this, 70, 0);
-        this.SaddleL.addBox(-0.5F, 0F, -0.5F, 1, 6, 1);
-        this.SaddleL.setRotationPoint(5F, 3F, 2F);
-
-        this.SaddleR2 = new ModelRenderer(this, 74, 4);
-        this.SaddleR2.addBox(-0.5F, 6F, -1F, 1, 2, 2);
-        this.SaddleR2.setRotationPoint(-5F, 3F, 2F);
-
-        this.SaddleR = new ModelRenderer(this, 80, 0);
-        this.SaddleR.addBox(-0.5F, 0F, -0.5F, 1, 6, 1);
-        this.SaddleR.setRotationPoint(-5F, 3F, 2F);
-
-        this.SaddleMouthL = new ModelRenderer(this, 74, 13);
-        this.SaddleMouthL.addBox(1.5F, -8F, -4F, 1, 2, 2);
-        this.SaddleMouthL.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.SaddleMouthL, 0.5235988F, 0F, 0F);
-
-        this.SaddleMouthR = new ModelRenderer(this, 74, 13);
-        this.SaddleMouthR.addBox(-2.5F, -8F, -4F, 1, 2, 2);
-        this.SaddleMouthR.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.SaddleMouthR, 0.5235988F, 0F, 0F);
-
-        this.SaddleMouthLine = new ModelRenderer(this, 44, 10);
-        this.SaddleMouthLine.addBox(2.6F, -6F, -6F, 0, 3, 16);
-        this.SaddleMouthLine.setRotationPoint(0F, 4F, -10F);
-
-        this.SaddleMouthLineR = new ModelRenderer(this, 44, 5);
-        this.SaddleMouthLineR.addBox(-2.6F, -6F, -6F, 0, 3, 16);
-        this.SaddleMouthLineR.setRotationPoint(0F, 4F, -10F);
-
-        this.Mane = new ModelRenderer(this, 58, 0);
-        this.Mane.addBox(-1F, -11.5F, 5F, 2, 16, 4);
-        this.Mane.setRotationPoint(0F, 4F, -10F);
-        //Mane.addBox(-1F, -9.5F, 6F, 2, 16, 4);
-        //Mane.setRotationPoint(0F, 3F, -12F);
-        setRotation(this.Mane, 0.5235988F, 0F, 0F);
-
-        this.HeadSaddle = new ModelRenderer(this, 80, 12);
-        this.HeadSaddle.addBox(-2.5F, -10.1F, -7F, 5, 5, 12, 0.2F);
-        this.HeadSaddle.setRotationPoint(0F, 4F, -10F);
-        setRotation(this.HeadSaddle, 0.5235988F, 0F, 0F);
-
-        this.MidWing = new ModelRenderer(this, 82, 68);
-        this.MidWing.addBox(1F, 0.1F, 1F, 12, 2, 11);
-        this.MidWing.setRotationPoint(5F, 3F, -6F);
-        setRotation(this.MidWing, 0F, 0.0872665F, 0F);
-
-        this.InnerWing = new ModelRenderer(this, 0, 96);
-        this.InnerWing.addBox(0F, 0F, 0F, 7, 2, 11);
-        this.InnerWing.setRotationPoint(5F, 3F, -6F);
-        setRotation(this.InnerWing, 0F, -0.3490659F, 0F);
-
-        this.OuterWing = new ModelRenderer(this, 0, 68);
-        this.OuterWing.addBox(0F, 0F, 0F, 22, 2, 11);
-        this.OuterWing.setRotationPoint(17F, 3F, -6F);
-        setRotation(this.OuterWing, 0F, -0.3228859F, 0F);
-
-        this.InnerWingR = new ModelRenderer(this, 0, 110);
-        this.InnerWingR.addBox(-7F, 0F, 0F, 7, 2, 11);
-        this.InnerWingR.setRotationPoint(-5F, 3F, -6F);
-        setRotation(this.InnerWingR, 0F, 0.3490659F, 0F);
-
-        this.MidWingR = new ModelRenderer(this, 82, 82);
-        this.MidWingR.addBox(-13F, 0.1F, 1F, 12, 2, 11);
-        this.MidWingR.setRotationPoint(-5F, 3F, -6F);
-        setRotation(this.MidWingR, 0F, -0.0872665F, 0F);
-
-        this.OuterWingR = new ModelRenderer(this, 0, 82);
-        this.OuterWingR.addBox(-22F, 0F, 0F, 22, 2, 11);
-        this.OuterWingR.setRotationPoint(-17F, 3F, -6F);
-        setRotation(this.OuterWingR, 0F, 0.3228859F, 0F);
-
-        this.ButterflyL = new ModelRenderer(this, 0, 98);
-        this.ButterflyL.addBox(-1F, 0F, -14F, 26, 0, 30);
-        this.ButterflyL.setRotationPoint(4.5F, 3F, -2F);
-        setRotation(this.ButterflyL, 0F, 0F, -0.78539F);
-
-        this.ButterflyR = new ModelRenderer(this, 0, 68);
-        this.ButterflyR.addBox(-25F, 0F, -14F, 26, 0, 30);
-        this.ButterflyR.setRotationPoint(-4.5F, 3F, -2F);
-        setRotation(this.ButterflyR, 0F, 0F, 0.78539F);
-
+        this.butterflyL        = root.getChild("butterflyL");
+        this.butterflyR        = root.getChild("butterflyR");
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // Body
+        PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create()
+                        .texOffs(0, 34).addBox(-5F, -8F, -19F, 10, 10, 24),
+                PartPose.offset(0F, 11F, 9F));
+
+        // Tail segments
+        root.addOrReplaceChild("tailA", CubeListBuilder.create()
+                        .texOffs(44, 0).addBox(-1F, -1F, 0F, 2, 2, 3),
+                PartPose.offsetAndRotation(0F, 3F, 14F, -1.134464F, 0F, 0F));
+        root.addOrReplaceChild("tailB", CubeListBuilder.create()
+                        .texOffs(38, 7).addBox(-1.5F, -2F, 3F, 3, 4, 7),
+                PartPose.offsetAndRotation(0F, 3F, 14F, -1.134464F, 0F, 0F));
+        root.addOrReplaceChild("tailC", CubeListBuilder.create()
+                        .texOffs(24, 3).addBox(-1.5F, -4.5F, 9F, 3, 4, 7),
+                PartPose.offsetAndRotation(0F, 3F, 14F, -1.40215F, 0F, 0F));
+
+        // Legs – rear right (leg1)
+        root.addOrReplaceChild("leg1A", CubeListBuilder.create()
+                        .texOffs(78, 29).addBox(-2.5F, -2F, -2.5F, 4, 9, 5),
+                PartPose.offset(4F, 9F, 11F));
+        root.addOrReplaceChild("leg1B", CubeListBuilder.create()
+                        .texOffs(78, 43).addBox(-2F, 0F, -1.5F, 3, 5, 3),
+                PartPose.offset(4F, 16F, 11F));
+        root.addOrReplaceChild("leg1C", CubeListBuilder.create()
+                        .texOffs(78, 51).addBox(-2.5F, 5.1F, -2F, 4, 3, 4),
+                PartPose.offset(4F, 16F, 11F));
+
+        // Legs – rear left (leg2)
+        root.addOrReplaceChild("leg2A", CubeListBuilder.create()
+                        .texOffs(96, 29).addBox(-1.5F, -2F, -2.5F, 4, 9, 5),
+                PartPose.offset(-4F, 9F, 11F));
+        root.addOrReplaceChild("leg2B", CubeListBuilder.create()
+                        .texOffs(96, 43).addBox(-1F, 0F, -1.5F, 3, 5, 3),
+                PartPose.offset(-4F, 16F, 11F));
+        root.addOrReplaceChild("leg2C", CubeListBuilder.create()
+                        .texOffs(96, 51).addBox(-1.5F, 5.1F, -2F, 4, 3, 4),
+                PartPose.offset(-4F, 16F, 11F));
+
+        // Legs – front right (leg3)
+        root.addOrReplaceChild("leg3A", CubeListBuilder.create()
+                        .texOffs(44, 29).addBox(-1.9F, -1F, -2.1F, 3, 8, 4),
+                PartPose.offset(4F, 9F, -8F));
+        root.addOrReplaceChild("leg3B", CubeListBuilder.create()
+                        .texOffs(44, 41).addBox(-1.9F, 0F, -1.6F, 3, 5, 3),
+                PartPose.offset(4F, 16F, -8F));
+        root.addOrReplaceChild("leg3C", CubeListBuilder.create()
+                        .texOffs(44, 51).addBox(-2.4F, 5.1F, -2.1F, 4, 3, 4),
+                PartPose.offset(4F, 16F, -8F));
+
+        // Legs – front left (leg4)
+        root.addOrReplaceChild("leg4A", CubeListBuilder.create()
+                        .texOffs(60, 29).addBox(-1.1F, -1F, -2.1F, 3, 8, 4),
+                PartPose.offset(-4F, 9F, -8F));
+        root.addOrReplaceChild("leg4B", CubeListBuilder.create()
+                        .texOffs(60, 41).addBox(-1.1F, 0F, -1.6F, 3, 5, 3),
+                PartPose.offset(-4F, 16F, -8F));
+        root.addOrReplaceChild("leg4C", CubeListBuilder.create()
+                        .texOffs(60, 51).addBox(-1.6F, 5.1F, -2.1F, 4, 3, 4),
+                PartPose.offset(-4F, 16F, -8F));
+
+        // Head and facial parts
+        root.addOrReplaceChild("head", CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(-2.5F, -10F, -1.5F, 5, 5, 7),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("uMouth", CubeListBuilder.create()
+                        .texOffs(24, 18).addBox(-2F, -10F, -7F, 4, 3, 6),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("lMouth", CubeListBuilder.create()
+                        .texOffs(24, 27).addBox(-2F, -7F, -6.5F, 4, 2, 5),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("uMouth2", CubeListBuilder.create()
+                        .texOffs(24, 18).addBox(-2F, -10F, -8F, 4, 3, 6),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.4363323F, 0F, 0F));
+        root.addOrReplaceChild("lMouth2", CubeListBuilder.create()
+                        .texOffs(24, 27).addBox(-2F, -7F, -5.5F, 4, 2, 5),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.7853982F, 0F, 0F));
+        root.addOrReplaceChild("unicorn", CubeListBuilder.create()
+                        .texOffs(24, 0).addBox(-0.5F, -18F, 2F, 1, 8, 1),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("ear1", CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(0.45F, -12F, 4F, 2, 3, 1),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("ear2", CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(-2.45F, -12F, 4F, 2, 3, 1),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("muleEarL", CubeListBuilder.create()
+                        .texOffs(0, 12).addBox(-2F, -16F, 4F, 2, 7, 1),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0.2617994F));
+        root.addOrReplaceChild("muleEarR", CubeListBuilder.create()
+                        .texOffs(0, 12).addBox(0F, -16F, 4F, 2, 7, 1),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, -0.2617994F));
+        root.addOrReplaceChild("neck", CubeListBuilder.create()
+                        .texOffs(0, 12).addBox(-2.05F, -9.8F, -2F, 4, 14, 8),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+
+        // Bags
+        root.addOrReplaceChild("bag1", CubeListBuilder.create()
+                        .texOffs(0, 34).addBox(-3F, 0F, 0F, 8, 8, 3),
+                PartPose.offsetAndRotation(-7.5F, 3F, 10F, 0F, (float)Math.PI / 2F, 0F));
+        root.addOrReplaceChild("bag2", CubeListBuilder.create()
+                        .texOffs(0, 47).addBox(-3F, 0F, 0F, 8, 8, 3),
+                PartPose.offsetAndRotation(4.5F, 3F, 10F, 0F, (float)Math.PI / 2F, 0F));
+
+        // Saddle pieces
+        root.addOrReplaceChild("saddle", CubeListBuilder.create()
+                        .texOffs(80, 0).addBox(-5F, 0F, -3F, 10, 1, 8),
+                PartPose.offset(0F, 2F, 2F));
+        root.addOrReplaceChild("saddleB", CubeListBuilder.create()
+                        .texOffs(106, 9).addBox(-1.5F, -1F, -3F, 3, 1, 2),
+                PartPose.offset(0F, 2F, 2F));
+        root.addOrReplaceChild("saddleC", CubeListBuilder.create()
+                        .texOffs(80, 9).addBox(-4F, -1F, 3F, 8, 1, 2),
+                PartPose.offset(0F, 2F, 2F));
+        root.addOrReplaceChild("saddleL2", CubeListBuilder.create()
+                        .texOffs(74, 0).addBox(-0.5F, 6F, -1F, 1, 2, 2),
+                PartPose.offset(5F, 3F, 2F));
+        root.addOrReplaceChild("saddleL", CubeListBuilder.create()
+                        .texOffs(70, 0).addBox(-0.5F, 0F, -0.5F, 1, 6, 1),
+                PartPose.offset(5F, 3F, 2F));
+        root.addOrReplaceChild("saddleR2", CubeListBuilder.create()
+                        .texOffs(74, 4).addBox(-0.5F, 6F, -1F, 1, 2, 2),
+                PartPose.offset(-5F, 3F, 2F));
+        root.addOrReplaceChild("saddleR", CubeListBuilder.create()
+                        .texOffs(80, 0).addBox(-0.5F, 0F, -0.5F, 1, 6, 1),
+                PartPose.offset(-5F, 3F, 2F));
+        root.addOrReplaceChild("saddleMouthL", CubeListBuilder.create()
+                        .texOffs(74, 13).addBox(1.5F, -8F, -4F, 1, 2, 2),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("saddleMouthR", CubeListBuilder.create()
+                        .texOffs(74, 13).addBox(-2.5F, -8F, -4F, 1, 2, 2),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("saddleMouthLine", CubeListBuilder.create()
+                        .texOffs(44, 10).addBox(2.6F, -6F, -6F, 0, 3, 16),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("saddleMouthLineR", CubeListBuilder.create()
+                        .texOffs(44, 5).addBox(-2.6F, -6F, -6F, 0, 3, 16),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+        root.addOrReplaceChild("headSaddle", CubeListBuilder.create()
+                        .texOffs(80, 12).addBox(-2.5F, -10.1F, -7F, 5F, 5F, 12F, new CubeDeformation(0.2F)),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+
+        // Mane
+        root.addOrReplaceChild("mane", CubeListBuilder.create()
+                        .texOffs(58, 0).addBox(-1F, -11.5F, 5F, 2, 16, 4),
+                PartPose.offsetAndRotation(0F, 4F, -10F, 0.5235988F, 0F, 0F));
+
+        // Wings
+        root.addOrReplaceChild("midWing", CubeListBuilder.create()
+                        .texOffs(82, 68).addBox(1F, 0.1F, 1F, 12, 2, 11),
+                PartPose.offsetAndRotation(5F, 3F, -6F, 0F, 0.0872665F, 0F));
+        root.addOrReplaceChild("innerWing", CubeListBuilder.create()
+                        .texOffs(0, 96).addBox(0F, 0F, 0F, 7, 2, 11),
+                PartPose.offsetAndRotation(5F, 3F, -6F, 0F, -0.3490659F, 0F));
+        root.addOrReplaceChild("outerWing", CubeListBuilder.create()
+                        .texOffs(0, 68).addBox(0F, 0F, 0F, 22, 2, 11),
+                PartPose.offsetAndRotation(17F, 3F, -6F, 0F, -0.3228859F, 0F));
+        root.addOrReplaceChild("innerWingR", CubeListBuilder.create()
+                        .texOffs(0, 110).addBox(-7F, 0F, 0F, 7, 2, 11),
+                PartPose.offsetAndRotation(-5F, 3F, -6F, 0F, 0.3490659F, 0F));
+        root.addOrReplaceChild("midWingR", CubeListBuilder.create()
+                        .texOffs(82, 82).addBox(-13F, 0.1F, 1F, 12, 2, 11),
+                PartPose.offsetAndRotation(-5F, 3F, -6F, 0F, -0.0872665F, 0F));
+        root.addOrReplaceChild("outerWingR", CubeListBuilder.create()
+                        .texOffs(0, 82).addBox(-22F, 0F, 0F, 22, 2, 11),
+                PartPose.offsetAndRotation(-17F, 3F, -6F, 0F, 0.3228859F, 0F));
+
+        // Butterflies
+        root.addOrReplaceChild("butterflyL", CubeListBuilder.create()
+                        .texOffs(0, 98).addBox(-1F, 0F, -14F, 26, 0, 30),
+                PartPose.offsetAndRotation(4.5F, 3F, -2F, 0F, 0F, -0.78539F));
+        root.addOrReplaceChild("butterflyR", CubeListBuilder.create()
+                        .texOffs(0, 68).addBox(-25F, 0F, -14F, 26, 0, 30),
+                PartPose.offsetAndRotation(-4.5F, 3F, -2F, 0F, 0F, 0.78539F));
+
+        return LayerDefinition.create(mesh, 128, 128);
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
-        float HeadXRot = (headPitch / 57.29578F);
-        if (netHeadYaw > 20F) {
-            netHeadYaw = 20F;
-        }
-        if (netHeadYaw < -20F) {
-            netHeadYaw = -20F;
-        }
+    @Override
+    public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        float RLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float LLegXRot = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
+        float HeadXRot = headPitch * (1F / 57.29578F);
 
-        /*
-         * limbSwing = distance walked limbSwingAmount = speed 0 - 1 ageInTicks = timer
-         */
+        if (netHeadYaw > 20F) netHeadYaw = 20F;
+        if (netHeadYaw < -20F) netHeadYaw = -20F;
 
         if (shuffling) {
-            HeadXRot = HeadXRot + (MathHelper.cos(ageInTicks * 0.4F) * 0.15F);
+            HeadXRot += Mth.cos(ageInTicks * 0.4F) * 0.15F;
         } else if (limbSwingAmount > 0.2F && !floating) {
-            HeadXRot = HeadXRot + (MathHelper.cos(limbSwing * 0.4F) * 0.15F * limbSwingAmount);
+            HeadXRot += Mth.cos(limbSwing * 0.4F) * 0.15F * limbSwingAmount;
         }
 
-        this.Head.rotationPointY = 4.0F;
-        this.Head.rotationPointZ = -10F;
-        this.Head.rotateAngleX = 0.5235988F + (HeadXRot);
-        this.Head.rotateAngleY = (netHeadYaw / 57.29578F);//fixes SMP bug
-        this.TailA.rotationPointY = 3F;
-        this.TailB.rotationPointZ = 14F;
-        this.Bag2.rotationPointY = 3F;
-        this.Bag2.rotationPointZ = 10F;
-        this.Body.rotateAngleX = 0F;
+        // HEAD
+        head.y = 4.0F;
+        head.z = -10F;
+        head.xRot = 0.5235988F + HeadXRot;
+        head.yRot = netHeadYaw * (1F / 57.29578F);
+        tailA.y = 3F;
+        tailB.z = 14F;
+        bag2.y = 3F;
+        bag2.z = 10F;
+        body.xRot = 0F;
 
-        if (standing && !shuffling) //standing on hind legs
-        {
-            this.Head.rotationPointY = -6F;
-            this.Head.rotationPointZ = -1F;
-            this.Head.rotateAngleX = (15 / 57.29578F) + (HeadXRot);
-            //120 degrees
-            this.Head.rotateAngleY = (netHeadYaw / 57.29578F);
-            this.TailA.rotationPointY = 9F;
-            this.TailB.rotationPointZ = 18F;
-            this.Bag2.rotationPointY = 5.5F;
-            this.Bag2.rotationPointZ = 15F;
-            this.Body.rotateAngleX = -45 / 57.29578F;
-
-        } else if (eating && !shuffling)//neck down
-        {
-            this.Head.rotationPointY = 11.0F; //new lower position
-            this.Head.rotationPointZ = -10F;
-            this.Head.rotateAngleX = 2.18166F;//120 degrees
-            this.Head.rotateAngleY = 0.0F;//don't twist your neck if eating
-
+        // Adjust for standing
+        if (standing && !shuffling) {
+            head.y = -6F;
+            head.z = -1F;
+            head.xRot = (15F / 57.29578F) + HeadXRot;
+            head.yRot = netHeadYaw * (1F / 57.29578F);
+            tailA.y = 9F;
+            tailB.z = 18F;
+            bag2.y = 5.5F;
+            bag2.z = 15F;
+            body.xRot = -45F / 57.29578F;
+        } else if (eating && !shuffling) {
+            head.y = 11.0F;
+            head.z = -10F;
+            head.xRot = 2.18166F;
+            head.yRot = 0F;
         }
 
-        this.Ear1.rotationPointY = this.Head.rotationPointY;
-        this.Ear2.rotationPointY = this.Head.rotationPointY;
-        this.MuleEarL.rotationPointY = this.Head.rotationPointY;
-        this.MuleEarR.rotationPointY = this.Head.rotationPointY;
-        this.Neck.rotationPointY = this.Head.rotationPointY;
-        this.UMouth.rotationPointY = this.Head.rotationPointY;
-        this.UMouth2.rotationPointY = this.Head.rotationPointY;
-        this.LMouth.rotationPointY = this.Head.rotationPointY;
-        this.LMouth2.rotationPointY = this.Head.rotationPointY;
-        this.Mane.rotationPointY = this.Head.rotationPointY;
-        this.Unicorn.rotationPointY = this.Head.rotationPointY;
+        // Sync head-linked parts
+        for (ModelPart part : new ModelPart[]{ear1, ear2, muleEarL, muleEarR, neck, uMouth, uMouth2, lMouth, lMouth2, mane, unicorn}) {
+            part.y = head.y;
+            part.z = head.z;
+            part.xRot = head.xRot;
+            part.yRot = head.yRot;
+        }
 
-        this.Ear1.rotationPointZ = this.Head.rotationPointZ;
-        this.Ear2.rotationPointZ = this.Head.rotationPointZ;
-        this.MuleEarL.rotationPointZ = this.Head.rotationPointZ;
-        this.MuleEarR.rotationPointZ = this.Head.rotationPointZ;
-        this.Neck.rotationPointZ = this.Head.rotationPointZ;
-        this.UMouth.rotationPointZ = this.Head.rotationPointZ;
-        this.UMouth2.rotationPointZ = this.Head.rotationPointZ;
-        this.LMouth.rotationPointZ = this.Head.rotationPointZ;
-        this.LMouth2.rotationPointZ = this.Head.rotationPointZ;
-        this.Mane.rotationPointZ = this.Head.rotationPointZ;
-        this.Unicorn.rotationPointZ = this.Head.rotationPointZ;
+        uMouth2.xRot = uMouth2.xRot - 0.0872664F; // -5°
+        lMouth2.xRot = lMouth2.xRot + 0.261799F; // +15°
+        
+        this.saddleMouthLine.y = head.y;
+            this.saddleMouthLineR.y = head.y;
+            this.headSaddle.y = head.y;
+            this.saddleMouthL.y = head.y;
+            this.saddleMouthR.y = head.y;
 
-        this.Ear1.rotateAngleX = this.Head.rotateAngleX;
-        this.Ear2.rotateAngleX = this.Head.rotateAngleX;
-        this.MuleEarL.rotateAngleX = this.Head.rotateAngleX;
-        this.MuleEarR.rotateAngleX = this.Head.rotateAngleX;
-        this.Neck.rotateAngleX = this.Head.rotateAngleX;
-        this.UMouth.rotateAngleX = this.Head.rotateAngleX;
-        this.UMouth2.rotateAngleX = this.Head.rotateAngleX - 0.0872664F;
-        this.LMouth.rotateAngleX = this.Head.rotateAngleX;
-        this.LMouth2.rotateAngleX = this.Head.rotateAngleX + 0.261799F;
-        this.Mane.rotateAngleX = this.Head.rotateAngleX;
-        this.Unicorn.rotateAngleX = this.Head.rotateAngleX;
+            this.saddleMouthLine.z = head.z;
+            this.saddleMouthLineR.z = head.z;
+            this.headSaddle.z = head.z;
+            this.saddleMouthL.z = head.z;
+            this.saddleMouthR.z = head.z;
 
-        this.Ear1.rotateAngleY = this.Head.rotateAngleY;
-        this.Ear2.rotateAngleY = this.Head.rotateAngleY;
-        this.MuleEarL.rotateAngleY = this.Head.rotateAngleY;
-        this.MuleEarR.rotateAngleY = this.Head.rotateAngleY;
-        this.Neck.rotateAngleY = this.Head.rotateAngleY;
-        this.UMouth.rotateAngleY = this.Head.rotateAngleY;
-        this.LMouth.rotateAngleY = this.Head.rotateAngleY;
-        this.UMouth2.rotateAngleY = this.Head.rotateAngleY;
-        this.LMouth2.rotateAngleY = this.Head.rotateAngleY;
-        this.Mane.rotateAngleY = this.Head.rotateAngleY;
-        this.Unicorn.rotateAngleY = this.Head.rotateAngleY;
+            this.saddleMouthLine.xRot = HeadXRot;
+            this.saddleMouthLineR.xRot = HeadXRot;
+            this.headSaddle.xRot = head.xRot;
+            this.saddleMouthL.xRot = head.xRot;
+            this.saddleMouthR.xRot = head.xRot;
+            this.headSaddle.yRot = head.yRot;
+            this.saddleMouthL.yRot = head.yRot;
+            this.saddleMouthLine.yRot = head.yRot;
+            this.saddleMouthR.yRot = head.yRot;
+            this.saddleMouthLineR.yRot = head.yRot;
 
-        //(if chested)
-        this.Bag1.rotateAngleX = RLegXRot / 5F;//(MathHelper.cos(limbSwing * 0.6662F) * 1.4F * ageInTicks) / 10F;
-        this.Bag2.rotateAngleX = -RLegXRot / 5F;//(MathHelper.cos(limbSwing * 0.6662F) * 1.4F * ageInTicks) / 10F;
+        // Bags (chest)
+        bag1.xRot = RLegXRot / 5F;
+        bag2.xRot = -RLegXRot / 5F;
 
+        // Wings setup
         if (wings) {
-            this.InnerWing.rotateAngleX = this.Body.rotateAngleX;
-            this.MidWing.rotateAngleX = this.Body.rotateAngleX;
-            this.OuterWing.rotateAngleX = this.Body.rotateAngleX;
-            this.InnerWingR.rotateAngleX = this.Body.rotateAngleX;
-            this.MidWingR.rotateAngleX = this.Body.rotateAngleX;
-            this.OuterWingR.rotateAngleX = this.Body.rotateAngleX;
+            // Sync wing X rotation with body
+            innerWing.xRot = body.xRot;
+            midWing.xRot   = body.xRot;
+            outerWing.xRot = body.xRot;
+            innerWingR.xRot = body.xRot;
+            midWingR.xRot   = body.xRot;
+            outerWingR.xRot = body.xRot;
 
             if (standing) {
-                this.InnerWing.rotationPointY = -5F;
-                this.InnerWing.rotationPointZ = 4F;
+                innerWing.y = -5F;
+                innerWing.z = 4F;
             } else {
-                this.InnerWing.rotationPointY = 3F;
-                this.InnerWing.rotationPointZ = -6F;
+                innerWing.y = 3F;
+                innerWing.z = -6F;
             }
 
-            /*
-             * flapping wings or cruising. IF flapping wings, move up and down.
-             * if cruising, movement depends on speed
-             */
             float WingRot;
             if (flapwings) {
-                WingRot = MathHelper.cos((ageInTicks * 0.3F) + 3.141593F) * 1.2F;// * limbSwingAmount;
-            } else
-            //cruising
-            {
-                //WingRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.2F * limbSwingAmount;
-                WingRot = MathHelper.cos((limbSwing * 0.5F)) * 0.1F;//* 1.2F * limbSwingAmount;
+                WingRot = Mth.cos((ageInTicks * 0.3F) + (float)Math.PI) * 1.2F;
+            } else {
+                WingRot = Mth.cos(limbSwing * 0.5F) * 0.1F;
             }
-
-            //float WingRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * limbSwingAmount * 1.2F;
-            //InnerWing.setRotationPoint(5F, 3F, -6F);
-            //setRotation(InnerWing, 0F, -0.3490659F, 0F);
-            //X dist = 12
-            //OuterWing.setRotationPoint(17F, 3F, -6F);
-            //setRotation(OuterWing, 0F, -0.3228859F, 0F);
 
             if (floating) {
-                this.OuterWing.rotateAngleY = -0.3228859F + (WingRot / 2F);
-                this.OuterWingR.rotateAngleY = 0.3228859F - (WingRot / 2F);
-
+                outerWing.yRot = -0.3228859F + (WingRot / 2F);
+                outerWingR.yRot = 0.3228859F - (WingRot / 2F);
             } else {
-                WingRot = 60 / 57.29578F;//0.7854F;
-                this.OuterWing.rotateAngleY = -90 / 57.29578F;//-1.396F;
-                this.OuterWingR.rotateAngleY = 90 / 57.29578F;//1.396F;
+                WingRot = 60F / 57.29578F;
+                outerWing.yRot   = -90F / 57.29578F;
+                outerWingR.yRot =  90F / 57.29578F;
             }
 
-            this.InnerWingR.rotationPointY = this.InnerWing.rotationPointY;
-            this.InnerWingR.rotationPointZ = this.InnerWing.rotationPointZ;
+            innerWingR.y = innerWing.y;
+            innerWingR.z = innerWing.z;
+            outerWing.x = innerWing.x + Mth.cos(WingRot) * 12F;
+            outerWingR.x = innerWingR.x - Mth.cos(WingRot) * 12F;
+            midWing.y = innerWing.y;
+            midWingR.y = innerWing.y;
+            outerWing.y = innerWing.y + Mth.sin(WingRot) * 12F;
+            outerWingR.y = innerWingR.y + Mth.sin(WingRot) * 12F;
+            midWing.z = innerWing.z;
+            midWingR.z = innerWing.z;
+            outerWing.z = innerWing.z;
+            outerWingR.z = innerWing.z;
 
-            //OuterWing.rotationPointX = InnerWing.rotationPointX + (MathHelper.cos(WingRot)*12F);
-            //the rotation point X rotates depending on the cos of rotation times the distance of the other block:
-            //cos (WingRot) * 12F
-            //the rotation PointX of InnerWing = 5
-            //the rotation PointX of OuterWing = 17
-            //the difference = 12.
-            // for the rotation point Y, sin is used instead.
-            //OuterWing.rotationPointX = InnerWing.rotationPointX + (MathHelper.cos(WingRot)*12F);
-            //OuterWing.rotationPointY = InnerWing.rotationPointY + (MathHelper.sin(WingRot)*12F);
-
-            this.OuterWing.rotationPointX = this.InnerWing.rotationPointX + (MathHelper.cos(WingRot) * 12F);
-            this.OuterWingR.rotationPointX = this.InnerWingR.rotationPointX - (MathHelper.cos(WingRot) * 12F);
-
-            this.MidWing.rotationPointY = this.InnerWing.rotationPointY;
-            this.MidWingR.rotationPointY = this.InnerWing.rotationPointY;
-            this.OuterWing.rotationPointY = this.InnerWing.rotationPointY + (MathHelper.sin(WingRot) * 12F);
-            this.OuterWingR.rotationPointY = this.InnerWingR.rotationPointY + (MathHelper.sin(WingRot) * 12F);
-
-            this.MidWing.rotationPointZ = this.InnerWing.rotationPointZ;
-            this.MidWingR.rotationPointZ = this.InnerWing.rotationPointZ;
-            this.OuterWing.rotationPointZ = this.InnerWing.rotationPointZ;
-            this.OuterWingR.rotationPointZ = this.InnerWing.rotationPointZ;
-
-            this.MidWing.rotateAngleZ = WingRot;
-            this.InnerWing.rotateAngleZ = WingRot;
-            this.OuterWing.rotateAngleZ = WingRot;
-
-            this.InnerWingR.rotateAngleZ = -WingRot;
-            this.MidWingR.rotateAngleZ = -WingRot;
-            this.OuterWingR.rotateAngleZ = -WingRot;
-
-            //45deg = 0.7854F
-            //1.396 (80degrees folded)
-            /*
-             * //rear left. -4X(ignored), 9Y, 11Z the distance is 7Y
-             * Leg1B.rotationPointY = 9F + (MathHelper.sin((90/ 57.29578F) +
-             * LLegXRot )*7F); Leg1B.rotationPointZ = 11F +
-             * (MathHelper.cos((270/ 57.29578F) + LLegXRot )*7F); //rear right
-             * Leg2B.rotationPointY = 9F + (MathHelper.sin((90/ 57.29578F) +
-             * RLegXRot )*7F); Leg2B.rotationPointZ = 11F +
-             * (MathHelper.cos((270/ 57.29578F) + RLegXRot )*7F); //front left
-             * 4X(ign), 9Y, -8Z, the distance is again 7Y Leg3B.rotationPointY =
-             * 9F + (MathHelper.sin((90/ 57.29578F) + RLegXRot )*7F);
-             * Leg3B.rotationPointZ = -8F + (MathHelper.cos((270/ 57.29578F) +
-             * RLegXRot )*7F); //front right -4X(ign), 9Y, -8Z, the distance is
-             * again 7Y Leg4B.rotationPointY = 9F + (MathHelper.sin((90/
-             * 57.29578F) + LLegXRot )*7F); Leg4B.rotationPointZ = -8F +
-             * (MathHelper.cos((270/ 57.29578F) + LLegXRot )*7F);
-             */
-
+            midWing.zRot = WingRot;
+            innerWing.zRot = WingRot;
+            outerWing.zRot = WingRot;
+            innerWingR.zRot = -WingRot;
+            midWingR.zRot = -WingRot;
+            outerWingR.zRot = -WingRot;
         }
 
-        if (type > 44 && type < 60 || type == 21) //butterfly horses or ghost horse
-        {
-            /*
-             * buttefly to have two / 3 movs: 1 slow movement when idle on
-             * ground has to be random from closing up to horizontal 2 fast wing
-             * flapping flying movement, short range close to 0 degree RLegXRot
-             * = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-             */
-
-            /*
-             * limbSwing = distance walked limbSwingAmount = speed 0 - 1 ageInTicks = timer
-             */
-
+        // Butterflies or ghost horse (type 45–59 or 21)
+        if ((type > 44 && type < 60) || type == 21) {
             float f2a = ageInTicks % 100F;
             float WingRot = 0F;
 
             if (type != 21) {
-                //for butterfly horses
-                if (flapwings) //when user hits space or randomly
-                {
-                    WingRot = MathHelper.cos((ageInTicks * 0.9F)) * 0.9F;
-
-                } else
-                //default movement
-                {
-                    if (floating) //cruising
-                    {
-                        WingRot = MathHelper.cos((ageInTicks * 0.6662F)) * 0.5F;
+                if (flapwings) {
+                    WingRot = Mth.cos(ageInTicks * 0.9F) * 0.9F;
+                } else {
+                    if (floating) {
+                        WingRot = Mth.cos(ageInTicks * 0.6662F) * 0.5F;
                     } else {
-                        if (f2a > 40 & f2a < 60) //random movement
-                        {
-                            WingRot = MathHelper.cos((ageInTicks * 0.15F)) * 1.20F;
+                        if (f2a > 40F && f2a < 60F) {
+                            WingRot = Mth.cos(ageInTicks * 0.15F) * 1.20F;
                         }
                     }
-
                 }
-            } else
-            //for ghost horse
-            {
-                WingRot = MathHelper.cos((ageInTicks * 0.1F));//* 0.2F;
-            }
-
-            //from regular horse
-            /*
-             * if (flapwings) { WingRot = MathHelper.cos((ageInTicks * 0.3F) +
-             * 3.141593F) * 1.2F;// * limbSwingAmount; }else //cruising { //WingRot =
-             * MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.2F * limbSwingAmount; WingRot =
-             * MathHelper.cos((limbSwing * 0.5F)) *0.1F ;//* 1.2F * limbSwingAmount; }
-             */
-
-            /*
-             * this part is needed for position and angle of the butterfly wings
-             * and ghost horse wings
-             */
-            if (standing) {
-                this.ButterflyL.rotationPointY = -2.5F;
-                this.ButterflyL.rotationPointZ = 6.5F;
             } else {
-                this.ButterflyL.rotationPointY = 3F;
-                this.ButterflyL.rotationPointZ = -2F;
+                WingRot = Mth.cos(ageInTicks * 0.1F);
             }
 
-            this.ButterflyR.rotationPointY = this.ButterflyL.rotationPointY;
-            this.ButterflyR.rotationPointZ = this.ButterflyL.rotationPointZ;
-            this.ButterflyL.rotateAngleX = this.Body.rotateAngleX;
-            this.ButterflyR.rotateAngleX = this.Body.rotateAngleX;
-
-            //this to be added for the ghost or adjusted
-            //ButterflyL.rotateAngleZ = -0.52359F + RLegXRot;
-            //ButterflyR.rotateAngleZ = 0.52359F -RLegXRot;
-
-            float baseAngle = 0.52359F;
-            if (type == 21) {
-                baseAngle = 0F;
+            if (standing) {
+                butterflyL.y = -2.5F;
+                butterflyL.z = 6.5F;
+            } else {
+                butterflyL.y = 3F;
+                butterflyL.z = -2F;
             }
-            this.ButterflyL.rotateAngleZ = -baseAngle + WingRot;
-            this.ButterflyR.rotateAngleZ = baseAngle - WingRot;
+
+            butterflyR.y = butterflyL.y;
+            butterflyR.z = butterflyL.z;
+            butterflyL.xRot = body.xRot;
+            butterflyR.xRot = body.xRot;
+
+            float baseAngle = (type == 21) ? 0F : 0.52359F;
+            butterflyL.zRot = -baseAngle + WingRot;
+            butterflyR.zRot = baseAngle - WingRot;
         }
 
-        /*
-         * knee joints Leg1 and Leg4 use LLegXRot Leg2 and Leg3 use RLegXRot
-         */
-        //RLegXRot = 45/57.29578F;
-        //fMov1 = RLegXRot;
+        // Legs animation
         float RLegXRotB = RLegXRot;
         float LLegXRotB = LLegXRot;
         float RLegXRotC = RLegXRot;
         float LLegXRotC = LLegXRot;
 
         if (floating) {
-            RLegXRot = (15 / 57.29578F);
+            RLegXRot = 15F / 57.29578F;
             LLegXRot = RLegXRot;
-            RLegXRotB = (45 / 57.29578F);
+            RLegXRotB = 45F / 57.29578F;
             RLegXRotC = RLegXRotB;
             LLegXRotB = RLegXRotB;
             LLegXRotC = RLegXRotB;
         }
 
         if (standing) {
-            this.Leg3A.rotationPointY = -2F;
-            this.Leg3A.rotationPointZ = -2F;
-            this.Leg4A.rotationPointY = this.Leg3A.rotationPointY;
-            this.Leg4A.rotationPointZ = this.Leg3A.rotationPointZ;
+            leg3A.y = -2F;
+            leg3A.z = -2F;
+            leg4A.y = leg3A.y;
+            leg4A.z = leg3A.z;
 
-            RLegXRot = (-60 / 57.29578F) + MathHelper.cos((ageInTicks * 0.4F) + 3.141593F);
-            LLegXRot = (-60 / 57.29578F) + MathHelper.cos(ageInTicks * 0.4F);
+            RLegXRot = (-60F / 57.29578F) + Mth.cos((ageInTicks * 0.4F) + (float)Math.PI);
+            LLegXRot = (-60F / 57.29578F) + Mth.cos(ageInTicks * 0.4F);
 
-            RLegXRotB = (45 / 57.29578F);
+            RLegXRotB = 45F / 57.29578F;
             LLegXRotB = RLegXRotB;
 
-            RLegXRotC = (-15 / 57.29578F);
-            LLegXRotC = (15 / 57.29578F);
+            RLegXRotC = (-15F / 57.29578F);
+            LLegXRotC = (15F / 57.29578F);
 
-            this.Leg3B.rotationPointY = this.Leg3A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + RLegXRot) * 7F);
-            this.Leg3B.rotationPointZ = this.Leg3A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + RLegXRot) * 7F);
+            leg3B.y = leg3A.y + Mth.sin((90F / 57.29578F) + RLegXRot) * 7F;
+            leg3B.z = leg3A.z + Mth.cos((270F / 57.29578F) + RLegXRot) * 7F;
 
-            //front right -4X(ign), 9Y, -8Z, the distance is again 7Y
-            this.Leg4B.rotationPointY = this.Leg4A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + LLegXRot) * 7F);
-            this.Leg4B.rotationPointZ = this.Leg4A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + LLegXRot) * 7F);
+            leg4B.y = leg4A.y + Mth.sin((90F / 57.29578F) + LLegXRot) * 7F;
+            leg4B.z = leg4A.z + Mth.cos((270F / 57.29578F) + LLegXRot) * 7F;
 
-            this.Leg1B.rotationPointY = this.Leg1A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + RLegXRotC) * 7F);
-            this.Leg1B.rotationPointZ = this.Leg1A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + RLegXRotC) * 7F);
+            leg1B.y = leg1A.y + Mth.sin((90F / 57.29578F) + RLegXRotC) * 7F;
+            leg1B.z = leg1A.z + Mth.cos((270F / 57.29578F) + RLegXRotC) * 7F;
 
-            //rear right
-            this.Leg2B.rotationPointY = this.Leg1B.rotationPointY;// Leg2A.rotationPointY + (MathHelper.sin((90/ 57.29578F) + RLegXRotC )*7F);
-            this.Leg2B.rotationPointZ = this.Leg1B.rotationPointZ;//Leg2A.rotationPointZ + (MathHelper.cos((270/ 57.29578F) + RLegXRotC )*7F);
+            leg2B.y = leg1B.y;
+            leg2B.z = leg1B.z;
 
-            this.Leg1A.rotateAngleX = RLegXRotC;
-            this.Leg1B.rotateAngleX = LLegXRotC;
-            this.Leg1C.rotateAngleX = this.Leg1B.rotateAngleX;
+            leg1A.xRot = RLegXRotC;
+            leg1B.xRot = LLegXRotC;
+            leg1C.xRot = leg1B.xRot;
 
-            this.Leg2A.rotateAngleX = RLegXRotC;
-            this.Leg2B.rotateAngleX = LLegXRotC;
-            this.Leg2C.rotateAngleX = this.Leg2B.rotateAngleX;
-        } else
-        //not standing
-        {
-            this.Leg3A.rotationPointY = 9F;
-            this.Leg3A.rotationPointZ = -8F;
-            this.Leg4A.rotationPointY = this.Leg3A.rotationPointY;
-            this.Leg4A.rotationPointZ = this.Leg3A.rotationPointZ;
+            leg2A.xRot = RLegXRotC;
+            leg2B.xRot = LLegXRotC;
+            leg2C.xRot = leg2B.xRot;
+        } else {
+            leg3A.y = 9F;
+            leg3A.z = -8F;
+            leg4A.y = leg3A.y;
+            leg4A.z = leg3A.z;
 
-            if (!floating && limbSwingAmount > 0.2F) {
-
-                float RLegXRot2 = MathHelper.cos(((limbSwing + 0.1F) * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-                float LLegXRot2 = MathHelper.cos((limbSwing + 0.1F) * 0.6662F) * 0.8F * limbSwingAmount;
-                if (RLegXRot > RLegXRot2) // - - >
-                {
-                    RLegXRotB = RLegXRot + (55 / 57.29578F);
-                    //LLegXRotB = LLegXRot + (55/57.29578F);
-
-                }
-                if (RLegXRot < RLegXRot2) // < - -
-                {
-                    RLegXRotC = RLegXRot + (15 / 57.29578F);
-                    //LLegXRotC = LLegXRot - (15/57.29578F);
-
-                }
-                if (LLegXRot > LLegXRot2) // - - >
-                {
-                    LLegXRotB = LLegXRot + (55 / 57.29578F);
-                }
-                if (LLegXRot < LLegXRot2) // < - -
-                {
-                    LLegXRotC = LLegXRot + (15 / 57.29578F);
-                }
-
-            }
-
-            this.Leg1B.rotationPointY = this.Leg1A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + LLegXRot) * 7F);
-            this.Leg1B.rotationPointZ = this.Leg1A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + LLegXRot) * 7F);
-
-            //rear right
-            this.Leg2B.rotationPointY = this.Leg2A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + RLegXRot) * 7F);
-            this.Leg2B.rotationPointZ = this.Leg2A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + RLegXRot) * 7F);
-
-            //front left 4X(ign), 9Y, -8Z, the distance is again 7Y
-            this.Leg3B.rotationPointY = this.Leg3A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + RLegXRot) * 7F);
-            this.Leg3B.rotationPointZ = this.Leg3A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + RLegXRot) * 7F);
-
-            //front right -4X(ign), 9Y, -8Z, the distance is again 7Y
-            this.Leg4B.rotationPointY = this.Leg4A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + LLegXRot) * 7F);
-            this.Leg4B.rotationPointZ = this.Leg4A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + LLegXRot) * 7F);
-
-            this.Leg1A.rotateAngleX = LLegXRot;
-            this.Leg1B.rotateAngleX = LLegXRotC;
-            this.Leg1C.rotateAngleX = LLegXRotC;
-
-            this.Leg2A.rotateAngleX = RLegXRot;
-            this.Leg2B.rotateAngleX = RLegXRotC;
-            this.Leg2C.rotateAngleX = RLegXRotC;
-
+            RLegXRot = Mth.cos(limbSwing * 0.6662F) * 0.4F * limbSwingAmount;
+            LLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.4F * limbSwingAmount;
+            RLegXRotC = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.4F * limbSwingAmount;
+            LLegXRotC = Mth.cos(limbSwing * 0.6662F) * 0.4F * limbSwingAmount;
+            
+            leg3B.y = leg3A.y + Mth.sin((90F / 57.29578F) + RLegXRot) * 7F;
+            leg3B.z = leg3A.z + Mth.cos((270F / 57.29578F) + RLegXRot) * 7F;
+            
+            leg4B.y = leg4A.y + Mth.sin((90F / 57.29578F) + LLegXRot) * 7F;
+            leg4B.z = leg4A.z + Mth.cos((270F / 57.29578F) + LLegXRot) * 7F;
+            
+            leg1A.y = 9F;
+            leg1A.z = 11F;
+            leg2A.y = leg1A.y;
+            leg2A.z = leg1A.z;
+            
+            leg1B.y = leg1A.y + Mth.sin((90F / 57.29578F) + RLegXRotC) * 7F;
+            leg1B.z = leg1A.z + Mth.cos((270F / 57.29578F) + RLegXRotC) * 7F;
+            
+            leg2B.y = leg2A.y + Mth.sin((90F / 57.29578F) + LLegXRotC) * 7F;
+            leg2B.z = leg2A.z + Mth.cos((270F / 57.29578F) + LLegXRotC) * 7F;
         }
-        this.Leg3A.rotateAngleX = RLegXRot;
-        this.Leg3B.rotateAngleX = RLegXRotB;
-        this.Leg3C.rotateAngleX = RLegXRotB;
-        this.Leg4A.rotateAngleX = LLegXRot;
-        this.Leg4B.rotateAngleX = LLegXRotB;
-        this.Leg4C.rotateAngleX = LLegXRotB;
 
+        leg3A.xRot = RLegXRot;
+        leg3B.xRot = RLegXRotB;
+        leg3C.xRot = RLegXRotB;
+        leg4A.xRot = LLegXRot;
+        leg4B.xRot = LLegXRotB;
+        leg4C.xRot = LLegXRotB;
+
+        // Type 60 (sprinting/shuffling) adjustments
         if (type == 60 && shuffling) {
-            this.Leg3A.rotationPointY = 9F;
-            this.Leg3A.rotationPointZ = -8F;
-            this.Leg4A.rotationPointY = this.Leg3A.rotationPointY;
-            this.Leg4A.rotationPointZ = this.Leg3A.rotationPointZ;
+            leg3A.y = 9F;
+            leg3A.z = -8F;
+            leg4A.y = leg3A.y;
+            leg4A.z = leg3A.z;
 
-            if (!floating)//&& limbSwingAmount > 0.2F)
-            {
-
-                //float RLegXRot2 = MathHelper.cos(ageInTicks * 0.4F);//MathHelper.cos(((limbSwing+0.1F) * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
-                RLegXRot = MathHelper.cos(ageInTicks * 0.4F);
-                if (RLegXRot > 0.1F) {
-                    RLegXRot = 0.3F;
-                }
-                //if (RLegXRot < -0.5F) RLegXRotB = RLegXRot + (45/57.29578F);
-                LLegXRot = MathHelper.cos((ageInTicks * 0.4F) + 3.141593F);
-                if (LLegXRot > 0.1F) {
-                    LLegXRot = 0.3F;
-                }
-
-                /*
-                 * if (RLegXRot > RLegXRot2) // - - > { RLegXRotB = RLegXRot +
-                 * (55/57.29578F); LLegXRotB = LLegXRot + (55/57.29578F); } if
-                 * (RLegXRot < RLegXRot2) // < - - { RLegXRotC = RLegXRot -
-                 * (15/57.29578F); LLegXRotC = LLegXRot - (15/57.29578F); }
-                 */
-
-                /*
-                 * float RLegXRot2 = MathHelper.cos(((limbSwing+0.1F) * 0.6662F) +
-                 * 3.141593F) * 1.4F * limbSwingAmount; if (RLegXRot > RLegXRot2) // - - > {
-                 * RLegXRotB = RLegXRot + (55/57.29578F); LLegXRotB = LLegXRot +
-                 * (55/57.29578F); } if (RLegXRot < RLegXRot2) // < - - {
-                 * RLegXRotC = RLegXRot - (15/57.29578F); LLegXRotC = LLegXRot -
-                 * (15/57.29578F); }
-                 */
+            if (!floating) {
+                float RLegXRot2 = Mth.cos(ageInTicks * 0.4F);
+                if (RLegXRot2 > 0.1F) RLegXRot2 = 0.3F;
+                float LLegXRot2 = Mth.cos((ageInTicks * 0.4F) + (float)Math.PI);
+                if (LLegXRot2 > 0.1F) LLegXRot2 = 0.3F;
+                RLegXRot = RLegXRot2;
+                LLegXRot = LLegXRot2;
             }
 
-            this.Leg1B.rotationPointY = this.Leg1A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + LLegXRot) * 7F);
-            this.Leg1B.rotationPointZ = this.Leg1A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + LLegXRot) * 7F);
+            leg1B.y = leg1A.y + Mth.sin((90F / 57.29578F) + LLegXRot) * 7F;
+            leg1B.z = leg1A.z + Mth.cos((270F / 57.29578F) + LLegXRot) * 7F;
+            leg2B.y = leg2A.y + Mth.sin((90F / 57.29578F) + RLegXRot) * 7F;
+            leg2B.z = leg2A.z + Mth.cos((270F / 57.29578F) + RLegXRot) * 7F;
+            leg3B.y = leg3A.y + Mth.sin((90F / 57.29578F) + LLegXRot) * 7F;
+            leg3B.z = leg3A.z + Mth.cos((270F / 57.29578F) + LLegXRot) * 7F;
+            leg4B.y = leg4A.y + Mth.sin((90F / 57.29578F) + RLegXRot) * 7F;
+            leg4B.z = leg4A.z + Mth.cos((270F / 57.29578F) + RLegXRot) * 7F;
 
-            //rear right
-            this.Leg2B.rotationPointY = this.Leg2A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + RLegXRot) * 7F);
-            this.Leg2B.rotationPointZ = this.Leg2A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + RLegXRot) * 7F);
-
-            //front left 4X(ign), 9Y, -8Z, the distance is again 7Y
-            this.Leg3B.rotationPointY = this.Leg3A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + LLegXRot) * 7F);
-            this.Leg3B.rotationPointZ = this.Leg3A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + LLegXRot) * 7F);
-
-            //front right -4X(ign), 9Y, -8Z, the distance is again 7Y
-            this.Leg4B.rotationPointY = this.Leg4A.rotationPointY + (MathHelper.sin((90 / 57.29578F) + RLegXRot) * 7F);
-            this.Leg4B.rotationPointZ = this.Leg4A.rotationPointZ + (MathHelper.cos((270 / 57.29578F) + RLegXRot) * 7F);
-
-            this.Leg1A.rotateAngleX = LLegXRot;// + rand.nextFloat();
-            this.Leg1B.rotateAngleX = LLegXRotB;
-            this.Leg1C.rotateAngleX = LLegXRotB;
-
-            this.Leg3A.rotateAngleX = LLegXRot;
-            this.Leg3B.rotateAngleX = LLegXRotB;
-            this.Leg3C.rotateAngleX = LLegXRotB;
-
-            this.Leg2A.rotateAngleX = RLegXRot;
-            this.Leg2B.rotateAngleX = RLegXRotB;
-            this.Leg2C.rotateAngleX = RLegXRotB;
-
-            this.Leg4A.rotateAngleX = RLegXRot;
-            this.Leg4B.rotateAngleX = RLegXRotB;
-            this.Leg4C.rotateAngleX = RLegXRotB;
-
+            leg1A.xRot = LLegXRot;
+            leg1B.xRot = LLegXRotB;
+            leg1C.xRot = LLegXRotB;
+            leg3A.xRot = LLegXRot;
+            leg3B.xRot = LLegXRotB;
+            leg3C.xRot = LLegXRotB;
+            leg2A.xRot = RLegXRot;
+            leg2B.xRot = RLegXRotB;
+            leg2C.xRot = RLegXRotB;
+            leg4A.xRot = RLegXRot;
+            leg4B.xRot = RLegXRotB;
+            leg4C.xRot = RLegXRotB;
         }
 
-        this.Leg1C.rotationPointY = this.Leg1B.rotationPointY;
-        this.Leg1C.rotationPointZ = this.Leg1B.rotationPointZ;
-        this.Leg2C.rotationPointY = this.Leg2B.rotationPointY;
-        this.Leg2C.rotationPointZ = this.Leg2B.rotationPointZ;
-        this.Leg3C.rotationPointY = this.Leg3B.rotationPointY;
-        this.Leg3C.rotationPointZ = this.Leg3B.rotationPointZ;
-        this.Leg4C.rotationPointY = this.Leg4B.rotationPointY;
-        this.Leg4C.rotationPointZ = this.Leg4B.rotationPointZ;
+        // Sync lower leg parts to upper leg positions
+        leg1C.y = leg1B.y;
+        leg1C.z = leg1B.z;
+        leg2C.y = leg2B.y;
+        leg2C.z = leg2B.z;
+        leg3C.y = leg3B.y;
+        leg3C.z = leg3B.z;
+        leg4C.y = leg4B.y;
+        leg4C.z = leg4B.z;
 
-        /*
-         * //rear left. -4X(ignored), 9Y, 11Z the distance is 7Y
-         * Leg1B.rotationPointY = 9F + (MathHelper.sin((90/ 57.29578F) +
-         * LLegXRot )*7F); Leg1B.rotationPointZ = 11F + (MathHelper.cos((270/
-         * 57.29578F) + LLegXRot )*7F); //rear right Leg2B.rotationPointY = 9F +
-         * (MathHelper.sin((90/ 57.29578F) + RLegXRot )*7F);
-         * Leg2B.rotationPointZ = 11F + (MathHelper.cos((270/ 57.29578F) +
-         * RLegXRot )*7F); //front left 4X(ign), 9Y, -8Z, the distance is again
-         * 7Y Leg3B.rotationPointY = 9F + (MathHelper.sin((90/ 57.29578F) +
-         * RLegXRot )*7F); Leg3B.rotationPointZ = -8F + (MathHelper.cos((270/
-         * 57.29578F) + RLegXRot )*7F); //front right -4X(ign), 9Y, -8Z, the
-         * distance is again 7Y Leg4B.rotationPointY = 9F + (MathHelper.sin((90/
-         * 57.29578F) + LLegXRot )*7F); Leg4B.rotationPointZ = -8F +
-         * (MathHelper.cos((270/ 57.29578F) + LLegXRot )*7F);
-         */
-
+        // Saddle adjustments
         if (saddled) {
-
             if (standing) {
-                this.Saddle.rotationPointY = 0.5F;
-                this.Saddle.rotationPointZ = 11F;
-
+                saddle.y = 0.5F;
+                saddle.z = 11F;
             } else {
-                this.Saddle.rotationPointY = 2F;
-                this.Saddle.rotationPointZ = 2F;
-
+                saddle.y = 2F;
+                saddle.z = 2F;
             }
+            
+            this.saddleB.y = saddle.y;
+            this.saddleC.y = saddle.y;
+            this.saddleL.y = saddle.y;
+            this.saddleR.y = saddle.y;
+            this.saddleL2.y = saddle.y;
+            this.saddleR2.y = saddle.y;
+            this.bag1.y = bag2.y;
 
-            this.SaddleB.rotationPointY = this.Saddle.rotationPointY;
-            this.SaddleC.rotationPointY = this.Saddle.rotationPointY;
-            this.SaddleL.rotationPointY = this.Saddle.rotationPointY;
-            this.SaddleR.rotationPointY = this.Saddle.rotationPointY;
-            this.SaddleL2.rotationPointY = this.Saddle.rotationPointY;
-            this.SaddleR2.rotationPointY = this.Saddle.rotationPointY;
-            this.Bag1.rotationPointY = this.Bag2.rotationPointY;
+            this.saddleB.z = saddle.z;
+            this.saddleC.z = saddle.z;
+            this.saddleL.z = saddle.z;
+            this.saddleR.z = saddle.z;
+            this.saddleL2.z = saddle.z;
+            this.saddleR2.z = saddle.z;
+            this.bag1.z = bag2.z;
 
-            this.SaddleB.rotationPointZ = this.Saddle.rotationPointZ;
-            this.SaddleC.rotationPointZ = this.Saddle.rotationPointZ;
-            this.SaddleL.rotationPointZ = this.Saddle.rotationPointZ;
-            this.SaddleR.rotationPointZ = this.Saddle.rotationPointZ;
-            this.SaddleL2.rotationPointZ = this.Saddle.rotationPointZ;
-            this.SaddleR2.rotationPointZ = this.Saddle.rotationPointZ;
-            this.Bag1.rotationPointZ = this.Bag2.rotationPointZ;
-
-            this.Saddle.rotateAngleX = this.Body.rotateAngleX;
-            this.SaddleB.rotateAngleX = this.Body.rotateAngleX;
-            this.SaddleC.rotateAngleX = this.Body.rotateAngleX;
-
-            this.SaddleMouthLine.rotationPointY = this.Head.rotationPointY;
-            this.SaddleMouthLineR.rotationPointY = this.Head.rotationPointY;
-            this.HeadSaddle.rotationPointY = this.Head.rotationPointY;
-            this.SaddleMouthL.rotationPointY = this.Head.rotationPointY;
-            this.SaddleMouthR.rotationPointY = this.Head.rotationPointY;
-
-            this.SaddleMouthLine.rotationPointZ = this.Head.rotationPointZ;
-            this.SaddleMouthLineR.rotationPointZ = this.Head.rotationPointZ;
-            this.HeadSaddle.rotationPointZ = this.Head.rotationPointZ;
-            this.SaddleMouthL.rotationPointZ = this.Head.rotationPointZ;
-            this.SaddleMouthR.rotationPointZ = this.Head.rotationPointZ;
-
-            this.SaddleMouthLine.rotateAngleX = HeadXRot;
-            this.SaddleMouthLineR.rotateAngleX = HeadXRot;
-            this.HeadSaddle.rotateAngleX = this.Head.rotateAngleX;
-            this.SaddleMouthL.rotateAngleX = this.Head.rotateAngleX;
-            this.SaddleMouthR.rotateAngleX = this.Head.rotateAngleX;
-            this.HeadSaddle.rotateAngleY = this.Head.rotateAngleY;
-            this.SaddleMouthL.rotateAngleY = this.Head.rotateAngleY;
-            this.SaddleMouthLine.rotateAngleY = this.Head.rotateAngleY;
-            this.SaddleMouthR.rotateAngleY = this.Head.rotateAngleY;
-            this.SaddleMouthLineR.rotateAngleY = this.Head.rotateAngleY;
+            this.saddle.xRot = body.xRot;
+            this.saddleB.xRot = body.xRot;
+            this.saddleC.xRot = body.xRot;
 
             if (rider) {
-                this.SaddleL.rotateAngleX = -60 / 57.29578F;
-                this.SaddleL2.rotateAngleX = -60 / 57.29578F;
-                this.SaddleR.rotateAngleX = -60 / 57.29578F;
-                this.SaddleR2.rotateAngleX = -60 / 57.29578F;
-
-                this.SaddleL.rotateAngleZ = 0F;
-                this.SaddleL2.rotateAngleZ = 0F;
-                this.SaddleR.rotateAngleZ = 0F;
-                this.SaddleR2.rotateAngleZ = 0F;
+                saddleL.xRot = -60F / 57.29578F;
+                saddleL2.xRot = -60F / 57.29578F;
+                saddleR.xRot = -60F / 57.29578F;
+                saddleR2.xRot = -60F / 57.29578F;
+                saddleL.zRot = 0F;
+                saddleL2.zRot = 0F;
+                saddleR.zRot = 0F;
+                saddleR2.zRot = 0F;
             } else {
-                this.SaddleL.rotateAngleX = RLegXRot / 3F;
-                this.SaddleL2.rotateAngleX = RLegXRot / 3F;
-                this.SaddleR.rotateAngleX = RLegXRot / 3F;
-                this.SaddleR2.rotateAngleX = RLegXRot / 3F;
-
-                this.SaddleL.rotateAngleZ = RLegXRot / 5F;
-                this.SaddleL2.rotateAngleZ = RLegXRot / 5F;
-                this.SaddleR.rotateAngleZ = -RLegXRot / 5F;
-                this.SaddleR2.rotateAngleZ = -RLegXRot / 5F;
+                saddleL.xRot = RLegXRot / 3F;
+                saddleL2.xRot = RLegXRot / 3F;
+                saddleR.xRot = RLegXRot / 3F;
+                saddleR2.xRot = RLegXRot / 3F;
+                saddleL.zRot = RLegXRot / 5F;
+                saddleL2.zRot = RLegXRot / 5F;
+                saddleR.zRot = -RLegXRot / 5F;
+                saddleR2.zRot = -RLegXRot / 5F;
             }
         }
 
-        //limbSwingAmount = movement speed!
-        //ageInTicks = timer!
-
+        // Tail swinging
         float tailMov = -1.3089F + (limbSwingAmount * 1.5F);
-        if (tailMov > 0) {
-            tailMov = 0;
-        }
-
+        if (tailMov > 0F) tailMov = 0F;
         if (moveTail) {
-            this.TailA.rotateAngleY = MathHelper.cos(ageInTicks * 0.7F);
-            tailMov = 0;
+            tailA.yRot = Mth.cos(ageInTicks * 0.7F);
+            tailMov = 0F;
         } else {
-            this.TailA.rotateAngleY = 0F;
+            tailA.yRot = 0F;
         }
-        this.TailB.rotateAngleY = this.TailA.rotateAngleY;
-        this.TailC.rotateAngleY = this.TailA.rotateAngleY;
+        tailB.yRot = tailA.yRot;
+        tailC.yRot = tailA.yRot;
 
-        this.TailB.rotationPointY = this.TailA.rotationPointY;
-        this.TailC.rotationPointY = this.TailA.rotationPointY;
-        this.TailB.rotationPointZ = this.TailA.rotationPointZ;
-        this.TailC.rotationPointZ = this.TailA.rotationPointZ;
+        tailB.y = tailA.y;
+        tailC.y = tailA.y;
+        tailB.z = tailA.z;
+        tailC.z = tailA.z;
 
-        this.TailA.rotateAngleX = tailMov;//-1.3089F+(limbSwingAmount*1.5F);
-        this.TailB.rotateAngleX = tailMov;//-1.3089F+(limbSwingAmount*1.5F);
-        this.TailC.rotateAngleX = -0.2618F + tailMov;//-1.5707F -tailMov;
+        tailA.xRot = tailMov;
+        tailB.xRot = tailMov;
+        tailC.xRot = -0.2618F + tailMov;
+    }
+
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tailA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tailB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tailC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.leg1A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg1B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg1C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg2A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg2B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg2C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg3A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg3B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg3C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg4A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg4B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg4C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.uMouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.lMouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.uMouth2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.lMouth2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.unicorn.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.ear1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.ear2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.muleEarL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.muleEarR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.neck.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.bag1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.bag2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.saddle.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleL2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleR2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleMouthL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleMouthR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleMouthLine.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.saddleMouthLineR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.headSaddle.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.mane.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.midWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.innerWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.outerWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.innerWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.midWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.outerWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.butterflyL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.butterflyR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

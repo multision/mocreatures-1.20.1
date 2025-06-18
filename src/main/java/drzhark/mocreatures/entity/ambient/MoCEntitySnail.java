@@ -7,26 +7,26 @@ import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityAmbient;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
 public class MoCEntitySnail extends MoCEntityAmbient {
 
-    private static final DataParameter<Boolean> IS_HIDING = EntityDataManager.createKey(MoCEntitySnail.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_HIDING = SynchedEntityData.defineId(MoCEntitySnail.class, EntityDataSerializers.BOOLEAN);
 
-    public MoCEntitySnail(EntityType<? extends MoCEntitySnail> type, World world) {
+    public MoCEntitySnail(EntityType<? extends MoCEntitySnail> type, Level world) {
         super(type, world);
         //setSize(0.4F, 0.3F);
     }
@@ -37,13 +37,16 @@ public class MoCEntitySnail extends MoCEntityAmbient {
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(IS_HIDING, Boolean.FALSE);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(IS_HIDING, Boolean.FALSE);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityAmbient.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 4.0D).createMutableAttribute(Attributes.ARMOR, 2.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.10D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityAmbient.createAttributes()
+                .add(Attributes.MAX_HEALTH, 4.0D)
+                .add(Attributes.ARMOR, 2.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.10D);
     }
 
     @Override
@@ -54,7 +57,7 @@ public class MoCEntitySnail extends MoCEntityAmbient {
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(6) + 1);
+            setTypeMoC(this.random.nextInt(6) + 1);
         }
     }
 
@@ -77,24 +80,24 @@ public class MoCEntitySnail extends MoCEntityAmbient {
     }
 
     public boolean getIsHiding() {
-        return this.dataManager.get(IS_HIDING);
+        return this.entityData.get(IS_HIDING);
     }
 
     public void setIsHiding(boolean flag) {
-        this.dataManager.set(IS_HIDING, flag);
+        this.entityData.set(IS_HIDING, flag);
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
 
-        if (!this.world.isRemote) {
+        if (!this.level().isClientSide()) {
             LivingEntity entityliving = getBoogey(3D);
-            if ((entityliving != null) && entityliving.getHeight() > 0.5F && entityliving.getWidth() > 0.5F && canEntityBeSeen(entityliving)) {
+            if ((entityliving != null) && entityliving.getEyeHeight() > 0.5F && entityliving.getBbWidth() > 0.5F && hasLineOfSight(entityliving)) {
                 if (!getIsHiding()) {
                     setIsHiding(true);
                 }
-                this.getNavigator().clearPath();
+                this.getNavigation().stop();
             } else {
                 setIsHiding(false);
             }
@@ -110,34 +113,38 @@ public class MoCEntitySnail extends MoCEntityAmbient {
         super.tick();
 
         if (getIsHiding()) {
-            this.prevRenderYawOffset = this.renderYawOffset = this.rotationYaw = this.prevRotationYaw;
+            this.yBodyRotO = this.yBodyRot = this.getYRot();
+            this.yRotO = this.getYRot();
         }
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_SILVERFISH_STEP;
+        return SoundEvents.SILVERFISH_STEP;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.ENTITY_SILVERFISH_STEP;
+        return SoundEvents.SILVERFISH_STEP;
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.SNAIL;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.SNAIL;
     }
 
     @Override
-    public boolean isOnLadder() {
-        return this.collidedHorizontally;
+    public boolean onClimbable() {
+        return this.horizontalCollision;
     }
 
     public boolean climbing() {
-        return !this.onGround && isOnLadder();
+        return !this.onGround() && onClimbable();
     }
 
     @Override
-    public void jump() {
+    protected void jumpFromGround() {
+        // Prevent jumping
     }
 }

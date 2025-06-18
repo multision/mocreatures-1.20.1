@@ -10,60 +10,64 @@ import drzhark.mocreatures.entity.ai.EntityAIFleeFromPlayer;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.PanicGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.ClimberPathNavigator;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
 
 import javax.annotation.Nullable;
 
 public class MoCEntityMouse extends MoCEntityAnimal {
-    private static final DataParameter<Boolean> CLIMBING = EntityDataManager.createKey(MoCEntityMouse.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> CLIMBING = SynchedEntityData.defineId(MoCEntityMouse.class, EntityDataSerializers.BOOLEAN);
 
-    public MoCEntityMouse(EntityType<? extends MoCEntityMouse> type, World world) {
+    public MoCEntityMouse(EntityType<? extends MoCEntityMouse> type, Level world) {
         super(type, world);
         //setSize(0.45F, 0.3F);
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new EntityAIFleeFromPlayer(this, 1.2D, 4D));
         this.goalSelector.addGoal(2, new PanicGoal(this, 1.4D));
         this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 1.0D));
-        this.goalSelector.addGoal(6, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityAnimal.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 8.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.35D);
-    }
-
-    @Override
-    protected PathNavigator createNavigator(World worldIn) {
-        return new ClimberPathNavigator(this, worldIn);
+    public static AttributeSupplier.Builder registerAttributes() {
+        return MoCEntityAnimal.createAttributes().add(Attributes.MAX_HEALTH, 8.0D).add(Attributes.MOVEMENT_SPEED, 0.35D);
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(CLIMBING, Boolean.FALSE);
+    protected PathNavigation createNavigation(Level worldIn) {
+        return new WallClimberNavigation(this, worldIn);
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(CLIMBING, Boolean.FALSE);
     }
 
     @Override
@@ -71,7 +75,7 @@ public class MoCEntityMouse extends MoCEntityAnimal {
         checkSpawningBiome();
 
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(3) + 1);
+            setTypeMoC(this.random.nextInt(3) + 1);
         }
     }
 
@@ -89,15 +93,17 @@ public class MoCEntityMouse extends MoCEntityAnimal {
 
     @Override
     public boolean checkSpawningBiome() {
-        BlockPos pos = new BlockPos(MathHelper.floor(this.getPosX()), MathHelper.floor(getBoundingBox().minY), this.getPosZ());
-        RegistryKey<Biome> currentbiome = MoCTools.biomeKind(this.world, pos);
-
+        BlockPos pos = new BlockPos(Mth.floor(this.getX()), Mth.floor(getBoundingBox().minY), Mth.floor(this.getZ()));
+        
         try {
-            if (BiomeDictionary.hasType(currentbiome, Type.MESA)) {
+            // In 1.20.1, we should use biome checks compatible with the MoCTools methods actually available
+            String biomeName = this.level().getBiome(pos).unwrapKey().orElseThrow().location().getPath();
+            
+            if (biomeName.contains("mesa")) {
                 setTypeMoC(2); // only brown mice
             }
 
-            if (BiomeDictionary.hasType(currentbiome, Type.SNOWY)) {
+            if (biomeName.contains("snow")) {
                 setTypeMoC(3); // only white mice
             }
         } catch (Exception ignored) {
@@ -106,7 +112,7 @@ public class MoCEntityMouse extends MoCEntityAnimal {
     }
 
     public boolean getIsPicked() {
-        return this.getRidingEntity() != null;
+        return this.getVehicle() != null;
     }
 
     @Override
@@ -124,76 +130,70 @@ public class MoCEntityMouse extends MoCEntityAnimal {
         return MoCSoundEvents.ENTITY_MOUSE_AMBIENT.get();
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.MOUSE;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.MOUSE;
     }
 
     @Override
-    protected SoundEvent getFallSound(int heightIn) {
-        return null;
-    }
-
-    @Override
-    public boolean onLivingFall(float distance, float damageMultiplier) {
+    public boolean causeFallDamage(float distance, float damageMultiplier, DamageSource source) {
         return false;
     }
 
     @Override
-    public double getYOffset() {
-        if (this.getRidingEntity() instanceof PlayerEntity && this.getRidingEntity() == MoCreatures.proxy.getPlayer() && this.world.isRemote) {
-            return (super.getYOffset() - 0.7F);
+    public double getMyRidingOffset() {
+        if (this.getVehicle() instanceof Player && this.getVehicle() == MoCreatures.proxy.getPlayer() && this.level().isClientSide()) {
+            return (super.getMyRidingOffset() - 0.7F);
         }
 
-        if ((this.getRidingEntity() instanceof PlayerEntity) && this.world.isRemote) {
-            return (super.getYOffset() - 0.1F);
+        if ((this.getVehicle() instanceof Player) && this.level().isClientSide()) {
+            return (super.getMyRidingOffset() - 0.1F);
         } else {
-            return super.getYOffset();
+            return super.getMyRidingOffset();
         }
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity player, Hand hand) {
-        if (this.getRidingEntity() == null) {
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (this.getVehicle() == null) {
             if (this.startRiding(player)) {
-                this.rotationYaw = player.rotationYaw;
+                this.setYRot(player.getYRot());
             }
 
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        return super.getEntityInteractionResult(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
-    public boolean isOnLadder() {
+    public boolean onClimbable() {
         return this.isBesideClimbableBlock();
     }
 
     public boolean isBesideClimbableBlock() {
-        return this.dataManager.get(CLIMBING);
+        return this.entityData.get(CLIMBING);
     }
 
     public void setBesideClimbableBlock(boolean climbing) {
-        this.dataManager.set(CLIMBING, climbing);
+        this.entityData.set(CLIMBING, climbing);
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        if (!this.world.isRemote) {
-            this.setBesideClimbableBlock(this.collidedHorizontally);
+        if (!this.level().isClientSide()) {
+            this.setBesideClimbableBlock(this.horizontalCollision);
         }
     }
 
-
     @Override
-    public void livingTick() {
-        super.livingTick();
-        if (!this.onGround && (this.getRidingEntity() != null)) {
-            this.rotationYaw = this.getRidingEntity().rotationYaw;
+    public void aiStep() {
+        super.aiStep();
+        if (!this.onGround() && (this.getVehicle() != null)) {
+            this.setYRot(this.getVehicle().getYRot());
         }
-
     }
 
     public boolean upsideDown() {
@@ -204,8 +204,14 @@ public class MoCEntityMouse extends MoCEntityAnimal {
     public boolean canRidePlayer() {
         return true;
     }
+    
+    @Override
+    public Fallsounds getFallSounds() {
+        return new Fallsounds(SoundEvents.EMPTY, SoundEvents.EMPTY);
+    }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.575F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.575F;
     }
 }

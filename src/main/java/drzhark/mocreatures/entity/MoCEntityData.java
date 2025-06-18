@@ -4,23 +4,38 @@
 package drzhark.mocreatures.entity;
 
 import drzhark.mocreatures.MoCreatures;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.MobSpawnInfo;
-import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.BiomeDictionary.Type;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.MobSpawnSettings;
+
+/**
+ * Updated for Minecraft 1.20.1 (Yarn mappings + Forge).
+ */
 public class MoCEntityData {
 
-    private final MobSpawnInfo.Spawners spawnListEntry;
-    private List<Type> biomeTypes;
-    private List<Type> blockedBiomeTypes = new ArrayList<>();
-    private EntityClassification typeOfCreature;
+    /**
+     * In 1.20.1, use MobSpawnSettings.SpawnerData instead of MobSpawnInfo.Spawners.
+     */
+    private final MobSpawnSettings.SpawnerData spawnListEntry;
+
+    /**
+     * In 1.20.1, biome types are represented by TagKey<Biome> rather than BiomeDictionary.Type.
+     */
+    private List<TagKey<net.minecraft.world.level.biome.Biome>> biomeTags;
+    private List<TagKey<net.minecraft.world.level.biome.Biome>> blockedBiomeTags = new ArrayList<>();
+
+    /**
+     * In 1.20.1, EntityClassification is now called MobCategory.
+     */
+    private MobCategory typeOfCreature;
+
     private String entityName;
     private boolean canSpawn = true;
     private int entityId;
@@ -28,72 +43,93 @@ public class MoCEntityData {
     private int minGroup;
     private int maxGroup;
     private int maxSpawnInChunk;
-    private RegistryKey<World>[] dimensions;
 
-    public MoCEntityData(String name, int maxchunk, RegistryKey<World>[] dimensions, EntityClassification type, MobSpawnInfo.Spawners spawnListEntry, List<Type> biomeTypes) {
+    /**
+     * In 1.20.1, ResourceKey<World> became ResourceKey<Level>.
+     */
+    private ResourceKey<Level>[] dimensions;
+
+    public MoCEntityData(
+            String name,
+            int maxChunk,
+            ResourceKey<Level>[] dimensions,
+            MobCategory type,
+            MobSpawnSettings.SpawnerData spawnListEntry,
+            List<TagKey<net.minecraft.world.level.biome.Biome>> biomeTags
+    ) {
         this.entityName = name;
         this.typeOfCreature = type;
         this.dimensions = dimensions;
-        this.biomeTypes = biomeTypes;
-        this.frequency = spawnListEntry.itemWeight;
-        this.minGroup = spawnListEntry.minCount;
-        this.maxGroup = spawnListEntry.maxCount;
-        this.maxSpawnInChunk = maxchunk;
+        this.biomeTags = biomeTags;
+        this.frequency = spawnListEntry.getWeight().asInt();      // formerly itemWeight
+        this.minGroup = spawnListEntry.minCount;     // formerly minCount
+        this.maxGroup = spawnListEntry.maxCount;     // formerly maxCount
+        this.maxSpawnInChunk = maxChunk;
         this.spawnListEntry = spawnListEntry;
         MoCreatures.entityMap.put(spawnListEntry.type, this);
     }
 
-    public MoCEntityData(String name, int maxchunk, RegistryKey<World>[] dimensions, EntityClassification type, MobSpawnInfo.Spawners spawnListEntry, List<Type> biomeTypes, List<Type> blockedBiomeTypes) {
+    public MoCEntityData(
+            String name,
+            int maxChunk,
+            ResourceKey<Level>[] dimensions,
+            MobCategory type,
+            MobSpawnSettings.SpawnerData spawnListEntry,
+            List<TagKey<net.minecraft.world.level.biome.Biome>> biomeTags,
+            List<TagKey<net.minecraft.world.level.biome.Biome>> blockedBiomeTags
+    ) {
         this.entityName = name;
         this.typeOfCreature = type;
         this.dimensions = dimensions;
-        this.biomeTypes = biomeTypes;
-        this.blockedBiomeTypes = blockedBiomeTypes;
-        this.frequency = spawnListEntry.itemWeight;
+        this.biomeTags = biomeTags;
+        this.blockedBiomeTags = blockedBiomeTags;
+        this.frequency = spawnListEntry.getWeight().asInt();
         this.minGroup = spawnListEntry.minCount;
         this.maxGroup = spawnListEntry.maxCount;
-        this.maxSpawnInChunk = maxchunk;
+        this.maxSpawnInChunk = maxChunk;
         this.spawnListEntry = spawnListEntry;
         MoCreatures.entityMap.put(spawnListEntry.type, this);
     }
 
+    /** Returns the EntityType of this entry. */
     public EntityType<?> getEntityClass() {
         return this.spawnListEntry.type;
     }
 
-    public EntityClassification getType() {
-        if (this.typeOfCreature != null) {
-            return this.typeOfCreature;
-        }
-        return null;
+    /** Returns the mob category (formerly EntityClassification). */
+    public MobCategory getType() {
+        return this.typeOfCreature;
     }
 
-    public void setTypeMoC(EntityClassification type) {
+    public void setTypeMoC(MobCategory type) {
         this.typeOfCreature = type;
     }
 
-    public RegistryKey<World>[] getDimensions() {
+    /** Returns the dimensions (as ResourceKey<Level>[]). */
+    public ResourceKey<Level>[] getDimensions() {
         return this.dimensions;
     }
 
-    public void setDimensions(RegistryKey<World>[] dimensions) {
+    public void setDimensions(ResourceKey<Level>[] dimensions) {
         this.dimensions = dimensions;
     }
 
-    public List<Type> getBiomeTypes() {
-        return this.biomeTypes;
+    /** Returns the allowed biome tags list. */
+    public List<TagKey<net.minecraft.world.level.biome.Biome>> getBiomeTags() {
+        return this.biomeTags;
     }
 
-    public void setBiomeTypes(List<BiomeDictionary.Type> biomeTypes) {
-        this.biomeTypes = biomeTypes;
+    public void setBiomeTags(List<TagKey<net.minecraft.world.level.biome.Biome>> biomeTags) {
+        this.biomeTags = biomeTags;
     }
 
-    public List<Type> getBlockedBiomeTypes() {
-        return this.blockedBiomeTypes;
+    /** Returns the blocked biome tags list. */
+    public List<TagKey<net.minecraft.world.level.biome.Biome>> getBlockedBiomeTags() {
+        return this.blockedBiomeTags;
     }
 
-    public void setBlockedBiomeTypes(List<BiomeDictionary.Type> blockedBiomeTypes) {
-        this.blockedBiomeTypes = blockedBiomeTypes;
+    public void setBlockedBiomeTags(List<TagKey<net.minecraft.world.level.biome.Biome>> blockedBiomeTags) {
+        this.blockedBiomeTags = blockedBiomeTags;
     }
 
     public int getEntityID() {
@@ -152,7 +188,8 @@ public class MoCEntityData {
         this.canSpawn = flag;
     }
 
-    public MobSpawnInfo.Spawners getSpawnListEntry() {
+    /** Returns the raw MobSpawnSettings.SpawnerData entry. */
+    public MobSpawnSettings.SpawnerData getSpawnListEntry() {
         return this.spawnListEntry;
     }
 }

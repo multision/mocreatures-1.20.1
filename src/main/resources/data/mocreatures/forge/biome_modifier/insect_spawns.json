@@ -1,0 +1,55 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": {
+    "type": "forge:any",
+    "values": [
+      "#minecraft:is_forest",
+      "#minecraft:is_jungle",
+      "#minecraft:is_plains"
+    ]
+  },
+  "spawners": [
+    {
+      "type": "mocreatures:ant",
+      "weight": 15,
+      "minCount": 2,
+      "maxCount": 4
+    },
+    {
+      "type": "mocreatures:bee",
+      "weight": 10,
+      "minCount": 2,
+      "maxCount": 4
+    },
+    {
+      "type": "mocreatures:butterfly",
+      "weight": 10,
+      "minCount": 2,
+      "maxCount": 5
+    },
+    {
+      "type": "mocreatures:cricket",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 3
+    },
+    {
+      "type": "mocreatures:firefly",
+      "weight": 10,
+      "minCount": 2,
+      "maxCount": 5
+    },
+    {
+      "type": "mocreatures:fly",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 3
+    },
+    {
+      "type": "mocreatures:grasshopper",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 3
+    }
+  ]
+} 

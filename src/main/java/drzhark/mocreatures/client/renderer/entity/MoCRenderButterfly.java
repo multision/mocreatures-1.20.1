@@ -3,39 +3,39 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.client.model.MoCModelButterfly;
 import drzhark.mocreatures.entity.ambient.MoCEntityButterfly;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderButterfly extends MoCRenderInsect<MoCEntityButterfly, MoCModelButterfly<MoCEntityButterfly>> {
 
-    public MoCRenderButterfly(EntityRendererManager renderManagerIn, MoCModelButterfly modelbase) {
+    public MoCRenderButterfly(EntityRendererProvider.Context renderManagerIn, MoCModelButterfly modelbase) {
         super(renderManagerIn, modelbase);
 
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityButterfly entitybutterfly, MatrixStack matrixStackIn, float par2) {
-        if (entitybutterfly.isOnAir() || !entitybutterfly.isOnGround()) {
-            adjustHeight(entitybutterfly, entitybutterfly.tFloat(), matrixStackIn);
+    protected void scale(MoCEntityButterfly entitybutterfly, PoseStack poseStack, float par2) {
+        if (entitybutterfly.isOnAir() || !entitybutterfly.onGround()) {
+            adjustHeight(entitybutterfly, entitybutterfly.tFloat(), poseStack);
         }
         if (entitybutterfly.climbing()) {
-            rotateAnimal(entitybutterfly, matrixStackIn);
+            rotateAnimal(entitybutterfly, poseStack);
         }
-        stretch(entitybutterfly, matrixStackIn);
+        stretch(entitybutterfly, poseStack);
     }
 
-    protected void adjustHeight(MoCEntityButterfly entitybutterfly, float FHeight, MatrixStack matrixStackIn) {
-        matrixStackIn.translate(0.0F, FHeight, 0.0F);
+    protected void adjustHeight(MoCEntityButterfly entitybutterfly, float FHeight, PoseStack poseStack) {
+        poseStack.translate(0.0F, FHeight, 0.0F);
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityButterfly entitybutterfly) {
+    public ResourceLocation getTextureLocation(MoCEntityButterfly entitybutterfly) {
         return entitybutterfly.getTexture();
     }
 }

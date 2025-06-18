@@ -7,16 +7,16 @@ import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.entity.IMoCEntity;
 import drzhark.mocreatures.entity.MoCEntityMob;
 import drzhark.mocreatures.entity.ambient.MoCEntityAnt;
-import net.minecraft.entity.CreatureEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
 public class EntityAIWanderMoC2 extends Goal {
 
-    private final CreatureEntity entity;
+    private final PathfinderMob entity;
     private final double speed;
     private double xPosition;
     private double yPosition;
@@ -24,46 +24,46 @@ public class EntityAIWanderMoC2 extends Goal {
     private int executionChance;
     private boolean mustUpdate;
 
-    public EntityAIWanderMoC2(CreatureEntity creatureIn, double speedIn) {
+    public EntityAIWanderMoC2(PathfinderMob creatureIn, double speedIn) {
         this(creatureIn, speedIn, 120);
     }
 
-    public EntityAIWanderMoC2(CreatureEntity creatureIn, double speedIn, int chance) {
+    public EntityAIWanderMoC2(PathfinderMob creatureIn, double speedIn, int chance) {
         this.entity = creatureIn;
         this.speed = speedIn;
         this.executionChance = chance;
-        this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
+        this.setFlags(EnumSet.of(Goal.Flag.MOVE));
     }
 
     /**
      * Returns whether the Goal should begin execution.
      */
     @Override
-    public boolean shouldExecute() {
+    public boolean canUse() {
         if (this.entity instanceof IMoCEntity && ((IMoCEntity) this.entity).isMovementCeased()) {
             return false;
         }
-        if (this.entity.isBeingRidden() && !(this.entity instanceof MoCEntityAnt || this.entity instanceof MoCEntityMob)) {
+        if (this.entity.isVehicle() && !(this.entity instanceof MoCEntityAnt || this.entity instanceof MoCEntityMob)) {
             return false;
         }
 
         if (!this.mustUpdate) {
-            if (this.entity.getIdleTime() >= 100) {
+            if (this.entity.getNoActionTime() >= 100) {
                 //System.out.println("exiting path finder !mustUpdate + Age > 100" + this.entity);
                 return false;
             }
 
-            if (this.entity.getRNG().nextInt(this.executionChance) != 0) {
+            if (this.entity.getRandom().nextInt(this.executionChance) != 0) {
                 //System.out.println(this.entity + "exiting due executionChance, age = " + this.entity.getIdleTime() + ", executionChance = " + this.executionChance );
                 return false;
             }
         }
 
-        Vector3d vec3 = RandomPositionGeneratorMoCFlyer.findRandomTarget(this.entity, 10, 12);
+        Vec3 vec3 = RandomPositionGeneratorMoCFlyer.findRandomTarget(this.entity, 10, 12);
 
-        if (vec3 != null && this.entity instanceof IMoCEntity && this.entity.getNavigator() instanceof PathNavigateFlyer) {
+        if (vec3 != null && this.entity instanceof IMoCEntity && this.entity.getNavigation() instanceof PathNavigateFlyer) {
             int distToFloor = MoCTools.distanceToFloor(this.entity);
-            int finalYHeight = distToFloor + MathHelper.floor(vec3.y - this.entity.getPosY());
+            int finalYHeight = distToFloor + Mth.floor(vec3.y - this.entity.getY());
             if ((finalYHeight < ((IMoCEntity) this.entity).minFlyingHeight())) {
                 //System.out.println("vector height " + finalYHeight + " smaller than min flying height " + ((IMoCEntity) this.entity).minFlyingHeight());
                 return false;
@@ -92,17 +92,17 @@ public class EntityAIWanderMoC2 extends Goal {
      * Returns whether an in-progress Goal should continue executing
      */
     @Override
-    public boolean shouldContinueExecuting() {
-        return !this.entity.getNavigator().noPath() && !entity.isBeingRidden();
+    public boolean canContinueToUse() {
+        return !this.entity.getNavigation().isDone() && !entity.isVehicle();
     }
 
     /**
      * Execute a one shot task or start executing a continuous task
      */
     @Override
-    public void startExecuting() {
+    public void start() {
         //System.out.println(this.entity + "moving to " + this.xPosition + ", " + this.yPosition + ", " + this.zPosition);
-        this.entity.getNavigator().tryMoveToXYZ(this.xPosition, this.yPosition, this.zPosition, this.speed);
+        this.entity.getNavigation().moveTo(this.xPosition, this.yPosition, this.zPosition, this.speed);
     }
 
     /**

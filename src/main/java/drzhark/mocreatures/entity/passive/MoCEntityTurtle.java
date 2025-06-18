@@ -11,60 +11,63 @@ import drzhark.mocreatures.entity.tameable.MoCEntityTameableAnimal;
 import drzhark.mocreatures.init.MoCItems;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.*;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
 
 public class MoCEntityTurtle extends MoCEntityTameableAnimal {
 
-    private static final DataParameter<Boolean> IS_UPSIDE_DOWN = EntityDataManager.createKey(MoCEntityTurtle.class, DataSerializers.BOOLEAN);
-    private static final DataParameter<Boolean> IS_HIDING = EntityDataManager.createKey(MoCEntityTurtle.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_UPSIDE_DOWN = SynchedEntityData.defineId(MoCEntityTurtle.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_HIDING = SynchedEntityData.defineId(MoCEntityTurtle.class, EntityDataSerializers.BOOLEAN);
     private boolean isSwinging;
     private boolean twistright;
     private int flopcounter;
 
-    public MoCEntityTurtle(EntityType<? extends MoCEntityTurtle> type, World world) {
+    public MoCEntityTurtle(EntityType<? extends MoCEntityTurtle> type, Level world) {
         super(type, world);
         //setSize(0.6F, 0.425F);
         setAdult(true);
         // TODO: Make hitboxes adjust depending on size
-        //setAge(60 + this.rand.nextInt(50));
-        setAge(90);
+        //setAge(60 + this.random.nextInt(50));
+        setMoCAge(90);
     }
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new EntityAIFollowOwnerPlayer(this, 0.8D, 2F, 10F));
         this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 0.8D, 50));
-        this.goalSelector.addGoal(6, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityTameableAnimal.registerAttributes().createMutableAttribute(Attributes.FOLLOW_RANGE, 12.0D).createMutableAttribute(Attributes.MAX_HEALTH, 10.0D).createMutableAttribute(Attributes.ARMOR, 5.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.15D);
+    public static AttributeSupplier.Builder registerAttributes() {
+        return MoCEntityTameableAnimal.createAttributes().add(Attributes.FOLLOW_RANGE, 12.0D).add(Attributes.MAX_HEALTH, 10.0D).add(Attributes.ARMOR, 5.0D).add(Attributes.MOVEMENT_SPEED, 0.15D);
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(IS_UPSIDE_DOWN, Boolean.FALSE);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(IS_UPSIDE_DOWN, Boolean.FALSE);
         // rideable: 0 nothing, 1 saddle
-        this.dataManager.register(IS_HIDING, Boolean.FALSE);
+        this.entityData.define(IS_HIDING, Boolean.FALSE);
         // rideable: 0 nothing, 1 saddle
     }
 
@@ -94,38 +97,38 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     }
 
     public boolean getIsHiding() {
-        return this.dataManager.get(IS_HIDING);
+        return this.entityData.get(IS_HIDING);
     }
 
     public void setIsHiding(boolean flag) {
-        this.dataManager.set(IS_HIDING, flag);
+        this.entityData.set(IS_HIDING, flag);
     }
 
     public boolean getIsUpsideDown() {
-        return this.dataManager.get(IS_UPSIDE_DOWN);
+        return this.entityData.get(IS_UPSIDE_DOWN);
     }
 
     public void setIsUpsideDown(boolean flag) {
         this.flopcounter = 0;
-        this.swingProgress = 0.0F;
-        this.dataManager.set(IS_UPSIDE_DOWN, flag);
+        this.attackAnim = 0.0F;
+        this.entityData.set(IS_UPSIDE_DOWN, flag);
     }
 
     @Override
-    public double getYOffset() {
-        if (this.getRidingEntity() instanceof PlayerEntity) {
-            if (this.getRidingEntity().isSneaking()) {
-                return -0.25D + ((300D - this.getAge()) / 500D);
+    public double getPassengersRidingOffset() {
+        if (this.getVehicle() instanceof Player) {
+            if (this.getVehicle().isCrouching()) {
+                return -0.25D + ((300D - this.getMoCAge()) / 500D);
             }
-            return (300D - this.getAge()) / 500D;
+            return (300D - this.getMoCAge()) / 500D;
         }
 
-        return super.getYOffset();
+        return super.getPassengersRidingOffset();
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity player, Hand hand) {
-        final ActionResultType tameResult = this.processTameInteract(player, hand);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        final InteractionResult tameResult = this.processTameInteract(player, hand);
         if (tameResult != null) {
             return tameResult;
         }
@@ -133,30 +136,30 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
         if (getIsTamed()) {
             if (getIsUpsideDown()) {
                 flipflop(false);
-                return ActionResultType.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
-            if (this.getRidingEntity() == null) {
+            if (this.getVehicle() == null) {
                 if (this.startRiding(player)) {
-                    this.rotationYaw = player.rotationYaw;
+                    this.setYRot(player.getYRot());
                 }
             }
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
         flipflop(!getIsUpsideDown());
 
-        return super.getEntityInteractionResult(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
-    protected void jump() {
-        if (areEyesInFluid(FluidTags.WATER)) {
-            this.setMotion(this.getMotion().getX(), 0.3D, this.getMotion().getZ());
+    public void jumpFromGround() {
+        if (this.isEyeInFluid(FluidTags.WATER)) {
+            this.setDeltaMovement(this.getDeltaMovement().x, 0.3D, this.getDeltaMovement().z);
             if (isSprinting()) {
-                float f = this.rotationYaw * 0.01745329F;
-                this.setMotion(this.getMotion().add(MathHelper.sin(f) * -0.2F, 0.0D, MathHelper.cos(f) * 0.2F));
+                float f = this.getYRot() * 0.01745329F;
+                this.setDeltaMovement(this.getDeltaMovement().add(Mth.sin(f) * -0.2F, 0.0D, Mth.cos(f) * 0.2F));
             }
-            this.isAirBorne = true;
+            this.hasImpulse = true;
         }
     }
 
@@ -166,32 +169,32 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
-        if (!this.world.isRemote) {
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide) {
             if (!getIsUpsideDown() && !getIsTamed()) {
                 LivingEntity entityliving = getBoogey(4D);
-                if ((entityliving != null) && canEntityBeSeen(entityliving)) {
+                if ((entityliving != null) && this.hasLineOfSight(entityliving)) {
                     if (!getIsHiding() && !isInWater()) {
                         MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_TURTLE_ANGRY.get());
                         setIsHiding(true);
                     }
 
-                    this.getNavigator().clearPath();
+                    this.getNavigation().stop();
                 } else {
 
                     setIsHiding(false);
-                    if (!hasPath() && this.rand.nextInt(50) == 0) {
-                        ItemEntity entityitem = getClosestItem(this, 10D, Ingredient.fromItems(Items.MELON, Items.SUGAR_CANE));
+                    if (!this.getNavigation().isInProgress() && this.random.nextInt(50) == 0) {
+                        ItemEntity entityitem = this.getClosestItem(this, 10D, Ingredient.of(Items.MELON, Items.SUGAR_CANE));
                         if (entityitem != null) {
-                            float f = entityitem.getDistance(this);
+                            float f = entityitem.distanceTo(this);
                             if (f > 2.0F) {
                                 setPathToEntity(entityitem, f);
                             }
                             if (f < 2.0F && this.deathTime == 0) {
-                                entityitem.remove();
+                                entityitem.remove(RemovalReason.DISCARDED);
                                 MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_TURTLE_EATING.get());
-                                PlayerEntity entityplayer = this.world.getClosestPlayer(this, 24D);
+                                Player entityplayer = this.level().getNearestPlayer(this, 24D);
                                 if (entityplayer != null) {
                                     MoCTools.tameWithName(entityplayer, this);
                                 }
@@ -209,22 +212,22 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource damagesource, float i) {
-        Entity entity = damagesource.getTrueSource();
-        if (this.getRidingEntity() != null) {
+    public boolean hurt(DamageSource damagesource, float i) {
+        Entity entity = damagesource.getEntity();
+        if (this.getVehicle() != null) {
             return false;
         }
         if (entity == null) {
-            return super.attackEntityFrom(damagesource, i);
+            return super.hurt(damagesource, i);
         }
         if (getIsHiding()) {
-            if (this.rand.nextInt(10) == 0) {
+            if (this.random.nextInt(10) == 0) {
                 flipflop(true);
             }
             return false;
         } else {
-            boolean flag = super.attackEntityFrom(damagesource, i);
-            if (this.rand.nextInt(3) == 0) {
+            boolean flag = super.hurt(damagesource, i);
+            if (this.random.nextInt(3) == 0) {
                 flipflop(true);
             }
             return flag;
@@ -234,52 +237,37 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     public void flipflop(boolean flip) {
         setIsUpsideDown(flip);
         setIsHiding(false);
-        this.getNavigator().clearPath();
+        this.getNavigation().stop();
     }
 
     @Override
     public boolean entitiesToIgnore(Entity entity) {
-        return (entity instanceof MoCEntityTurtle) || ((entity.getHeight() <= this.getHeight()) && (entity.getWidth() <= this.getWidth()))
+        return (entity instanceof MoCEntityTurtle) || ((entity.getBbHeight() <= this.getBbHeight()) && (entity.getBbWidth() <= this.getBbWidth()))
                 || super.entitiesToIgnore(entity);
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void aiStep() {
+        super.aiStep();
 
-        if ((this.getRidingEntity() != null) && (this.getRidingEntity() instanceof PlayerEntity)) {
-            PlayerEntity entityplayer = (PlayerEntity) this.getRidingEntity();
-            if (entityplayer != null) {
-                this.rotationYaw = entityplayer.rotationYaw;
-            }
-        }
-        //to make mega turtles if tamed
-        if (getIsTamed() && getAge() < 300 && this.rand.nextInt(900) == 0) {
-            setAge(getAge() + 1);
-        }
-        if (getIsUpsideDown() && isInWater()) {
-            setIsUpsideDown(false);
-        }
-        if (getIsUpsideDown() && (this.getRidingEntity() == null) && this.rand.nextInt(20) == 0) {
-            setSwinging(true);
-            this.flopcounter++;
+        if ((this.getVehicle() != null) && (this.getVehicle() instanceof Player)) {
+            Player entityplayer = (Player) this.getVehicle();
+            this.setYRot(entityplayer.getYRot());
         }
 
         if (getIsSwinging()) {
-            this.swingProgress += 0.2F;
-
-            boolean flag = (this.flopcounter > (this.rand.nextInt(3) + 8));
-
-            if (this.swingProgress > 2.0F && (!flag || this.rand.nextInt(20) == 0)) {
+            this.attackAnim += 0.2F;
+            if (this.attackAnim > 8F) {
                 setSwinging(false);
-                this.swingProgress = 0.0F;
-                if (this.rand.nextInt(2) == 0) {
-                    this.twistright = !this.twistright;
-                }
+            }
+        } else {
+            this.attackAnim = 0.0F;
+        }
 
-            } else if (this.swingProgress > 9.0F) {
-                setSwinging(false);
-                MoCTools.playCustomSound(this, SoundEvents.ENTITY_CHICKEN_EGG);
+        if (getIsUpsideDown()) {
+            this.flopcounter++;
+            this.getNavigation().stop();
+            if (this.flopcounter > 50 && this.random.nextInt(30) == 0) {
                 setIsUpsideDown(false);
             }
         }
@@ -295,26 +283,27 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
 
     @Override
     public boolean isMovementCeased() {
-        return (getIsUpsideDown() || getIsHiding());
+        return getIsUpsideDown() || getIsHiding();
     }
 
     public int getFlipDirection() {
         if (this.twistright) {
             return 1;
         }
+        this.twistright = !this.twistright;
         return -1;
     }
 
     @Override
-    public void readAdditional(CompoundNBT nbttagcompound) {
-        super.readAdditional(nbttagcompound);
-        setIsUpsideDown(nbttagcompound.getBoolean("UpsideDown"));
+    public void addAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.addAdditionalSaveData(nbttagcompound);
+        nbttagcompound.putBoolean("UpsideDown", getIsUpsideDown());
     }
 
     @Override
-    public void writeAdditional(CompoundNBT nbttagcompound) {
-        super.writeAdditional(nbttagcompound);
-        nbttagcompound.putBoolean("UpsideDown", getIsUpsideDown());
+    public void readAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.readAdditionalSaveData(nbttagcompound);
+        setIsUpsideDown(nbttagcompound.getBoolean("UpsideDown"));
     }
 
     @Override
@@ -332,53 +321,57 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
         return MoCSoundEvents.ENTITY_TURTLE_DEATH.get();
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.TURTLE;
     }
 
-    // TODO: Remove this after the weapons get reworked
     @Override
-    protected void dropSpecialItems(DamageSource source, int looting, boolean recentlyHitIn) {
-        if (MoCreatures.proxy.easterEggs) {
-            if (getPetName().equals("Donatello") || getPetName().equals("donatello")) {
-                this.entityDropItem(MoCItems.bo);
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHitIn) {
+        super.dropCustomDeathLoot(source, looting, recentlyHitIn);
+
+        // chance to drop turtle helmet
+        if (!this.level().isClientSide && !this.isBaby() && this.random.nextInt(10) == 0) {
+            ItemStack helmet = new ItemStack(Items.TURTLE_HELMET);
+            this.spawnAtLocation(helmet);
+        }
+
+        // teenage mutant ninja turtles drop weapons
+        if (isTMNT() && !this.level().isClientSide) {
+            if (getPetName().equalsIgnoreCase("Donatello")) {
+                ItemStack weapon = new ItemStack(MoCItems.BO.get());
+                weapon.setHoverName(Component.translatable("mocreatures.ninjaturtle.bo"));
+                this.spawnAtLocation(weapon);
             }
 
-            if (getPetName().equals("Leonardo") || getPetName().equals("leonardo")) {
-                this.entityDropItem(MoCItems.katana);
+            if (getPetName().equalsIgnoreCase("Leonardo")) {
+                ItemStack weapon = new ItemStack(MoCItems.KATANA.get());
+                weapon.setHoverName(Component.translatable("mocreatures.ninjaturtle.katana"));
+                this.spawnAtLocation(weapon);
             }
 
-            if (getPetName().equals("Rafael") || getPetName().equals("rafael") || getPetName().equals("raphael") || getPetName().equals("Raphael")) {
-                this.entityDropItem(MoCItems.sai);
+            if (getPetName().equalsIgnoreCase("Raphael")) {
+                ItemStack weapon = new ItemStack(MoCItems.SAI.get());
+                weapon.setHoverName(Component.translatable("mocreatures.ninjaturtle.sai"));
+                this.spawnAtLocation(weapon);
             }
 
-            if (getPetName().equals("Michelangelo") || getPetName().equals("michelangelo") || getPetName().equals("Michaelangelo")
-                    || getPetName().equals("michaelangelo")) {
-                this.entityDropItem(MoCItems.nunchaku);
+            if (getPetName().equalsIgnoreCase("Michelangelo")) {
+                ItemStack weapon = new ItemStack(MoCItems.NUNCHAKU.get());
+                weapon.setHoverName(Component.translatable("mocreatures.ninjaturtle.nunchaku"));
+                this.spawnAtLocation(weapon);
             }
         }
     }
 
-    /**
-     * Used to avoid rendering the top shell cube
-     */
     public boolean isTMNT() {
-        return getPetName().equals("Donatello") || getPetName().equals("donatello") || getPetName().equals("Leonardo") || getPetName().equals("leonardo")
-                || getPetName().equals("Rafael") || getPetName().equals("rafael") || getPetName().equals("raphael") || getPetName().equals("Raphael")
-                || getPetName().equals("Michelangelo") || getPetName().equals("michelangelo") || getPetName().equals("Michaelangelo")
-                || getPetName().equals("michaelangelo");
+        if (!getIsTamed() || !MoCreatures.proxy.easterEggs) {
+            return false;
+        }
+
+        return (getPetName().equalsIgnoreCase("Donatello") || getPetName().equalsIgnoreCase("Leonardo")
+                || getPetName().equalsIgnoreCase("Raphael") || getPetName().equalsIgnoreCase("Michelangelo"));
     }
-
-    /*@Override
-    public boolean updateMount() {
-        return getIsTamed();
-    }*/
-
-    /*@Override
-    public boolean forceUpdates() {
-        return getIsTamed();
-    }*/
 
     @Override
     public boolean isMyHealFood(ItemStack stack) {
@@ -386,13 +379,13 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public int getMaxSpawnedInChunk() {
+    public int getMaxSpawnClusterSize() {
         return 2;
     }
 
     @Override
     public int nameYOffset() {
-        return -10 - (getAge() / 5);
+        return -10 - (getMoCAge() / 5);
     }
 
     @Override
@@ -404,25 +397,25 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public float getAIMoveSpeed() {
-        if (isInWater()) {
-            return 0.08F;
+    public float getSpeed() {
+        if (isInWater() && !isMovementCeased()) {
+            return 0.25F;
         }
         return 0.12F;
     }
 
     @Override
     protected double minDivingDepth() {
-        return (getAge() + 8D) / 340D;
+        return (getMoCAge() + 8D) / 340D;
     }
 
     @Override
     protected double maxDivingDepth() {
-        return (this.getAge() / 100D);
+        return (this.getMoCAge() / 100D);
     }
 
     @Override
-    public int getMaxAge() {
+    public int getMoCMaxAge() {
         return 120;
     }
 
@@ -431,7 +424,7 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
         return true;
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.525F;
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.525F;
     }
 }

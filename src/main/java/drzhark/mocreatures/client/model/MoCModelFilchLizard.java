@@ -1,188 +1,294 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.passive.MoCEntityFilchLizard;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-// Courtesy of Daveyx0, permission given
+@OnlyIn(Dist.CLIENT)
 public class MoCModelFilchLizard<T extends MoCEntityFilchLizard> extends EntityModel<T> {
+    
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "filchlizard"), "main"
+    );
 
-    public ModelRenderer Body;
-    public ModelRenderer Head;
-    public ModelRenderer Tail;
-    public ModelRenderer Leg1;
-    public ModelRenderer Leg2;
-    public ModelRenderer Leg3;
-    public ModelRenderer Leg4;
+    private final ModelPart body;
+    private final ModelPart head;
+    private final ModelPart tail;
+    private final ModelPart leg1;
+    private final ModelPart leg2;
+    private final ModelPart leg3;
+    private final ModelPart leg4;
+    private final ModelPart foldHead;
+    private final ModelPart foldFilch1;
+    private final ModelPart foldFilch2;
 
-    public ModelRenderer FoldHead;
-    public ModelRenderer FoldFilch1;
-    public ModelRenderer FoldFilch2;
+    // These six are children under “head”
+    private final ModelPart filch1;
+    private final ModelPart filch2;
+    private final ModelPart filch3;
+    private final ModelPart filch4;
+    private final ModelPart filch5;
+    private final ModelPart filch6;
 
-    public ModelRenderer Filch1;
-    public ModelRenderer Filch2;
-    public ModelRenderer Filch3;
-    public ModelRenderer Filch5;
-    public ModelRenderer Filch4;
-    public ModelRenderer Filch6;
     private boolean heldItem;
 
-    public MoCModelFilchLizard() {
-        textureWidth = 64;
-        textureHeight = 32;
+    public MoCModelFilchLizard(ModelPart root) {
+        this.body        = root.getChild("body");
+        this.tail        = root.getChild("tail");
+        this.leg1        = root.getChild("leg1");
+        this.leg2        = root.getChild("leg2");
+        this.leg3        = root.getChild("leg3");
+        this.leg4        = root.getChild("leg4");
+        this.foldHead    = root.getChild("fold_head");
+        this.foldFilch1  = root.getChild("fold_filch1");
+        this.foldFilch2  = root.getChild("fold_filch2");
 
-        Body = new ModelRenderer(this, 0, 6);
-        Body.addBox(-2F, -1.5F, -6F, 4, 3, 12);
-        Body.setTextureSize(64, 32);
-        Tail = new ModelRenderer(this, 32, 9);
-        Tail.addBox(-1F, -0.5F, 0F, 2, 2, 10);
-        Tail.setTextureSize(64, 32);
-
-        Leg1 = new ModelRenderer(this, 16, 0);
-        Leg1.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        Leg1.setTextureSize(64, 32);
-        Leg2 = new ModelRenderer(this, 16, 3);
-        Leg2.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        Leg2.setTextureSize(64, 32);
-
-        Leg3 = new ModelRenderer(this, 16, 0);
-        Leg3.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        Leg3.setTextureSize(64, 32);
-        Leg4 = new ModelRenderer(this, 16, 3);
-        Leg4.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        Leg4.setTextureSize(64, 32);
-
-        FoldFilch1 = new ModelRenderer(this, 0, 22);
-        FoldFilch1.addBox(1F, -1.5F, 0F, 1, 3, 6);
-        FoldFilch1.setRotationPoint(0F, 21F, -6F);
-        FoldFilch1.setTextureSize(64, 32);
-        setRotation(FoldFilch1, 0F, 0.0349066F, 0F);
-        FoldFilch2 = new ModelRenderer(this, 14, 22);
-        FoldFilch2.addBox(-2F, -1.5F, 0F, 1, 3, 6);
-        FoldFilch2.setRotationPoint(0F, 21F, -6F);
-        FoldFilch2.setTextureSize(64, 32);
-        setRotation(FoldFilch2, 0F, -0.0349066F, 0F);
-
-        Filch1 = new ModelRenderer(this, 0, 22);
-        Filch1.addBox(0F, -2.5F, 2.5F, 1, 3, 6);
-        Filch1.setRotationPoint(0F, 0F, 0F);
-        Filch1.setTextureSize(64, 32);
-        setRotation(Filch1, 0.3665191F, 1.570796F, -0.296706F);
-
-        Filch2 = new ModelRenderer(this, 14, 22);
-        Filch2.addBox(-1F, -2.5F, 2.5F, 1, 3, 6);
-        Filch2.setRotationPoint(0F, 0F, 0F);
-        Filch2.setTextureSize(64, 32);
-        setRotation(Filch2, 0.3665191F, -1.570796F, 0.296706F);
-
-        Filch3 = new ModelRenderer(this, 0, 22);
-        Filch3.addBox(-0.5F, -2.5F, 2F, 1, 3, 6);
-        Filch3.setRotationPoint(0F, 0F, 0F);
-        Filch3.setTextureSize(64, 32);
-        setRotation(Filch3, 0F, 1.570796F, -0.2617994F);
-        Filch4 = new ModelRenderer(this, 14, 22);
-        Filch4.addBox(-0.5F, -2.5F, 2F, 1, 3, 6);
-        Filch4.setRotationPoint(0F, 0F, 0F);
-        Filch4.setTextureSize(64, 32);
-        setRotation(Filch4, 0F, -1.570796F, 0.2617994F);
-        Filch5 = new ModelRenderer(this, 0, 22);
-        Filch5.addBox(-1F, -2.5F, 1.5F, 1, 3, 6);
-        Filch5.setRotationPoint(0F, 0F, 0F);
-        Filch5.setTextureSize(64, 32);
-        setRotation(Filch5, -0.3839724F, 1.570796F, -0.2617994F);
-        Filch6 = new ModelRenderer(this, 14, 22);
-        Filch6.addBox(0F, -2.5F, 1.5F, 1, 3, 6);
-        Filch6.setRotationPoint(0F, 0F, 0F);
-        Filch6.setTextureSize(64, 32);
-        setRotation(Filch6, -0.4014257F, -1.570796F, 0.2617994F);
-
-        FoldHead = new ModelRenderer(this, 0, 0);
-        FoldHead.addBox(-2F, -0.5F, -4F, 4, 2, 4);
-        FoldHead.setRotationPoint(0F, 21F, -6F);
-        FoldHead.setTextureSize(64, 32);
-        setRotation(FoldHead, 0F, 0F, 0F);
-
-        Head = new ModelRenderer(this, 0, 0);
-        Head.addBox(-2F, -2.5F, -4F, 4, 2, 4);
-        Head.setRotationPoint(0F, 12F, -1F);
-        Head.setTextureSize(64, 32);
-        setRotation(Head, 0F, 0F, 0F);
-
-        Head.addChild(Filch1);
-        Head.addChild(Filch2);
-        Head.addChild(Filch3);
-        Head.addChild(Filch4);
-        Head.addChild(Filch5);
-        Head.addChild(Filch6);
-    }
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.heldItem = !entityIn.getHeldItemMainhand().isEmpty();
+        this.head       = root.getChild("head");
+        this.filch1     = this.head.getChild("filch1");
+        this.filch2     = this.head.getChild("filch2");
+        this.filch3     = this.head.getChild("filch3");
+        this.filch4     = this.head.getChild("filch4");
+        this.filch5     = this.head.getChild("filch5");
+        this.filch6     = this.head.getChild("filch6");
     }
 
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+    @Override
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        // Mimic original setLivingAnimations: check if Filch Lizard is holding something
+        this.heldItem = !entity.getMainHandItem().isEmpty();
+
         if (this.heldItem) {
-            Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            // “Held” pose
+            this.leg1.setPos(-2F, 13F, -1F);
+            this.leg1.xRot = 0F;
+            this.leg1.yRot = 1.047198F;
+            this.leg1.zRot = 0.6981317F;
+
+            this.leg2.setPos(2F, 13F, -1F);
+            this.leg2.xRot = 0F;
+            this.leg2.yRot = -1.047198F;
+            this.leg2.zRot = -0.6981317F;
+
+            this.leg3.setPos(2F, 20F, 5F);
+            this.leg3.xRot = 0F;
+            this.leg3.yRot = 0F;
+            this.leg3.zRot = 1.396263F;
+
+            this.leg4.setPos(-2F, 20F, 5F);
+            this.leg4.xRot = 0F;
+            this.leg4.yRot = 0F;
+            this.leg4.zRot = -1.396263F;
+
+            this.body.setPos(0F, 16F, 2F);
+            this.body.xRot = -0.9948377F;
+            this.body.yRot = 0F;
+            this.body.zRot = 0F;
+
+            this.tail.setPos(0F, 20F, 6F);
+            this.tail.xRot = 0.6806784F;
+            this.tail.yRot = 0F;
+            this.tail.zRot = 0F;
+
+            // Head follows netHeadYaw/headPitch
+            this.head.xRot = headPitch * ((float)Math.PI / 180F);
+            this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
+            this.head.zRot = 0F;
         } else {
-            FoldHead.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            FoldFilch1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            FoldFilch2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            // “Default (not held)” pose
+            this.leg1.setPos(2F, 22F, -4F);
+            this.leg1.xRot = 0F;
+            this.leg1.yRot = 0F;
+            this.leg1.zRot = 0.3839724F; // ≈ 22°
+
+            this.leg2.setPos(-2F, 22F, -4F);
+            this.leg2.xRot = 0F;
+            this.leg2.yRot = 0F;
+            this.leg2.zRot = -0.3839724F;
+
+            this.leg3.setPos(2F, 22F, 5F);
+            this.leg3.xRot = 0F;
+            this.leg3.yRot = 0F;
+            this.leg3.zRot = 0.3839724F;
+
+            this.leg4.setPos(-2F, 22F, 5F);
+            this.leg4.xRot = 0F;
+            this.leg4.yRot = 0F;
+            this.leg4.zRot = -0.3839724F;
+
+            this.body.setPos(0F, 21F, 0F);
+            this.body.xRot = 0F;
+            this.body.yRot = 0F;
+            this.body.zRot = 0F;
+
+            this.tail.setPos(0F, 21F, 6F);
+            this.tail.xRot = 0F;
+            this.tail.yRot = 0F;
+            this.tail.zRot = 0F;
+
+            // Legs 1 & 2 swing in opposite phase
+            this.leg1.yRot = Mth.cos(limbSwing * 0.6662F * 2.0F + (float)Math.PI) * 0.6F * limbSwingAmount;
+            this.leg2.yRot = -Mth.cos(limbSwing * 0.6662F * 2.0F + (float)Math.PI) * 0.6F * limbSwingAmount;
+
+            // Folded‐head orientation
+            this.foldHead.xRot = headPitch * ((float)Math.PI / 180F);
+            this.foldHead.yRot = netHeadYaw * ((float)Math.PI / 180F);
+            this.foldHead.zRot = 0F;
         }
-        Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        Leg1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        Leg2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        Leg3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        Leg4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+
+        // Common animations for legs 3 & 4 and tail rotation
+        this.leg3.yRot = Mth.cos(limbSwing * 0.6662F * 2.0F + (float)Math.PI) * 0.6F * limbSwingAmount;
+        this.leg4.yRot = Mth.cos(limbSwing * 0.6662F * 2.0F + (float)Math.PI) * 0.6F * limbSwingAmount;
+
+        this.tail.yRot = -Mth.cos(limbSwing * 0.6662F * 2.0F + (float)Math.PI) * 0.2F * limbSwingAmount;
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    public void setRotationAngles(T entityIn,float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // If holding an item: render “head” (which has Filch children); otherwise, render folded head + folds
         if (this.heldItem) {
-            Leg1.setRotationPoint(-2F, 13F, -1F);
-            setRotation(Leg1, 0F, 1.047198F, 0.6981317F);
-            Leg2.setRotationPoint(2F, 13F, -1F);
-            setRotation(Leg2, 0F, -1.047198F, -0.6981317F);
-            Leg3.setRotationPoint(2F, 20F, 5F);
-            setRotation(Leg3, 0F, 0F, 1.396263F);
-            Leg4.setRotationPoint(-2F, 20F, 5F);
-            setRotation(Leg4, 0F, 0F, -1.396263F);
-            Body.setRotationPoint(0F, 16F, 2F);
-            setRotation(Body, -0.9948377F, 0F, 0F);
-            Tail.setRotationPoint(0F, 20F, 6F);
-            setRotation(Tail, 0.6806784F, 0F, 0F);
-            Head.rotateAngleX = headPitch / (180F / (float) Math.PI);
-            Head.rotateAngleY = netHeadYaw / (180F / (float) Math.PI);
+            this.head.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
         } else {
-            Leg1.setRotationPoint(2F, 22F, -4F);
-            setRotation(Leg1, 0F, 0F, 0.3839724F);
-            Leg2.setRotationPoint(-2F, 22F, -4F);
-            setRotation(Leg2, 0F, 0F, -0.3839724F);
-            Leg3.setRotationPoint(2F, 22F, 5F);
-            setRotation(Leg3, 0F, 0F, 0.3839724F);
-            Leg4.setRotationPoint(-2F, 22F, 5F);
-            setRotation(Leg4, 0F, 0F, -0.3839724F);
-            Body.setRotationPoint(0F, 21F, 0F);
-            setRotation(Body, 0F, 0F, 0F);
-            Tail.setRotationPoint(0F, 21F, 6F);
-            setRotation(Tail, 0F, 0F, 0F);
-            Leg1.rotateAngleY = MathHelper.cos(limbSwing * 0.6662F * 2.0F + (float) Math.PI) * 0.6F * limbSwingAmount;
-            Leg2.rotateAngleY = -MathHelper.cos(limbSwing * 0.6662F * 2.0F + (float) Math.PI) * 0.6F * limbSwingAmount;
-            FoldHead.rotateAngleX = headPitch / (180F / (float) Math.PI);
-            FoldHead.rotateAngleY = netHeadYaw / (180F / (float) Math.PI);
+            this.foldHead.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.foldFilch1.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.foldFilch2.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
         }
-        Leg3.rotateAngleY = MathHelper.cos(limbSwing * 0.6662F * 2.0F + (float) Math.PI) * 0.6F * limbSwingAmount;
-        Leg4.rotateAngleY = MathHelper.cos(limbSwing * 0.6662F * 2.0F + (float) Math.PI) * 0.6F * limbSwingAmount;
-        Tail.rotateAngleY = -MathHelper.cos(limbSwing * 0.6662F * 2.0F + (float) Math.PI) * 0.2F * limbSwingAmount;
+
+        this.body.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tail.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.leg1.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg2.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg3.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg4.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+    }
+
+    /**
+     * Defines and textures all child parts.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // ─── BODY ──────────────────────────────────────────────────────────────────
+        root.addOrReplaceChild("body",
+                CubeListBuilder.create()
+                        .texOffs(0, 6)
+                        .addBox(-2F, -1.5F, -6F, 4, 3, 12, new CubeDeformation(0.0F)),
+                PartPose.offset(0F, 21F, 0F)
+        );
+
+        // ─── TAIL ──────────────────────────────────────────────────────────────────
+        root.addOrReplaceChild("tail",
+                CubeListBuilder.create()
+                        .texOffs(32, 9)
+                        .addBox(-1F, -0.5F, 0F, 2, 2, 10, new CubeDeformation(0.0F)),
+                PartPose.offset(0F, 21F, 6F)
+        );
+
+        // ─── LEGS ──────────────────────────────────────────────────────────────────
+        root.addOrReplaceChild("leg1",
+                CubeListBuilder.create()
+                        .texOffs(16, 0)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(2F, 22F, -4F)
+        );
+        root.addOrReplaceChild("leg2",
+                CubeListBuilder.create()
+                        .texOffs(16, 3)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(-2F, 22F, -4F)
+        );
+        root.addOrReplaceChild("leg3",
+                CubeListBuilder.create()
+                        .texOffs(16, 0)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(2F, 22F, 5F)
+        );
+        root.addOrReplaceChild("leg4",
+                CubeListBuilder.create()
+                        .texOffs(16, 3)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(-2F, 22F, 5F)
+        );
+
+        // ─── FOLDED FILCHS (used when not holding an item) ─────────────────────────
+        root.addOrReplaceChild("fold_filch1",
+                CubeListBuilder.create()
+                        .texOffs(0, 22)
+                        .addBox(1F, -1.5F, 0F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 21F, -6F, 0F, 0.0349066F, 0F)
+        );
+        root.addOrReplaceChild("fold_filch2",
+                CubeListBuilder.create()
+                        .texOffs(14, 22)
+                        .addBox(-2F, -1.5F, 0F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 21F, -6F, 0F, -0.0349066F, 0F)
+        );
+        root.addOrReplaceChild("fold_head",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-2F, -0.5F, -4F, 4, 2, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0F, 21F, -6F)
+        );
+
+        // ─── HEAD (with Filch children, used when holding an item) ─────────────────
+        PartDefinition headPart = root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-2F, -2.5F, -4F, 4, 2, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0F, 12F, -1F)
+        );
+        headPart.addOrReplaceChild("filch1",
+                CubeListBuilder.create()
+                        .texOffs(0, 22)
+                        .addBox(0F, -2.5F, 2.5F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0.3665191F, 1.570796F, -0.296706F)
+        );
+        headPart.addOrReplaceChild("filch2",
+                CubeListBuilder.create()
+                        .texOffs(14, 22)
+                        .addBox(-1F, -2.5F, 2.5F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0.3665191F, -1.570796F, 0.296706F)
+        );
+        headPart.addOrReplaceChild("filch3",
+                CubeListBuilder.create()
+                        .texOffs(0, 22)
+                        .addBox(-0.5F, -2.5F, 2F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 1.570796F, -0.2617994F)
+        );
+        headPart.addOrReplaceChild("filch4",
+                CubeListBuilder.create()
+                        .texOffs(14, 22)
+                        .addBox(-0.5F, -2.5F, 2F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, -1.570796F, 0.2617994F)
+        );
+        headPart.addOrReplaceChild("filch5",
+                CubeListBuilder.create()
+                        .texOffs(0, 22)
+                        .addBox(-1F, -2.5F, 1.5F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.3839724F, 1.570796F, -0.2617994F)
+        );
+        headPart.addOrReplaceChild("filch6",
+                CubeListBuilder.create()
+                        .texOffs(14, 22)
+                        .addBox(0F, -2.5F, 1.5F, 1, 3, 6, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.4014257F, -1.570796F, 0.2617994F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 32);
     }
 }

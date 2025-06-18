@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/scroll_of_freedom"
+    "layer0": "mocreatures:item/scroll_of_freedom"
   }
 }

@@ -8,100 +8,106 @@ import drzhark.mocreatures.entity.MoCEntityMob;
 import drzhark.mocreatures.entity.item.MoCEntityThrowableRock;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.passive.IronGolemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
 public class MoCEntityMiniGolem extends MoCEntityMob {
 
-    private static final DataParameter<Boolean> ANGRY = EntityDataManager.createKey(MoCEntityMiniGolem.class, DataSerializers.BOOLEAN);
-    private static final DataParameter<Boolean> HAS_ROCK = EntityDataManager.createKey(MoCEntityMiniGolem.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(MoCEntityMiniGolem.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> HAS_ROCK = SynchedEntityData.defineId(MoCEntityMiniGolem.class, EntityDataSerializers.BOOLEAN);
     public int tCounter;
     public MoCEntityThrowableRock tempRock;
 
-    public MoCEntityMiniGolem(EntityType<? extends MoCEntityMiniGolem> type, World world) {
+    public MoCEntityMiniGolem(EntityType<? extends MoCEntityMiniGolem> type, Level world) {
         super(type, world);
         this.texture = "mini_golem.png";
         //setSize(0.9F, 1.2F);
-        experienceValue = 5;
+        this.xpReward = 5;
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new MoCEntityMiniGolem.AIGolemAttack(this, 1.0D, true));
-        this.goalSelector.addGoal(8, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new MoCEntityMiniGolem.AIGolemTarget<>(this, PlayerEntity.class, true));
-        this.targetSelector.addGoal(3, new MoCEntityMiniGolem.AIGolemTarget<>(this, IronGolemEntity.class, true));
+        this.targetSelector.addGoal(2, new MoCEntityMiniGolem.AIGolemTarget<>(this, Player.class, true));
+        this.targetSelector.addGoal(3, new MoCEntityMiniGolem.AIGolemTarget<>(this, IronGolem.class, true));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityMob.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 20.0D).createMutableAttribute(Attributes.ARMOR, 6.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityMob.createAttributes()
+                .add(Attributes.MAX_HEALTH, 20.0D)
+                .add(Attributes.ARMOR, 6.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.ATTACK_DAMAGE, 4.0D);
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(ANGRY, Boolean.FALSE);
-        this.dataManager.register(HAS_ROCK, Boolean.FALSE);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(ANGRY, Boolean.FALSE);
+        this.entityData.define(HAS_ROCK, Boolean.FALSE);
     }
 
     public boolean getIsAngry() {
-        return this.dataManager.get(ANGRY);
+        return this.entityData.get(ANGRY);
     }
 
     public void setIsAngry(boolean flag) {
-        this.dataManager.set(ANGRY, flag);
+        this.entityData.set(ANGRY, flag);
     }
 
     public boolean getHasRock() {
-        return this.dataManager.get(HAS_ROCK);
+        return this.entityData.get(HAS_ROCK);
     }
 
     public void setHasRock(boolean flag) {
-        this.dataManager.set(HAS_ROCK, flag);
+        this.entityData.set(HAS_ROCK, flag);
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
 
-        if (!this.world.isRemote) {
-            setIsAngry(getAttackTarget() != null);
+        if (!this.level().isClientSide()) {
+            setIsAngry(getTarget() != null);
 
-            if (getIsAngry() && getAttackTarget() != null && !getHasRock() && this.rand.nextInt(30) == 0) {
+            if (getIsAngry() && getTarget() != null && !getHasRock() && this.random.nextInt(30) == 0) {
                 acquireTRock();
             }
 
             if (getHasRock()) {
-                getNavigator().clearPath();
+                getNavigation().stop();
                 attackWithTRock();
             }
         }
     }
 
     @Override
-    public void onDeath(DamageSource cause) {
+    public void die(DamageSource cause) {
         if (getHasRock() && this.tempRock != null) this.tempRock.transformToItem();
-        super.onDeath(cause);
+        super.die(cause);
     }
 
     protected void acquireTRock() {
@@ -113,8 +119,8 @@ public class MoCEntityMiniGolem extends MoCEntityMob {
         }
 
         //creates a dummy TRock on top of it
-        MoCEntityThrowableRock tRock = MoCEntityThrowableRock.build(this.world, this, this.getPosX(), this.getPosY() + 1.5D, this.getPosZ());
-        this.world.addEntity(tRock);
+        MoCEntityThrowableRock tRock = MoCEntityThrowableRock.build(this.level(), this, this.getX(), this.getY() + 1.5D, this.getZ());
+        this.level().addFreshEntity(tRock);
         tRock.setState(tRockState);
         tRock.setBehavior(1);
         this.tempRock = tRock;
@@ -129,18 +135,18 @@ public class MoCEntityMiniGolem extends MoCEntityMob {
 
         if (this.tCounter < 50) {
             //maintains position of TRock above head
-            this.tempRock.setPosition(this.getPosX(), this.getPosY() + 1.0D, this.getPosZ());
+            this.tempRock.setPos(this.getX(), this.getY() + 1.0D, this.getZ());
         }
 
         if (this.tCounter >= 50) {
             //throws a newly spawned TRock and destroys the held TRock
-            if (this.getAttackTarget() != null && this.getDistance(this.getAttackTarget()) < 48F) {
-                MoCTools.throwStone(this, this.getAttackTarget(), this.tempRock.getState(), 10D, 0.25D);
+            if (this.getTarget() != null && this.distanceTo(this.getTarget()) < 48F) {
+                MoCTools.throwStone(this, this.getTarget(), this.tempRock.getState(), 10D, 0.25D);
             } else {
                 this.tempRock.transformToItem();
             }
 
-            this.tempRock.remove();
+            this.tempRock.remove(RemovalReason.DISCARDED);
             setHasRock(false);
             this.tCounter = 0;
         }
@@ -177,12 +183,14 @@ public class MoCEntityMiniGolem extends MoCEntityMob {
         return MoCSoundEvents.ENTITY_GOLEM_AMBIENT.get();
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.MINI_GOLEM;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.MINI_GOLEM;
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.92F;
+    @Override
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.92F;
     }
 
     static class AIGolemAttack extends MeleeAttackGoal {
@@ -191,20 +199,20 @@ public class MoCEntityMiniGolem extends MoCEntityMob {
         }
 
         @Override
-        public boolean shouldContinueExecuting() {
-            float f = this.attacker.getBrightness();
+        public boolean canContinueToUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
 
-            if (f >= 0.5F && this.attacker.getRNG().nextInt(100) == 0) {
-                this.attacker.setAttackTarget(null);
+            if (f >= 0.5F && this.mob.getRandom().nextInt(100) == 0) {
+                this.mob.setTarget(null);
                 return false;
             } else {
-                return super.shouldContinueExecuting();
+                return super.canContinueToUse();
             }
         }
 
         @Override
         protected double getAttackReachSqr(LivingEntity attackTarget) {
-            return 4.0F + attackTarget.getWidth();
+            return 4.0F + attackTarget.getBbWidth();
         }
     }
 
@@ -214,9 +222,9 @@ public class MoCEntityMiniGolem extends MoCEntityMob {
         }
 
         @Override
-        public boolean shouldExecute() {
-            float f = this.goalOwner.getBrightness();
-            return f < 0.5F && super.shouldExecute();
+        public boolean canUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
+            return f < 0.5F && super.canUse();
         }
     }
 }

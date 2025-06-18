@@ -2,33 +2,31 @@
 package drzhark.mocreatures.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 public class MoCWyvernCommand {
-    public static final RegistryKey<World> WYVERN_DIM = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation("mocreatures", "wyvernlairworld"));
-
-    public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        dispatcher.register(Commands.literal("tpwyvern")
-                .requires(source -> source.hasPermissionLevel(2))
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        /*dispatcher.register(Commands.literal("tpwyvern")
+                .requires(source -> source.hasPermission(2))
                 .executes(context -> {
-                    ServerPlayerEntity player = context.getSource().asPlayer();
-                    ServerWorld wyvernWorld = player.getServer().getWorld(WYVERN_DIM);
+                    ServerPlayer player = context.getSource().getPlayer();
+                    ServerLevel wyvernWorld = player.getServer().getLevel(WyvernLairWorldDimension.WYVERNLAIR_WORLD_KEY);
                     if (wyvernWorld != null) {
-                        player.teleport(wyvernWorld, 0, 100, 0, player.rotationYaw, player.rotationPitch);
-                        context.getSource().sendFeedback(new StringTextComponent("Teleported to Wyvern Dimension"), true);
+                        player.teleportTo(wyvernWorld, 
+                            WyvernLairWorldDimension.TELEPORT_X,
+                            WyvernLairWorldDimension.TELEPORT_Y,
+                            WyvernLairWorldDimension.TELEPORT_Z,
+                            player.getYRot(), player.getXRot());
+                        context.getSource().sendSuccess(() -> Component.literal("Teleported to Wyvern Dimension"), true);
                         return 1;
                     } else {
-                        context.getSource().sendErrorMessage(new StringTextComponent("Wyvern dimension not found."));
+                        context.getSource().sendFailure(Component.literal("Wyvern dimension not found."));
                         return 0;
                     }
-                }));
+                }));*/
     }
 }

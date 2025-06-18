@@ -3,20 +3,24 @@
  */
 package drzhark.mocreatures.event;
 
+import drzhark.mocreatures.MoCConstants;
 import drzhark.mocreatures.compat.CompatScreen;
-import net.minecraft.client.gui.screen.MainMenuScreen;
-import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
 
-
+@Mod.EventBusSubscriber(value = Dist.CLIENT, modid = MoCConstants.MOD_ID)
 public class MoCEventHooksClient {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void displayCompatScreen(GuiOpenEvent event) {
-        if (event.getGui() instanceof MainMenuScreen && CompatScreen.showScreen && ModList.get().isLoaded("customspawner")) {
-            event.setGui(new CompatScreen());
+    public void displayCompatScreen(ScreenEvent.Opening event) {
+        if (event.getScreen() instanceof TitleScreen && CompatScreen.showScreen && ModList.get().isLoaded("customspawner")) {
+            event.setNewScreen(new CompatScreen());
             CompatScreen.showScreen = false;
         }
     }
@@ -25,21 +29,21 @@ public class MoCEventHooksClient {
     @SubscribeEvent
     public void renderClimbingRiderPre(RenderLivingEvent.Pre<LivingEntity> event) {
         LivingEntity rider = event.getEntity();
-        Entity mount = rider.getRidingEntity();
+        Entity mount = rider.getVehicle();
         if (mount instanceof MoCEntityScorpion || mount instanceof MoCEntityPetScorpion) {
-            if (((LivingEntity) rider.getRidingEntity()).isOnLadder()) {
-                Direction facing = rider.getHorizontalFacing();
-                matrixStackIn.push();
+            if (((LivingEntity) rider.getVehicle()).onClimbable()) {
+                Direction facing = rider.getDirection();
+                poseStack.pushPose();
                 if (facing == Direction.NORTH) {
-                    matrixStackIn.rotate(90.0F, 1.0F, 0.0F, 0.0F);
+                    poseStack.mulPose(Axis.X.rotationDegrees(90.0F));
                 } else if (facing == Direction.WEST) {
-                    matrixStackIn.rotate(90.0F, 0.0F, 0.0F, -1.0F);
+                    poseStack.mulPose(Axis.Z.rotationDegrees(-90.0F));
                 } else if (facing == Direction.SOUTH) {
-                    matrixStackIn.rotate(90.0F, -1.0F, 0.0F, 0.0F);
+                    poseStack.mulPose(Axis.X.rotationDegrees(-90.0F));
                 } else if (facing == Direction.EAST) {
-                    matrixStackIn.rotate(90.0F, 0.0F, 0.0F, 1.0F);
+                    poseStack.mulPose(Axis.Z.rotationDegrees(90.0F));
                 }
-                matrixStackIn.translate(0.0F, -1.0F, 0.0F);
+                poseStack.translate(0.0F, -1.0F, 0.0F);
             }
         }
     }
@@ -47,21 +51,21 @@ public class MoCEventHooksClient {
     @SubscribeEvent
     public void renderClimbingRiderPost(RenderLivingEvent.Post<LivingEntity> event) {
         LivingEntity rider = event.getEntity();
-        Entity mount = rider.getRidingEntity();
+        Entity mount = rider.getVehicle();
         if (mount instanceof MoCEntityScorpion || mount instanceof MoCEntityPetScorpion) {
-            if (((LivingEntity) rider.getRidingEntity()).isOnLadder()) {
-                Direction facing = rider.getHorizontalFacing();
-                matrixStackIn.translate(0.0F, 1.0F, 0.0F);
+            if (((LivingEntity) rider.getVehicle()).onClimbable()) {
+                Direction facing = rider.getDirection();
+                poseStack.translate(0.0F, 1.0F, 0.0F);
                 if (facing == Direction.NORTH) {
-                    matrixStackIn.rotate(90.0F, -1.0F, 0.0F, 0.0F);
+                    poseStack.mulPose(Axis.X.rotationDegrees(-90.0F));
                 } else if (facing == Direction.WEST) {
-                    matrixStackIn.rotate(90.0F, 0.0F, 0.0F, 1.0F);
+                    poseStack.mulPose(Axis.Z.rotationDegrees(90.0F));
                 } else if (facing == Direction.SOUTH) {
-                    matrixStackIn.rotate(90.0F, 1.0F, 0.0F, 0.0F);
+                    poseStack.mulPose(Axis.X.rotationDegrees(90.0F));
                 } else if (facing == Direction.EAST) {
-                    matrixStackIn.rotate(90.0F, 0.0F, 0.0F, -1.0F);
+                    poseStack.mulPose(Axis.Z.rotationDegrees(-90.0F));
                 }
-                matrixStackIn.pop();
+                poseStack.popPose();
             }
         }
     }

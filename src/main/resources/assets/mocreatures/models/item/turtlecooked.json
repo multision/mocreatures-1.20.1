@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/turtle_cooked"
+    "layer0": "mocreatures:item/turtle_cooked"
   }
 }

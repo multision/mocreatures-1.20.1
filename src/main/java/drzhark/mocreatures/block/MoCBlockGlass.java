@@ -3,16 +3,21 @@
  */
 package drzhark.mocreatures.block;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.AbstractGlassBlock;
-import net.minecraft.block.SoundType;
-import net.minecraftforge.common.ToolType;
+import net.minecraft.world.level.block.GlassBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
 
+public class MoCBlockGlass extends GlassBlock {
 
-public class MoCBlockGlass extends AbstractGlassBlock {
-
-    // TODO: PRIVATE ACCESS
-    public MoCBlockGlass(AbstractBlock.Properties properties) {
-        super(properties.sound(SoundType.GLASS).notSolid()/*.setAllowsSpawn(Blocks::neverAllowSpawn).setOpaque(Blocks::isntSolid).setSuffocates(Blocks::isntSolid).setBlocksVision(Blocks::isntSolid)*/.harvestLevel(0).harvestTool(ToolType.PICKAXE));
+    public MoCBlockGlass(BlockBehaviour.Properties properties) {
+        super(properties
+                .mapColor(MapColor.NONE)
+                .strength(0.3F)
+                .noOcclusion()
+                .sound(SoundType.GLASS)
+                .isValidSpawn((state, getter, pos, entityType) -> false)
+                .isSuffocating((state, getter, pos) -> false)
+                .isViewBlocking((state, getter, pos) -> false));
     }
 }

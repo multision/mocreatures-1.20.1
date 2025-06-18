@@ -3,8 +3,8 @@
  */
 package drzhark.mocreatures.entity;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.LivingEntity;
 
 import java.util.UUID;
 
@@ -56,9 +56,9 @@ public interface IMoCEntity {
 
     float pitchRotationOffset();
 
-    int getAge();
+    int getMoCAge();
 
-    void setAge(int i);
+    void setMoCAge(int i);
 
     float yawRotationOffset();
 

@@ -4,27 +4,28 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.IMoCEntity;
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class MoCMessageEntityDive{
+public class MoCMessageEntityDive {
 
     public MoCMessageEntityDive() {
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
     }
 
-    public MoCMessageEntityDive(ByteBuf buffer) {
+    public MoCMessageEntityDive(FriendlyByteBuf buffer) {
     }
 
-    public static boolean onMessage(MoCMessageEntityDive message, Supplier<NetworkEvent.Context> ctx) {
+    public static void onMessage(MoCMessageEntityDive message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            if (ctx.get().getSender() != null && ctx.get().getSender().getVehicle() instanceof IMoCEntity) {
+                ((IMoCEntity) ctx.get().getSender().getVehicle()).makeEntityDive();
+            }
+        });
         ctx.get().setPacketHandled(true);
-        if (ctx.get().getSender().getRidingEntity() instanceof IMoCEntity) {
-            ((IMoCEntity) ctx.get().getSender().getRidingEntity()).makeEntityDive();
-        }
-        return true;
     }
 }

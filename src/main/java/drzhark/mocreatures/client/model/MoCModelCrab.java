@@ -1,385 +1,514 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.ambient.MoCEntityCrab;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelCrab<T extends MoCEntityCrab> extends EntityModel<T> {
 
-    private final float radianF = 57.29578F;
-    ModelRenderer Shell;
-    ModelRenderer ShellRight;
-    ModelRenderer ShellLeft;
-    ModelRenderer ShellBack;
-    ModelRenderer LeftEye;
-    ModelRenderer LeftEyeBase;
-    ModelRenderer RightEyeBase;
-    ModelRenderer RightEye;
-    ModelRenderer RightArmA;
-    ModelRenderer RightArmB;
-    ModelRenderer RightArmC;
-    ModelRenderer RightArmD;
-    ModelRenderer LeftArmA;
-    ModelRenderer LeftArmB;
-    ModelRenderer LeftArmC;
-    ModelRenderer LeftArmD;
-    ModelRenderer LeftLeg1A;
-    ModelRenderer LeftLeg1B;
-    ModelRenderer LeftLeg2A;
-    ModelRenderer LeftLeg2B;
-    ModelRenderer LeftLeg3A;
-    ModelRenderer LeftLeg3B;
-    ModelRenderer LeftLeg4A;
-    ModelRenderer LeftLeg4B;
-    ModelRenderer LeftLeg4C;
-    ModelRenderer RightLeg1A;
-    ModelRenderer RightLeg1B;
-    ModelRenderer RightLeg2A;
-    ModelRenderer RightLeg2B;
-    ModelRenderer RightLeg3A;
-    ModelRenderer RightLeg3B;
-    ModelRenderer RightLeg4A;
-    ModelRenderer RightLeg4B;
-    ModelRenderer RightLeg4C;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION =
+            new ModelLayerLocation(new ResourceLocation("mocreatures", "crab"), "main");
 
-    public MoCModelCrab() {
-        this.textureWidth = 64;
-        this.textureHeight = 64;
+    private final ModelPart shell;
+    private final ModelPart shell_right;
+    private final ModelPart shell_left;
+    private final ModelPart shell_back;
+    private final ModelPart left_eye;
+    private final ModelPart left_eye_base;
+    private final ModelPart right_eye_base;
+    private final ModelPart right_eye;
 
-        this.Shell = new ModelRenderer(this, 0, 0);
-        this.Shell.addBox(-5F, 0F, -4F, 10, 4, 8);
-        this.Shell.setRotationPoint(0F, 16F, 0F);
+    private final ModelPart right_arm_a;
+    private final ModelPart right_arm_b;
+    private final ModelPart right_arm_c;
+    private final ModelPart right_arm_d;
 
-        this.ShellRight = new ModelRenderer(this, 0, 23);
-        this.ShellRight.addBox(4.6F, -2F, -4F, 3, 3, 8);
-        this.ShellRight.setRotationPoint(0F, 16F, 0F);
-        setRotation(this.ShellRight, 0F, 0F, 0.418879F);
+    private final ModelPart left_arm_a;
+    private final ModelPart left_arm_b;
+    private final ModelPart left_arm_c;
+    private final ModelPart left_arm_d;
 
-        this.ShellLeft = new ModelRenderer(this, 0, 12);
-        this.ShellLeft.addBox(-7.6F, -2F, -4F, 3, 3, 8);
-        this.ShellLeft.setRotationPoint(0F, 16F, 0F);
-        setRotation(this.ShellLeft, 0F, 0F, -0.418879F);
+    private final ModelPart right_leg1_a;
+    private final ModelPart right_leg1_b;
+    private final ModelPart right_leg2_a;
+    private final ModelPart right_leg2_b;
+    private final ModelPart right_leg3_a;
+    private final ModelPart right_leg3_b;
+    private final ModelPart right_leg4_a;
+    private final ModelPart right_leg4_b;
+    private final ModelPart right_leg4_c;
 
-        this.ShellBack = new ModelRenderer(this, 10, 42);
-        this.ShellBack.addBox(-5F, -1.6F, 3.6F, 10, 3, 3);
-        this.ShellBack.setRotationPoint(0F, 16F, 0F);
-        setRotation(this.ShellBack, -0.418879F, 0F, 0F);
+    private final ModelPart left_leg1_a;
+    private final ModelPart left_leg1_b;
+    private final ModelPart left_leg2_a;
+    private final ModelPart left_leg2_b;
+    private final ModelPart left_leg3_a;
+    private final ModelPart left_leg3_b;
+    private final ModelPart left_leg4_a;
+    private final ModelPart left_leg4_b;
+    private final ModelPart left_leg4_c;
 
-        this.LeftEye = new ModelRenderer(this, 0, 4);
-        this.LeftEye.addBox(1F, -2F, -4.5F, 1, 3, 1);
-        this.LeftEye.setRotationPoint(0F, 16F, 0F);
-        setRotation(this.LeftEye, 0F, 0F, 0.1745329F);
+    public MoCModelCrab(ModelPart root) {
+        this.shell          = root.getChild("shell");
+        this.shell_right    = root.getChild("shell_right");
+        this.shell_left     = root.getChild("shell_left");
+        this.shell_back     = root.getChild("shell_back");
+        this.left_eye       = root.getChild("left_eye");
+        this.left_eye_base  = root.getChild("left_eye_base");
+        this.right_eye_base = root.getChild("right_eye_base");
+        this.right_eye      = root.getChild("right_eye");
 
-        this.LeftEyeBase = new ModelRenderer(this, 0, 16);
-        this.LeftEyeBase.addBox(1F, 1F, -5F, 2, 3, 1);
-        this.LeftEyeBase.setRotationPoint(0F, 16F, 0F);
-        setRotation(this.LeftEyeBase, 0F, 0F, 0.2094395F);
+        this.right_arm_a    = root.getChild("right_arm_a");
+        this.right_arm_b    = this.right_arm_a.getChild("right_arm_b");
+        this.right_arm_c    = this.right_arm_b.getChild("right_arm_c");
+        this.right_arm_d    = this.right_arm_b.getChild("right_arm_d");
 
-        this.RightEyeBase = new ModelRenderer(this, 0, 12);
-        this.RightEyeBase.addBox(-3F, 1F, -5F, 2, 3, 1);
-        this.RightEyeBase.setRotationPoint(0F, 16F, 0F);
-        setRotation(this.RightEyeBase, 0F, 0F, -0.2094395F);
+        this.left_arm_a     = root.getChild("left_arm_a");
+        this.left_arm_b     = this.left_arm_a.getChild("left_arm_b");
+        this.left_arm_c     = this.left_arm_b.getChild("left_arm_c");
+        this.left_arm_d     = this.left_arm_b.getChild("left_arm_d");
 
-        this.RightEye = new ModelRenderer(this, 0, 0);
-        this.RightEye.addBox(-2F, -2F, -4.5F, 1, 3, 1);
-        this.RightEye.setRotationPoint(0F, 16F, 0F);
-        setRotation(this.RightEye, 0F, 0F, -0.1745329F);
+        this.right_leg1_a   = root.getChild("right_leg1_a");
+        this.right_leg1_b   = this.right_leg1_a.getChild("right_leg1_b");
+        this.right_leg2_a   = root.getChild("right_leg2_a");
+        this.right_leg2_b   = this.right_leg2_a.getChild("right_leg2_b");
+        this.right_leg3_a   = root.getChild("right_leg3_a");
+        this.right_leg3_b   = this.right_leg3_a.getChild("right_leg3_b");
+        this.right_leg4_a   = root.getChild("right_leg4_a");
+        this.right_leg4_b   = this.right_leg4_a.getChild("right_leg4_b");
+        this.right_leg4_c   = this.right_leg4_b.getChild("right_leg4_c");
 
-        this.RightArmA = new ModelRenderer(this, 0, 34);
-        this.RightArmA.addBox(-4F, -1F, -1F, 4, 2, 2);
-        this.RightArmA.setRotationPoint(-4F, 19F, -4F);
-        setRotation(this.RightArmA, 0F, -0.5235988F, 0F);
+        this.left_leg1_a    = root.getChild("left_leg1_a");
+        this.left_leg1_b    = this.left_leg1_a.getChild("left_leg1_b");
+        this.left_leg2_a    = root.getChild("left_leg2_a");
+        this.left_leg2_b    = this.left_leg2_a.getChild("left_leg2_b");
+        this.left_leg3_a    = root.getChild("left_leg3_a");
+        this.left_leg3_b    = this.left_leg3_a.getChild("left_leg3_b");
+        this.left_leg4_a    = root.getChild("left_leg4_a");
+        this.left_leg4_b    = this.left_leg4_a.getChild("left_leg4_b");
+        this.left_leg4_c    = this.left_leg4_b.getChild("left_leg4_c");
+    }
 
-        this.RightArmB = new ModelRenderer(this, 22, 12);
-        this.RightArmB.addBox(-4F, -1.5F, -1F, 4, 3, 2);
-        this.RightArmB.setRotationPoint(-4F, 0F, 0F);
-        setRotation(this.RightArmB, 0F, -2.094395F, 0F);
-        this.RightArmA.addChild(this.RightArmB);
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
 
-        this.RightArmC = new ModelRenderer(this, 22, 17);
-        this.RightArmC.addBox(-3F, -1.5F, -1F, 3, 1, 2);
-        this.RightArmC.setRotationPoint(-4F, 0F, 0F);
-        this.RightArmB.addChild(this.RightArmC);
+        // Shell (main carapace)
+        root.addOrReplaceChild("shell",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-5F, 0F, -4F, 10, 4, 8),
+                PartPose.offset(0F, 16F, 0F)
+        );
 
-        this.RightArmD = new ModelRenderer(this, 16, 12);
-        this.RightArmD.addBox(-2F, 0.5F, -0.5F, 2, 1, 1);
-        this.RightArmD.setRotationPoint(-4F, 0F, 0F);
-        this.RightArmB.addChild(this.RightArmD);
+        // Shell Right Flare
+        root.addOrReplaceChild("shell_right",
+                CubeListBuilder.create()
+                        .texOffs(0, 23)
+                        .addBox(4.6F, -2F, -4F, 3, 3, 8),
+                PartPose.offsetAndRotation(0F, 16F, 0F, 0F, 0F, 0.418879F)
+        );
 
-        this.LeftArmA = new ModelRenderer(this, 0, 38);
-        this.LeftArmA.addBox(0F, -1F, -1F, 4, 2, 2);
-        this.LeftArmA.setRotationPoint(4F, 19F, -4F);
-        setRotation(this.LeftArmA, 0F, 0.5235988F, 0F);
+        // Shell Left Flare
+        root.addOrReplaceChild("shell_left",
+                CubeListBuilder.create()
+                        .texOffs(0, 12)
+                        .addBox(-7.6F, -2F, -4F, 3, 3, 8),
+                PartPose.offsetAndRotation(0F, 16F, 0F, 0F, 0F, -0.418879F)
+        );
 
-        this.LeftArmB = new ModelRenderer(this, 22, 20);
-        this.LeftArmB.addBox(0F, -1.5F, -1F, 4, 3, 2);
-        this.LeftArmB.setRotationPoint(4F, 0F, 0F);
-        setRotation(this.LeftArmB, 0F, 2.094395F, 0F);
-        this.LeftArmA.addChild(this.LeftArmB);
+        // Shell Back Rim
+        root.addOrReplaceChild("shell_back",
+                CubeListBuilder.create()
+                        .texOffs(10, 42)
+                        .addBox(-5F, -1.6F, 3.6F, 10, 3, 3),
+                PartPose.offsetAndRotation(0F, 16F, 0F, -0.418879F, 0F, 0F)
+        );
 
-        this.LeftArmC = new ModelRenderer(this, 22, 25);
-        this.LeftArmC.addBox(0F, -1.5F, -1F, 3, 1, 2);
-        this.LeftArmC.setRotationPoint(4F, 0F, 0F);
-        this.LeftArmB.addChild(this.LeftArmC);
+        // Left Eye (upper stalk)
+        root.addOrReplaceChild("left_eye",
+                CubeListBuilder.create()
+                        .texOffs(0, 4)
+                        .addBox(1F, -2F, -4.5F, 1, 3, 1),
+                PartPose.offsetAndRotation(0F, 16F, 0F, 0F, 0F, 0.1745329F)
+        );
 
-        this.LeftArmD = new ModelRenderer(this, 16, 23);
-        this.LeftArmD.addBox(0F, 0.5F, -0.5F, 2, 1, 1);
-        this.LeftArmD.setRotationPoint(4F, 0F, 0F);
-        this.LeftArmB.addChild(this.LeftArmD);
+        // Left Eye Base
+        root.addOrReplaceChild("left_eye_base",
+                CubeListBuilder.create()
+                        .texOffs(0, 16)
+                        .addBox(1F, 1F, -5F, 2, 3, 1),
+                PartPose.offsetAndRotation(0F, 16F, 0F, 0F, 0F, 0.2094395F)
+        );
 
-        this.RightLeg1A = new ModelRenderer(this, 0, 42);
-        this.RightLeg1A.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        this.RightLeg1A.setRotationPoint(-5F, 19.5F, -2.5F);
-        setRotation(this.RightLeg1A, 0F, -0.1745329F, -0.418879F);
+        // Right Eye Base
+        root.addOrReplaceChild("right_eye_base",
+                CubeListBuilder.create()
+                        .texOffs(0, 12)
+                        .addBox(-3F, 1F, -5F, 2, 3, 1),
+                PartPose.offsetAndRotation(0F, 16F, 0F, 0F, 0F, -0.2094395F)
+        );
 
-        this.RightLeg1B = new ModelRenderer(this, 0, 48);
-        this.RightLeg1B.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        this.RightLeg1B.setRotationPoint(-4F, 0F, 0F);
-        setRotation(this.RightLeg1B, 0F, 0F, -0.5235988F);
-        this.RightLeg1A.addChild(this.RightLeg1B);
+        // Right Eye (upper stalk)
+        root.addOrReplaceChild("right_eye",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-2F, -2F, -4.5F, 1, 3, 1),
+                PartPose.offsetAndRotation(0F, 16F, 0F, 0F, 0F, -0.1745329F)
+        );
 
-        this.RightLeg2A = new ModelRenderer(this, 0, 44);
-        this.RightLeg2A.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        this.RightLeg2A.setRotationPoint(-5F, 19.5F, 0F);
-        setRotation(this.RightLeg2A, 0F, 0.0872665F, -0.418879F);
+        // Right Arm A (first segment of right claw)
+        PartDefinition rightArmA = root.addOrReplaceChild("right_arm_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 34)
+                        .addBox(-4F, -1F, -1F, 4, 2, 2),
+                PartPose.offsetAndRotation(-4F, 19F, -4F, 0F, -0.5235988F, 0F)
+        );
+        // Right Arm B (second segment)
+        PartDefinition rightArmB = rightArmA.addOrReplaceChild("right_arm_b",
+                CubeListBuilder.create()
+                        .texOffs(22, 12)
+                        .addBox(-4F, -1.5F, -1F, 4, 3, 2),
+                PartPose.offsetAndRotation(-4F, 0F, 0F, 0F, -2.094395F, 0F)
+        );
+        // Right Arm C (pincer claw)
+        rightArmB.addOrReplaceChild("right_arm_c",
+                CubeListBuilder.create()
+                        .texOffs(22, 17)
+                        .addBox(-3F, -1.5F, -1F, 3, 1, 2),
+                PartPose.offset( -4F, 0F, 0F )
+        );
+        // Right Arm D (tip of pincer)
+        rightArmB.addOrReplaceChild("right_arm_d",
+                CubeListBuilder.create()
+                        .texOffs(16, 12)
+                        .addBox(-2F, 0.5F, -0.5F, 2, 1, 1),
+                PartPose.offset( -4F, 0F, 0F )
+        );
 
-        this.RightLeg2B = new ModelRenderer(this, 0, 50);
-        this.RightLeg2B.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        this.RightLeg2B.setRotationPoint(-4F, 0F, 0F);
-        setRotation(this.RightLeg2B, 0F, 0F, -0.5235988F);
-        this.RightLeg2A.addChild(this.RightLeg2B);
+        // Left Arm A
+        PartDefinition leftArmA = root.addOrReplaceChild("left_arm_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 38)
+                        .addBox(0F, -1F, -1F, 4, 2, 2),
+                PartPose.offsetAndRotation(4F, 19F, -4F, 0F, 0.5235988F, 0F)
+        );
+        // Left Arm B
+        PartDefinition leftArmB = leftArmA.addOrReplaceChild("left_arm_b",
+                CubeListBuilder.create()
+                        .texOffs(22, 20)
+                        .addBox(0F, -1.5F, -1F, 4, 3, 2),
+                PartPose.offsetAndRotation(4F, 0F, 0F, 0F, 2.094395F, 0F)
+        );
+        // Left Arm C
+        leftArmB.addOrReplaceChild("left_arm_c",
+                CubeListBuilder.create()
+                        .texOffs(22, 25)
+                        .addBox(0F, -1.5F, -1F, 3, 1, 2),
+                PartPose.offset(4F, 0F, 0F)
+        );
+        // Left Arm D
+        leftArmB.addOrReplaceChild("left_arm_d",
+                CubeListBuilder.create()
+                        .texOffs(16, 23)
+                        .addBox(0F, 0.5F, -0.5F, 2, 1, 1),
+                PartPose.offset(4F, 0F, 0F)
+        );
 
-        this.RightLeg3A = new ModelRenderer(this, 0, 46);
-        this.RightLeg3A.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        this.RightLeg3A.setRotationPoint(-5F, 19.5F, 2.5F);
-        setRotation(this.RightLeg3A, 0F, 0.6981317F, -0.418879F);
+        // Right Leg 1A (closest to body)
+        PartDefinition rightLeg1A = root.addOrReplaceChild("right_leg1_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 42)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(-5F, 19.5F, -2.5F, 0F, -0.1745329F, -0.418879F)
+        );
+        // Right Leg 1B
+        rightLeg1A.addOrReplaceChild("right_leg1_b",
+                CubeListBuilder.create()
+                        .texOffs(0, 48)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(-4F, 0F, 0F, 0F, 0F, -0.5235988F)
+        );
 
-        this.RightLeg3B = new ModelRenderer(this, 0, 52);
-        this.RightLeg3B.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        this.RightLeg3B.setRotationPoint(-4F, 0F, 0F);
-        setRotation(this.RightLeg3B, 0F, 0F, -0.5235988F);
-        this.RightLeg3A.addChild(this.RightLeg3B);
+        // Right Leg 2A
+        PartDefinition rightLeg2A = root.addOrReplaceChild("right_leg2_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 44)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(-5F, 19.5F, 0F, 0F, 0.0872665F, -0.418879F)
+        );
+        // Right Leg 2B
+        rightLeg2A.addOrReplaceChild("right_leg2_b",
+                CubeListBuilder.create()
+                        .texOffs(0, 50)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(-4F, 0F, 0F, 0F, 0F, -0.5235988F)
+        );
 
-        this.RightLeg4A = new ModelRenderer(this, 12, 34);
-        this.RightLeg4A.addBox(-4F, -0.5F, -0.5F, 4, 1, 1);
-        this.RightLeg4A.setRotationPoint(-3F, 19.5F, 3.5F);
-        setRotation(this.RightLeg4A, 0F, 0.6108652F, -0.418879F);
+        // Right Leg 3A
+        PartDefinition rightLeg3A = root.addOrReplaceChild("right_leg3_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 46)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(-5F, 19.5F, 2.5F, 0F, 0.6981317F, -0.418879F)
+        );
+        // Right Leg 3B
+        rightLeg3A.addOrReplaceChild("right_leg3_b",
+                CubeListBuilder.create()
+                        .texOffs(0, 52)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(-4F, 0F, 0F, 0F, 0F, -0.5235988F)
+        );
 
-        this.RightLeg4B = new ModelRenderer(this, 12, 36);
-        this.RightLeg4B.addBox(-3F, -0.5F, -1F, 3, 1, 2);
-        this.RightLeg4B.setRotationPoint(-4F, 0F, 0F);
-        setRotation(this.RightLeg4B, 0F, 1.308997F, -0.418879F);
-        this.RightLeg4A.addChild(this.RightLeg4B);
+        // Right Leg 4A
+        PartDefinition rightLeg4A = root.addOrReplaceChild("right_leg4_a",
+                CubeListBuilder.create()
+                        .texOffs(12, 34)
+                        .addBox(-4F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(-3F, 19.5F, 3.5F, 0F, 0.6108652F, -0.418879F)
+        );
+        // Right Leg 4B
+        PartDefinition rightLeg4B = rightLeg4A.addOrReplaceChild("right_leg4_b",
+                CubeListBuilder.create()
+                        .texOffs(12, 36)
+                        .addBox(-3F, -0.5F, -1F, 3, 1, 2),
+                PartPose.offsetAndRotation(-4F, 0F, 0F, 0F, 1.308997F, -0.418879F)
+        );
+        // Right Leg 4C
+        rightLeg4B.addOrReplaceChild("right_leg4_c",
+                CubeListBuilder.create()
+                        .texOffs(12, 39)
+                        .addBox(-3F, -0.5F, -1F, 3, 1, 2),
+                PartPose.offsetAndRotation(-3F, 0F, 0F, 0F, 0.8726646F, -0.418879F)
+        );
 
-        this.RightLeg4C = new ModelRenderer(this, 12, 39);
-        this.RightLeg4C.addBox(-3F, -0.5F, -1F, 3, 1, 2);
-        this.RightLeg4C.setRotationPoint(-3F, 0F, 0F);
-        setRotation(this.RightLeg4C, 0F, 0.8726646F, -0.418879F);
-        this.RightLeg4C.mirror = true;
-        this.RightLeg4B.addChild(this.RightLeg4C);
+        // Left Leg 1A
+        PartDefinition leftLeg1A = root.addOrReplaceChild("left_leg1_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 54)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(5F, 19.5F, -2.5F, 0F, 0.1745329F, 0.418879F)
+        );
+        // Left Leg 1B
+        leftLeg1A.addOrReplaceChild("left_leg1_b",
+                CubeListBuilder.create()
+                        .texOffs(0, 56)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(4F, 0F, 0F, 0F, 0F, 0.5235988F)
+        );
 
-        this.LeftLeg1A = new ModelRenderer(this, 0, 54);
-        this.LeftLeg1A.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        this.LeftLeg1A.setRotationPoint(5F, 19.5F, -2.5F);
-        setRotation(this.LeftLeg1A, 0F, 0.1745329F, 0.418879F);
+        // Left Leg 2A
+        PartDefinition leftLeg2A = root.addOrReplaceChild("left_leg2_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 62)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(5F, 19.5F, 0F, 0F, -0.0872665F, 0.418879F)
+        );
+        // Left Leg 2B
+        leftLeg2A.addOrReplaceChild("left_leg2_b",
+                CubeListBuilder.create()
+                        .texOffs(10, 62)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(4F, 0F, 0F, 0F, 0F, 0.5235988F)
+        );
 
-        this.LeftLeg1B = new ModelRenderer(this, 0, 56);
-        this.LeftLeg1B.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        this.LeftLeg1B.setRotationPoint(4F, 0F, 0F);
-        setRotation(this.LeftLeg1B, 0F, 0F, 0.5235988F);
-        this.LeftLeg1A.addChild(this.LeftLeg1B);
+        // Left Leg 3A
+        PartDefinition leftLeg3A = root.addOrReplaceChild("left_leg3_a",
+                CubeListBuilder.create()
+                        .texOffs(0, 58)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(5F, 19.5F, 2.5F, 0F, -0.6981317F, 0.418879F)
+        );
+        // Left Leg 3B
+        leftLeg3A.addOrReplaceChild("left_leg3_b",
+                CubeListBuilder.create()
+                        .texOffs(0, 60)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(4F, 0F, 0F, 0F, 0F, 0.5235988F)
+        );
 
-        this.LeftLeg2A = new ModelRenderer(this, 0, 62);
-        this.LeftLeg2A.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        this.LeftLeg2A.setRotationPoint(5F, 19.5F, 0F);
-        setRotation(this.LeftLeg2A, 0F, -0.0872665F, 0.418879F);
+        // Left Leg 4A
+        PartDefinition leftLeg4A = root.addOrReplaceChild("left_leg4_a",
+                CubeListBuilder.create()
+                        .texOffs(22, 34)
+                        .addBox(0F, -0.5F, -0.5F, 4, 1, 1),
+                PartPose.offsetAndRotation(2F, 19.5F, 3.5F, 0F, -0.6108652F, 0.418879F)
+        );
+        // Left Leg 4B
+        PartDefinition leftLeg4B = leftLeg4A.addOrReplaceChild("left_leg4_b",
+                CubeListBuilder.create()
+                        .texOffs(22, 36)
+                        .addBox(0F, -0.5F, -1F, 3, 1, 2),
+                PartPose.offsetAndRotation(4F, 0F, 0F, 0F, -1.308997F, 0.418879F)
+        );
+        // Left Leg 4C
+        leftLeg4B.addOrReplaceChild("left_leg4_c",
+                CubeListBuilder.create()
+                        .texOffs(22, 39)
+                        .addBox(0F, -0.5F, -1F, 3, 1, 2),
+                PartPose.offsetAndRotation(3F, 0F, 0F, 0F, -0.8726646F, 0.418879F)
+        );
 
-        this.LeftLeg2B = new ModelRenderer(this, 10, 62);
-        this.LeftLeg2B.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        this.LeftLeg2B.setRotationPoint(4F, 0F, 0F);
-        setRotation(this.LeftLeg2B, 0F, 0F, 0.5235988F);
-        this.LeftLeg2A.addChild(this.LeftLeg2B);
-
-        this.LeftLeg3A = new ModelRenderer(this, 0, 58);
-        this.LeftLeg3A.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        this.LeftLeg3A.setRotationPoint(5F, 19.5F, 2.5F);
-        setRotation(this.LeftLeg3A, 0F, -0.6981317F, 0.418879F);
-
-        this.LeftLeg3B = new ModelRenderer(this, 0, 60);
-        this.LeftLeg3B.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        this.LeftLeg3B.setRotationPoint(4F, 0F, 0F);
-        setRotation(this.LeftLeg3B, 0F, 0F, 0.5235988F);
-        this.LeftLeg3A.addChild(this.LeftLeg3B);
-
-        this.LeftLeg4A = new ModelRenderer(this, 22, 34);
-        this.LeftLeg4A.addBox(0F, -0.5F, -0.5F, 4, 1, 1);
-        this.LeftLeg4A.setRotationPoint(2F, 19.5F, 3.5F);
-        setRotation(this.LeftLeg4A, 0F, -0.6108652F, 0.418879F);
-
-        this.LeftLeg4B = new ModelRenderer(this, 22, 36);
-        this.LeftLeg4B.addBox(0F, -0.5F, -1F, 3, 1, 2);
-        this.LeftLeg4B.setRotationPoint(4F, 0F, 0F);
-        setRotation(this.LeftLeg4B, 0F, -1.308997F, 0.418879F);
-        this.LeftLeg4A.addChild(this.LeftLeg4B);
-
-        this.LeftLeg4C = new ModelRenderer(this, 22, 39);
-        this.LeftLeg4C.addBox(0F, -0.5F, -1F, 3, 1, 2);
-        this.LeftLeg4C.setRotationPoint(3F, 0F, 0F);
-        setRotation(this.LeftLeg4C, 0F, -0.8726646F, 0.418879F);
-        this.LeftLeg4B.addChild(this.LeftLeg4C);
-
+        return LayerDefinition.create(mesh, 64, 64);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Shell.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.ShellRight.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.ShellLeft.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.ShellBack.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftEye.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftEyeBase.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightEyeBase.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightEye.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightArmA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftArmA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftLeg1A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftLeg2A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftLeg3A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftLeg4A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightLeg1A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightLeg2A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightLeg3A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightLeg4A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-    }
-
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        /*
-         * limbSwing = distance walked limbSwingAmount = speed 0 - 1 ageInTicks = timer
-         */
+    public void setupAnim(T entityIn,
+                          float limbSwing, float limbSwingAmount,
+                          float ageInTicks,
+                          float netHeadYaw, float headPitch) {
+        // Handle “fleeing” animation for claws
         if (entityIn.isFleeing()) {
-            //LeftArmA.rotateAngleY = 45F/radianF;
-            this.LeftArmA.rotateAngleX = -90F / this.radianF;
-            this.RightArmA.rotateAngleX = -90F / this.radianF;
+            // Both claws point downward (–90° on X)
+            this.left_arm_a.xRot  = -90F / 57.29578F;
+            this.right_arm_a.xRot = -90F / 57.29578F;
         } else {
-            //LeftArmA.rotateAngleY = 30F/radianF;
-            this.LeftArmA.rotateAngleX = 0F;
-            this.RightArmA.rotateAngleX = 0F;
+            this.left_arm_a.xRot  = 0F;
+            this.right_arm_a.xRot = 0F;
         }
 
+        // If nearly stationary, do random “claw wave” animations
         if (limbSwingAmount < 0.1F) {
-            this.RightArmA.rotateAngleY = -30F / this.radianF;
-            this.RightArmB.rotateAngleY = -120F / this.radianF;
+            // Base positions for both arms
+            this.right_arm_a.yRot = -30F / 57.29578F;
+            this.right_arm_b.yRot = -120F / 57.29578F;
 
-            //hand movement
-
-            /*
-             * LHand random animation
-             */
+            // Left claw “random flick”
             float lHand = 0F;
-
             float f2a = ageInTicks % 100F;
-            if (f2a > 0 & f2a < 10) {
-                lHand = (f2a * 2F) / this.radianF;
+            if (f2a > 0F && f2a < 10F) {
+                lHand = (f2a * 2F) / 57.29578F;
             }
+            this.left_arm_a.yRot = 30F / 57.29578F + lHand;
+            this.left_arm_b.yRot = 120F / 57.29578F + lHand;
 
-            this.LeftArmA.rotateAngleY = 30F / this.radianF + lHand;
-            this.LeftArmB.rotateAngleY = 120F / this.radianF + lHand;
-
-            /*
-             * RHand random animation
-             */
-            float RHand = 0F;
+            // Right claw “random flick”
+            float rHand = 0F;
             float f2b = ageInTicks % 75F;
-            if (f2b > 30 & f2b < 40) {
-                RHand = (f2b - 29) * 2F / this.radianF;
+            if (f2b > 30F && f2b < 40F) {
+                rHand = (f2b - 29F) * 2F / 57.29578F;
             }
-            this.RightArmA.rotateAngleY = -30F / this.radianF - RHand;
-            this.RightArmB.rotateAngleY = -120F / this.radianF - RHand;
+            this.right_arm_a.yRot = -30F / 57.29578F - rHand;
+            this.right_arm_b.yRot = -120F / 57.29578F - rHand;
         }
 
-        /*
-         * floats used for the leg animations
-         */
-        float f9 = -(MathHelper.cos(limbSwing * 5F)) * limbSwingAmount * 2F;
-        float f10 = -(MathHelper.cos(limbSwing * 5F + 3.141593F)) * limbSwingAmount * 2F;
-        float f11 = -(MathHelper.cos(limbSwing * 5.0F + 1.570796F)) * limbSwingAmount * 2F;
-        float f12 = -(MathHelper.cos(limbSwing * 5.0F + 4.712389F)) * limbSwingAmount * 2F;
-        float f13 = Math.abs(MathHelper.sin(limbSwing * 0.6662F + 0.0F) * 0.4F) * limbSwingAmount * 5F;
-        float f14 = Math.abs(MathHelper.sin(limbSwing * 0.6662F + 3.141593F) * 0.4F) * limbSwingAmount;
-        float f15 = Math.abs(MathHelper.sin(limbSwing * 0.6662F + 1.570796F) * 0.4F) * limbSwingAmount;
-        float f16 = Math.abs(MathHelper.sin(limbSwing * 0.6662F + 4.712389F) * 0.4F) * limbSwingAmount;
+        // Leg‐swing math
+        float f9  = -Mth.cos(limbSwing * 5F) * limbSwingAmount * 2F;
+        float f10 = -Mth.cos(limbSwing * 5F + (float)Math.PI) * limbSwingAmount * 2F;
+        float f11 = -Mth.cos(limbSwing * 5F + (float)(Math.PI * 0.5F)) * limbSwingAmount * 2F;
+        float f12 = -Mth.cos(limbSwing * 5F + (float)(Math.PI * 1.5F)) * limbSwingAmount * 2F;
+        float f13 = Math.abs(Mth.sin(limbSwing * 0.6662F + 0.0F) * 0.4F) * limbSwingAmount * 5F;
+        float f14 = Math.abs(Mth.sin(limbSwing * 0.6662F + (float)Math.PI) * 0.4F) * limbSwingAmount;
+        float f15 = Math.abs(Mth.sin(limbSwing * 0.6662F + (float)(Math.PI * 0.5F)) * 0.4F) * limbSwingAmount;
+        float f16 = Math.abs(Mth.sin(limbSwing * 0.6662F + (float)(Math.PI * 1.5F)) * 0.4F) * limbSwingAmount;
 
-        this.RightLeg1A.rotateAngleY = -0.1745329F;
-        this.RightLeg1A.rotateAngleZ = -0.418879F;
-        this.RightLeg1A.rotateAngleY += f9;
-        this.RightLeg1A.rotateAngleZ += f13;
+        // Right Leg 1A adjustments
+        this.right_leg1_a.yRot = -0.1745329F;
+        this.right_leg1_a.zRot = -0.418879F;
+        this.right_leg1_a.yRot += f9;
+        this.right_leg1_a.zRot += f13;
 
-        this.RightLeg1B.rotateAngleZ = -0.5235988F;
-        this.RightLeg1B.rotateAngleZ -= f13;
+        this.right_leg1_b.zRot = -0.5235988F;
+        this.right_leg1_b.zRot -= f13;
 
-        this.RightLeg2A.rotateAngleY = 0.0872665F;
-        this.RightLeg2A.rotateAngleZ = -0.418879F;
-        this.RightLeg2A.rotateAngleY += f10;
-        this.RightLeg2A.rotateAngleZ += f14;
+        // Right Leg 2A
+        this.right_leg2_a.yRot = 0.0872665F;
+        this.right_leg2_a.zRot = -0.418879F;
+        this.right_leg2_a.yRot += f10;
+        this.right_leg2_a.zRot += f14;
 
-        this.RightLeg2B.rotateAngleZ = -0.5235988F;
-        this.RightLeg2B.rotateAngleZ -= f14;
+        this.right_leg2_b.zRot = -0.5235988F;
+        this.right_leg2_b.zRot -= f14;
 
-        this.RightLeg3A.rotateAngleY = 0.6981317F;
-        this.RightLeg3A.rotateAngleZ = -0.418879F;
-        this.RightLeg3A.rotateAngleY += f11;
-        this.RightLeg3A.rotateAngleZ += f15;
+        // Right Leg 3A
+        this.right_leg3_a.yRot = 0.6981317F;
+        this.right_leg3_a.zRot = -0.418879F;
+        this.right_leg3_a.yRot += f11;
+        this.right_leg3_a.zRot += f15;
 
-        this.RightLeg3B.rotateAngleZ = -0.5235988F;
-        this.RightLeg3B.rotateAngleZ -= f15;
+        this.right_leg3_b.zRot = -0.5235988F;
+        this.right_leg3_b.zRot -= f15;
 
-        this.RightLeg4A.rotateAngleY = 0.6108652F;
-        this.RightLeg4A.rotateAngleZ = -0.418879F;
-        this.RightLeg4A.rotateAngleY += f12;
-        this.RightLeg4A.rotateAngleZ += f16;
+        // Right Leg 4A
+        this.right_leg4_a.yRot = 0.6108652F;
+        this.right_leg4_a.zRot = -0.418879F;
+        this.right_leg4_a.yRot += f12;
+        this.right_leg4_a.zRot += f16;
 
-        this.LeftLeg1A.rotateAngleY = 0.1745329F;
-        this.LeftLeg1A.rotateAngleZ = 0.418879F;
-        this.LeftLeg1A.rotateAngleY -= f9;
-        this.LeftLeg1A.rotateAngleZ -= f13;
+        // Left Leg 1A
+        this.left_leg1_a.yRot = 0.1745329F;
+        this.left_leg1_a.zRot = 0.418879F;
+        this.left_leg1_a.yRot -= f9;
+        this.left_leg1_a.zRot -= f13;
 
-        this.LeftLeg1B.rotateAngleZ = 0.5235988F;
-        this.LeftLeg1B.rotateAngleZ += f13;
+        this.left_leg1_b.zRot = 0.5235988F;
+        this.left_leg1_b.zRot += f13;
 
-        this.LeftLeg2A.rotateAngleY = -0.0872665F;
-        this.LeftLeg2A.rotateAngleZ = 0.418879F;
-        this.LeftLeg2A.rotateAngleY -= f10;
-        this.LeftLeg2A.rotateAngleZ -= f14;
+        // Left Leg 2A
+        this.left_leg2_a.yRot = -0.0872665F;
+        this.left_leg2_a.zRot = 0.418879F;
+        this.left_leg2_a.yRot -= f10;
+        this.left_leg2_a.zRot -= f14;
 
-        this.LeftLeg2B.rotateAngleZ = 0.5235988F;
-        this.LeftLeg2B.rotateAngleZ += f14;
+        this.left_leg2_b.zRot = 0.5235988F;
+        this.left_leg2_b.zRot += f14;
 
-        this.LeftLeg3A.rotateAngleY = -0.6981317F;
-        this.LeftLeg3A.rotateAngleZ = 0.418879F;
-        this.LeftLeg3A.rotateAngleY -= f11;
-        this.LeftLeg3A.rotateAngleZ -= f15;
+        // Left Leg 3A
+        this.left_leg3_a.yRot = -0.6981317F;
+        this.left_leg3_a.zRot = 0.418879F;
+        this.left_leg3_a.yRot -= f11;
+        this.left_leg3_a.zRot -= f15;
 
-        this.LeftLeg3B.rotateAngleZ = 0.5235988F;
-        this.LeftLeg3B.rotateAngleZ += f15;
+        this.left_leg3_b.zRot = 0.5235988F;
+        this.left_leg3_b.zRot += f15;
 
-        this.LeftLeg4A.rotateAngleY = -0.6108652F;
-        this.LeftLeg4A.rotateAngleZ = 0.418879F;
-        this.LeftLeg4A.rotateAngleY -= f12;
-        this.LeftLeg4A.rotateAngleZ -= f16;
+        // Left Leg 4A
+        this.left_leg4_a.yRot = -0.6108652F;
+        this.left_leg4_a.zRot = 0.418879F;
+        this.left_leg4_a.yRot -= f12;
+        this.left_leg4_a.zRot -= f16;
+    }
+
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer,
+                               int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        // Draw the crab in approximately the same order as before:
+        this.shell.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.shell_right.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.shell_left.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.shell_back.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.left_eye.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.left_eye_base.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.right_eye_base.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.right_eye.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.right_arm_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.left_arm_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.left_leg1_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.left_leg2_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.left_leg3_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.left_leg4_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        this.right_leg1_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.right_leg2_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.right_leg3_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.right_leg4_a.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

@@ -1,1195 +1,1500 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.neutral.MoCEntityElephant;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * 1.20.1 port of the old MoCModelElephant (1.16) to ModelPart/LayerDefinition.
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelElephant<T extends MoCEntityElephant> extends EntityModel<T> {
 
-    ModelRenderer Head;
-    ModelRenderer Neck;
-    ModelRenderer HeadBump;
-    ModelRenderer Chin;
-    ModelRenderer LowerLip;
-    ModelRenderer Back;
-    ModelRenderer LeftSmallEar;
-    ModelRenderer LeftBigEar;
-    ModelRenderer RightSmallEar;
-    ModelRenderer RightBigEar;
-    ModelRenderer Hump;
-    ModelRenderer Body;
-    ModelRenderer Skirt;
-    ModelRenderer RightTuskA;
-    ModelRenderer RightTuskB;
-    ModelRenderer RightTuskC;
-    ModelRenderer RightTuskD;
-    ModelRenderer LeftTuskA;
-    ModelRenderer LeftTuskB;
-    ModelRenderer LeftTuskC;
-    ModelRenderer LeftTuskD;
-    ModelRenderer TrunkA;
-    ModelRenderer TrunkB;
-    ModelRenderer TrunkC;
-    ModelRenderer TrunkD;
-    ModelRenderer TrunkE;
-    ModelRenderer FrontRightUpperLeg;
-    ModelRenderer FrontRightLowerLeg;
-    ModelRenderer FrontLeftUpperLeg;
-    ModelRenderer FrontLeftLowerLeg;
-    ModelRenderer BackRightUpperLeg;
-    ModelRenderer BackRightLowerLeg;
-    ModelRenderer BackLeftUpperLeg;
-    ModelRenderer BackLeftLowerLeg;
-    ModelRenderer TailRoot;
-    ModelRenderer Tail;
-    ModelRenderer TailPlush;
-    ModelRenderer StorageRightBedroll;
-    ModelRenderer StorageLeftBedroll;
-    ModelRenderer StorageFrontRightChest;
-    ModelRenderer StorageBackRightChest;
-    ModelRenderer StorageFrontLeftChest;
-    ModelRenderer StorageBackLeftChest;
-    ModelRenderer StorageRightBlankets;
-    ModelRenderer StorageLeftBlankets;
-    ModelRenderer HarnessBlanket;
-    ModelRenderer HarnessUpperBelt;
-    ModelRenderer HarnessLowerBelt;
-    ModelRenderer CabinPillow;
-    ModelRenderer CabinLeftRail;
-    ModelRenderer Cabin;
-    ModelRenderer CabinRightRail;
-    ModelRenderer CabinBackRail;
-    ModelRenderer CabinRoof;
-    ModelRenderer FortNeckBeam;
-    ModelRenderer FortBackBeam;
-    ModelRenderer TuskLD1;
-    ModelRenderer TuskLD2;
-    ModelRenderer TuskLD3;
-    ModelRenderer TuskLD4;
-    ModelRenderer TuskLD5;
-    ModelRenderer TuskRD1;
-    ModelRenderer TuskRD2;
-    ModelRenderer TuskRD3;
-    ModelRenderer TuskRD4;
-    ModelRenderer TuskRD5;
-    ModelRenderer TuskLI1;
-    ModelRenderer TuskLI2;
-    ModelRenderer TuskLI3;
-    ModelRenderer TuskLI4;
-    ModelRenderer TuskLI5;
-    ModelRenderer TuskRI1;
-    ModelRenderer TuskRI2;
-    ModelRenderer TuskRI3;
-    ModelRenderer TuskRI4;
-    ModelRenderer TuskRI5;
-    ModelRenderer TuskLW1;
-    ModelRenderer TuskLW2;
-    ModelRenderer TuskLW3;
-    ModelRenderer TuskLW4;
-    ModelRenderer TuskLW5;
-    ModelRenderer TuskRW1;
-    ModelRenderer TuskRW2;
-    ModelRenderer TuskRW3;
-    ModelRenderer TuskRW4;
-    ModelRenderer TuskRW5;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "elephant"), "main"
+    );
 
-    ModelRenderer FortFloor1;
-    ModelRenderer FortFloor2;
-    ModelRenderer FortFloor3;
-    ModelRenderer FortBackWall;
-    ModelRenderer FortBackLeftWall;
-    ModelRenderer FortBackRightWall;
-    ModelRenderer StorageUpLeft;
-    ModelRenderer StorageUpRight;
+    private final ModelPart head;
+    private final ModelPart neck;
+    private final ModelPart headBump;
+    private final ModelPart chin;
+    private final ModelPart lowerLip;
+    private final ModelPart back;
+    private final ModelPart leftSmallEar;
+    private final ModelPart leftBigEar;
+    private final ModelPart rightSmallEar;
+    private final ModelPart rightBigEar;
+    private final ModelPart hump;
+    private final ModelPart body;
+    private final ModelPart skirt;
+    private final ModelPart rightTuskA;
+    private final ModelPart rightTuskB;
+    private final ModelPart rightTuskC;
+    private final ModelPart rightTuskD;
+    private final ModelPart leftTuskA;
+    private final ModelPart leftTuskB;
+    private final ModelPart leftTuskC;
+    private final ModelPart leftTuskD;
+    private final ModelPart trunkA;
+    private final ModelPart trunkB;
+    private final ModelPart trunkC;
+    private final ModelPart trunkD;
+    private final ModelPart trunkE;
+    private final ModelPart frontRightUpperLeg;
+    private final ModelPart frontRightLowerLeg;
+    private final ModelPart frontLeftUpperLeg;
+    private final ModelPart frontLeftLowerLeg;
+    private final ModelPart backRightUpperLeg;
+    private final ModelPart backRightLowerLeg;
+    private final ModelPart backLeftUpperLeg;
+    private final ModelPart backLeftLowerLeg;
+    private final ModelPart tailRoot;
+    private final ModelPart tail;
+    private final ModelPart tailPlush;
+    private final ModelPart storageRightBedroll;
+    private final ModelPart storageLeftBedroll;
+    private final ModelPart storageFrontRightChest;
+    private final ModelPart storageBackRightChest;
+    private final ModelPart storageFrontLeftChest;
+    private final ModelPart storageBackLeftChest;
+    private final ModelPart storageRightBlankets;
+    private final ModelPart storageLeftBlankets;
+    private final ModelPart harnessBlanket;
+    private final ModelPart harnessUpperBelt;
+    private final ModelPart harnessLowerBelt;
+    private final ModelPart cabinPillow;
+    private final ModelPart cabinLeftRail;
+    private final ModelPart cabin;
+    private final ModelPart cabinRightRail;
+    private final ModelPart cabinBackRail;
+    private final ModelPart cabinRoof;
+    private final ModelPart fortNeckBeam;
+    private final ModelPart fortBackBeam;
+    private final ModelPart tuskLD1;
+    private final ModelPart tuskLD2;
+    private final ModelPart tuskLD3;
+    private final ModelPart tuskLD4;
+    private final ModelPart tuskLD5;
+    private final ModelPart tuskRD1;
+    private final ModelPart tuskRD2;
+    private final ModelPart tuskRD3;
+    private final ModelPart tuskRD4;
+    private final ModelPart tuskRD5;
+    private final ModelPart tuskLI1;
+    private final ModelPart tuskLI2;
+    private final ModelPart tuskLI3;
+    private final ModelPart tuskLI4;
+    private final ModelPart tuskLI5;
+    private final ModelPart tuskRI1;
+    private final ModelPart tuskRI2;
+    private final ModelPart tuskRI3;
+    private final ModelPart tuskRI4;
+    private final ModelPart tuskRI5;
+    private final ModelPart tuskLW1;
+    private final ModelPart tuskLW2;
+    private final ModelPart tuskLW3;
+    private final ModelPart tuskLW4;
+    private final ModelPart tuskLW5;
+    private final ModelPart tuskRW1;
+    private final ModelPart tuskRW2;
+    private final ModelPart tuskRW3;
+    private final ModelPart tuskRW4;
+    private final ModelPart tuskRW5;
+    private final ModelPart fortFloor1;
+    private final ModelPart fortFloor2;
+    private final ModelPart fortFloor3;
+    private final ModelPart fortBackWall;
+    private final ModelPart fortBackLeftWall;
+    private final ModelPart fortBackRightWall;
+    private final ModelPart storageUpLeft;
+    private final ModelPart storageUpRight;
+
+    // runtime state:
     private MoCEntityElephant elephant;
-
-    float radianF = 57.29578F;
-    int tusks;
+    private float radianF = 57.29578F;
+    private int tusks;
     private boolean isSitting;
     private int tailCounter;
     private int earCounter;
     private int trunkCounter;
 
-    public MoCModelElephant() {
-        this.textureWidth = 128;
-        this.textureHeight = 256;
-
-        this.Head = new ModelRenderer(this, 60, 0);
-        this.Head.addBox(-5.5F, -6F, -8F, 11, 15, 10);
-        this.Head.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.Head, -0.1745329F, 0F, 0F);
-
-        this.Neck = new ModelRenderer(this, 46, 48);
-        this.Neck.addBox(-4.95F, -6F, -8F, 10, 14, 8);
-        this.Neck.setRotationPoint(0F, -8F, -10F);
-        setRotation(this.Neck, -0.2617994F, 0F, 0F);
-
-        this.HeadBump = new ModelRenderer(this, 104, 41);
-        this.HeadBump.addBox(-3F, -9F, -6F, 6, 3, 6);
-        this.HeadBump.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.HeadBump, -0.1745329F, 0F, 0F);
-
-        /*
-         * Chin = new ModelRenderer(this, 86, 56); Chin.addBox(-1.5F, -1F, -4F,
-         * 3, 5, 4); Chin.setRotationPoint(0F, -2F, -17.46667F);
-         * setRotation(Chin, 2.054118F, 0F, 0F); LowerLip = new
-         * ModelRenderer(this, 80, 65); LowerLip.addBox(-2F, -1F, -6F, 4, 2, 6);
-         * LowerLip.setRotationPoint(0F, -2F, -17.46667F); setRotation(LowerLip,
-         * 1.570796F, 0F, 0F);
-         */
-
-        this.Chin = new ModelRenderer(this, 86, 56);
-        this.Chin.addBox(-1.5F, -6F, -10.7F, 3, 5, 4);
-        this.Chin.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.Chin, 2.054118F, 0F, 0F);
-
-        this.LowerLip = new ModelRenderer(this, 80, 65);
-        this.LowerLip.addBox(-2F, -2F, -14F, 4, 2, 6);
-        this.LowerLip.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.LowerLip, 1.570796F, 0F, 0F);
-
-        this.Back = new ModelRenderer(this, 0, 48);
-        this.Back.addBox(-5F, -10F, -10F, 10, 2, 26);
-        this.Back.setRotationPoint(0F, -4F, -3F);
-
-        this.LeftSmallEar = new ModelRenderer(this, 102, 0);
-        this.LeftSmallEar.addBox(2F, -8F, -5F, 8, 10, 1);
-        this.LeftSmallEar.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.LeftSmallEar, -0.1745329F, -0.5235988F, 0.5235988F);
-        this.LeftBigEar = new ModelRenderer(this, 102, 0);
-        this.LeftBigEar.addBox(2F, -8F, -5F, 12, 14, 1);
-        this.LeftBigEar.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.LeftBigEar, -0.1745329F, -0.5235988F, 0.5235988F);
-        this.RightSmallEar = new ModelRenderer(this, 106, 15);
-        this.RightSmallEar.addBox(-10F, -8F, -5F, 8, 10, 1);
-        this.RightSmallEar.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.RightSmallEar, -0.1745329F, 0.5235988F, -0.5235988F);
-        this.RightBigEar = new ModelRenderer(this, 102, 15);
-        this.RightBigEar.addBox(-14F, -8F, -5F, 12, 14, 1);
-        this.RightBigEar.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.RightBigEar, -0.1745329F, 0.5235988F, -0.5235988F);
-
-        this.Hump = new ModelRenderer(this, 88, 30);
-        this.Hump.addBox(-6F, -2F, -3F, 12, 3, 8);
-        this.Hump.setRotationPoint(0F, -13F, -5.5F);
-
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(-8F, -10F, -10F, 16, 20, 28);
-        this.Body.setRotationPoint(0F, -2F, -3F);
-
-        this.Skirt = new ModelRenderer(this, 28, 94);
-        this.Skirt.addBox(-8F, -10F, -6F, 16, 28, 6);
-        this.Skirt.setRotationPoint(0F, 8F, -3F);
-        setRotation(this.Skirt, 1.570796F, 0F, 0F);
-
-        this.RightTuskA = new ModelRenderer(this, 2, 60);
-        this.RightTuskA.addBox(-3.8F, -3.5F, -19F, 2, 2, 10);
-        this.RightTuskA.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.RightTuskA, 1.22173F, 0F, 0.1745329F);
-
-        this.RightTuskB = new ModelRenderer(this, 0, 0);
-        this.RightTuskB.addBox(-3.8F, 6.2F, -24.2F, 2, 2, 7);
-        this.RightTuskB.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.RightTuskB, 0.6981317F, 0F, 0.1745329F);
-
-        this.RightTuskC = new ModelRenderer(this, 0, 18);
-        this.RightTuskC.addBox(-3.8F, 17.1F, -21.9F, 2, 2, 5);
-        this.RightTuskC.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.RightTuskC, 0.1745329F, 0F, 0.1745329F);
-
-        this.RightTuskD = new ModelRenderer(this, 14, 18);
-        this.RightTuskD.addBox(-3.8F, 25.5F, -14.5F, 2, 2, 5);
-        this.RightTuskD.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.RightTuskD, -0.3490659F, 0F, 0.1745329F);
-
-        this.LeftTuskA = new ModelRenderer(this, 2, 48);
-        this.LeftTuskA.addBox(1.8F, -3.5F, -19F, 2, 2, 10);
-        this.LeftTuskA.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.LeftTuskA, 1.22173F, 0F, -0.1745329F);
-
-        this.LeftTuskB = new ModelRenderer(this, 0, 9);
-        this.LeftTuskB.addBox(1.8F, 6.2F, -24.2F, 2, 2, 7);
-        this.LeftTuskB.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.LeftTuskB, 0.6981317F, 0F, -0.1745329F);
-
-        this.LeftTuskC = new ModelRenderer(this, 0, 18);
-        this.LeftTuskC.addBox(1.8F, 17.1F, -21.9F, 2, 2, 5);
-        this.LeftTuskC.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.LeftTuskC, 0.1745329F, 0F, -0.1745329F);
-
-        this.LeftTuskD = new ModelRenderer(this, 14, 18);
-        this.LeftTuskD.addBox(1.8F, 25.5F, -14.5F, 2, 2, 5);
-        this.LeftTuskD.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.LeftTuskD, -0.3490659F, 0F, -0.1745329F);
-
-        //original
-        this.TrunkA = new ModelRenderer(this, 0, 76);
-        this.TrunkA.addBox(-4F, -2.5F, -18F, 8, 7, 10);
-        this.TrunkA.setRotationPoint(0F, -3F, -22.46667F);
-        setRotation(this.TrunkA, 1.570796F, 0F, 0F);
-
-        this.TrunkB = new ModelRenderer(this, 0, 93);
-        this.TrunkB.addBox(-3F, -2.5F, -7F, 6, 5, 7);
-        this.TrunkB.setRotationPoint(0F, 6.5F, -22.5F);
-        setRotation(this.TrunkB, 1.658063F, 0F, 0F);
-
-        this.TrunkC = new ModelRenderer(this, 0, 105);
-        this.TrunkC.addBox(-2.5F, -2F, -4F, 5, 4, 5);
-        this.TrunkC.setRotationPoint(0F, 13F, -22.0F);
-        setRotation(this.TrunkC, 1.919862F, 0F, 0F);
-
-        this.TrunkD = new ModelRenderer(this, 0, 114);
-        this.TrunkD.addBox(-2F, -1.5F, -5F, 4, 3, 5);
-        this.TrunkD.setRotationPoint(0F, 16F, -21.5F);
-        setRotation(this.TrunkD, 2.216568F, 0F, 0F);
-
-        this.TrunkE = new ModelRenderer(this, 0, 122);
-        this.TrunkE.addBox(-1.5F, -1F, -4F, 3, 2, 4);
-        this.TrunkE.setRotationPoint(0F, 19.5F, -19F);
-        setRotation(this.TrunkE, 2.530727F, 0F, 0F);
-
-        this.FrontRightUpperLeg = new ModelRenderer(this, 100, 109);
-        this.FrontRightUpperLeg.addBox(-3.5F, 0F, -3.5F, 7, 12, 7);
-        this.FrontRightUpperLeg.setRotationPoint(-4.6F, 4F, -9.6F);
-
-        this.FrontRightLowerLeg = new ModelRenderer(this, 100, 73);
-        this.FrontRightLowerLeg.addBox(-3.5F, 0F, -3.5F, 7, 10, 7);
-        this.FrontRightLowerLeg.setRotationPoint(-4.6F, 14F, -9.6F);
-
-        this.FrontLeftUpperLeg = new ModelRenderer(this, 100, 90);
-        this.FrontLeftUpperLeg.addBox(-3.5F, 0F, -3.5F, 7, 12, 7);
-        this.FrontLeftUpperLeg.setRotationPoint(4.6F, 4F, -9.6F);
-
-        this.FrontLeftLowerLeg = new ModelRenderer(this, 72, 73);
-        this.FrontLeftLowerLeg.addBox(-3.5F, 0F, -3.5F, 7, 10, 7);
-        this.FrontLeftLowerLeg.setRotationPoint(4.6F, 14F, -9.6F);
-
-        this.BackRightUpperLeg = new ModelRenderer(this, 72, 109);
-        this.BackRightUpperLeg.addBox(-3.5F, 0F, -3.5F, 7, 12, 7);
-        this.BackRightUpperLeg.setRotationPoint(-4.6F, 4F, 11.6F);
-
-        this.BackRightLowerLeg = new ModelRenderer(this, 100, 56);
-        this.BackRightLowerLeg.addBox(-3.5F, 0F, -3.5F, 7, 10, 7);
-        this.BackRightLowerLeg.setRotationPoint(-4.6F, 14F, 11.6F);
-
-        this.BackLeftUpperLeg = new ModelRenderer(this, 72, 90);
-        this.BackLeftUpperLeg.addBox(-3.5F, 0F, -3.5F, 7, 12, 7);
-        this.BackLeftUpperLeg.setRotationPoint(4.6F, 4F, 11.6F);
-
-        this.BackLeftLowerLeg = new ModelRenderer(this, 44, 77);
-        this.BackLeftLowerLeg.addBox(-3.5F, 0F, -3.5F, 7, 10, 7);
-        this.BackLeftLowerLeg.setRotationPoint(4.6F, 14F, 11.6F);
-
-        this.TailRoot = new ModelRenderer(this, 20, 105);
-        this.TailRoot.addBox(-1F, 0F, -2F, 2, 10, 2);
-        this.TailRoot.setRotationPoint(0F, -8F, 15F);
-        setRotation(this.TailRoot, 0.296706F, 0F, 0F);
-
-        this.Tail = new ModelRenderer(this, 20, 117);
-        this.Tail.addBox(-1F, 9.7F, -0.2F, 2, 6, 2);
-        this.Tail.setRotationPoint(0F, -8F, 15F);
-        setRotation(this.Tail, 0.1134464F, 0F, 0F);
-
-        this.TailPlush = new ModelRenderer(this, 26, 76);
-        this.TailPlush.addBox(-1.5F, 15.5F, -0.7F, 3, 6, 3);
-        this.TailPlush.setRotationPoint(0F, -8F, 15F);
-        setRotation(this.TailPlush, 0.1134464F, 0F, 0F);
-
-        this.StorageRightBedroll = new ModelRenderer(this, 90, 231);
-        this.StorageRightBedroll.addBox(-2.5F, 8F, -8F, 3, 3, 16);
-        this.StorageRightBedroll.setRotationPoint(-9F, -10.2F, 1F);
-        setRotation(this.StorageRightBedroll, 0F, 0F, 0.418879F);
-
-        this.StorageLeftBedroll = new ModelRenderer(this, 90, 231);
-        this.StorageLeftBedroll.addBox(-0.5F, 8F, -8F, 3, 3, 16);
-        this.StorageLeftBedroll.setRotationPoint(9F, -10.2F, 1F);
-        setRotation(this.StorageLeftBedroll, 0F, 0F, -0.418879F);
-
-        this.StorageFrontRightChest = new ModelRenderer(this, 76, 208);
-        this.StorageFrontRightChest.addBox(-3.5F, 0F, -5F, 5, 8, 10);
-        this.StorageFrontRightChest.setRotationPoint(-11F, -1.2F, -4.5F);
-        setRotation(this.StorageFrontRightChest, 0F, 0F, -0.2617994F);
-
-        this.StorageBackRightChest = new ModelRenderer(this, 76, 208);
-        this.StorageBackRightChest.addBox(-3.5F, 0F, -5F, 5, 8, 10);
-        this.StorageBackRightChest.setRotationPoint(-11F, -1.2F, 6.5F);
-        setRotation(this.StorageBackRightChest, 0F, 0F, -0.2617994F);
-
-        this.StorageFrontLeftChest = new ModelRenderer(this, 76, 226);
-        this.StorageFrontLeftChest.addBox(-1.5F, 0F, -5F, 5, 8, 10);
-        this.StorageFrontLeftChest.setRotationPoint(11F, -1.2F, -4.5F);
-        setRotation(this.StorageFrontLeftChest, 0F, 0F, 0.2617994F);
-
-        this.StorageBackLeftChest = new ModelRenderer(this, 76, 226);
-        this.StorageBackLeftChest.addBox(-1.5F, 0F, -5F, 5, 8, 10);
-        this.StorageBackLeftChest.setRotationPoint(11F, -1.2F, 6.5F);
-        setRotation(this.StorageBackLeftChest, 0F, 0F, 0.2617994F);
-
-        this.StorageRightBlankets = new ModelRenderer(this, 0, 228);
-        this.StorageRightBlankets.addBox(-4.5F, -1F, -7F, 5, 10, 14);
-        this.StorageRightBlankets.setRotationPoint(-9F, -10.2F, 1F);
-
-        this.StorageLeftBlankets = new ModelRenderer(this, 38, 228);
-        this.StorageLeftBlankets.addBox(-0.5F, -1F, -7F, 5, 10, 14);
-        this.StorageLeftBlankets.setRotationPoint(9F, -10.2F, 1F);
-
-        this.HarnessBlanket = new ModelRenderer(this, 0, 196);
-        this.HarnessBlanket.addBox(-8.5F, -2F, -3F, 17, 14, 18);
-        this.HarnessBlanket.setRotationPoint(0F, -13.2F, -3.5F);
-
-        this.HarnessUpperBelt = new ModelRenderer(this, 70, 196);
-        this.HarnessUpperBelt.addBox(-8.5F, 0.5F, -2F, 17, 10, 2);
-        this.HarnessUpperBelt.setRotationPoint(0F, -2F, -2.5F);
-
-        this.HarnessLowerBelt = new ModelRenderer(this, 70, 196);
-        this.HarnessLowerBelt.addBox(-8.5F, 0.5F, -2.5F, 17, 10, 2);
-        this.HarnessLowerBelt.setRotationPoint(0F, -2F, 7F);
-
-        this.CabinPillow = new ModelRenderer(this, 76, 146);
-        this.CabinPillow.addBox(-6.5F, 0F, -6.5F, 13, 4, 13);
-        this.CabinPillow.setRotationPoint(0F, -16F, 2F);
-
-        this.CabinLeftRail = new ModelRenderer(this, 56, 147);
-        this.CabinLeftRail.addBox(-7F, 0F, 7F, 14, 1, 1);
-        this.CabinLeftRail.setRotationPoint(0F, -23F, 1.5F);
-        setRotation(this.CabinLeftRail, 0F, 1.570796F, 0F);
-
-        this.Cabin = new ModelRenderer(this, 0, 128);
-        this.Cabin.addBox(-7F, 0F, -7F, 14, 20, 14);
-        this.Cabin.setRotationPoint(0F, -35F, 2F);
-
-        this.CabinRightRail = new ModelRenderer(this, 56, 147);
-        this.CabinRightRail.addBox(-7F, 0F, 7F, 14, 1, 1);
-        this.CabinRightRail.setRotationPoint(0F, -23F, 1.5F);
-        setRotation(this.CabinRightRail, 0F, -1.570796F, 0F);
-
-        this.CabinBackRail = new ModelRenderer(this, 56, 147);
-        this.CabinBackRail.addBox(-7F, 0F, 7F, 14, 1, 1);
-        this.CabinBackRail.setRotationPoint(0F, -23F, 1.5F);
-
-        this.CabinRoof = new ModelRenderer(this, 56, 128);
-        this.CabinRoof.addBox(-7.5F, 0F, -7.5F, 15, 4, 15);
-        this.CabinRoof.setRotationPoint(0F, -34F, 2F);
-
-        this.FortNeckBeam = new ModelRenderer(this, 26, 180);
-        this.FortNeckBeam.addBox(-12F, 0F, -20.5F, 24, 4, 4);
-        this.FortNeckBeam.setRotationPoint(0F, -16F, 10F);
-
-        this.FortBackBeam = new ModelRenderer(this, 26, 180);
-        this.FortBackBeam.addBox(-12F, 0F, 0F, 24, 4, 4);
-        this.FortBackBeam.setRotationPoint(0F, -16F, 10F);
-
-        this.TuskLD1 = new ModelRenderer(this, 108, 207);
-        this.TuskLD1.addBox(1.3F, 5.5F, -24.2F, 3, 3, 7);
-        this.TuskLD1.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLD1, 0.6981317F, 0F, -0.1745329F);
-
-        this.TuskLD2 = new ModelRenderer(this, 112, 199);
-        this.TuskLD2.addBox(1.29F, 16.5F, -21.9F, 3, 3, 5);
-        this.TuskLD2.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLD2, 0.1745329F, 0F, -0.1745329F);
-
-        this.TuskLD3 = new ModelRenderer(this, 110, 190);
-        this.TuskLD3.addBox(1.3F, 24.9F, -15.5F, 3, 3, 6);
-        this.TuskLD3.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLD3, -0.3490659F, 0F, -0.1745329F);
-
-        this.TuskLD4 = new ModelRenderer(this, 86, 175);
-        this.TuskLD4.addBox(2.7F, 14.5F, -21.9F, 0, 7, 5);
-        this.TuskLD4.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLD4, 0.1745329F, 0F, -0.1745329F);
-
-        this.TuskLD5 = new ModelRenderer(this, 112, 225);
-        this.TuskLD5.addBox(2.7F, 22.9F, -17.5F, 0, 7, 8);
-        this.TuskLD5.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLD5, -0.3490659F, 0F, -0.1745329F);
-
-        this.TuskRD1 = new ModelRenderer(this, 108, 207);
-        this.TuskRD1.addBox(-4.3F, 5.5F, -24.2F, 3, 3, 7);
-        this.TuskRD1.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRD1, 0.6981317F, 0F, 0.1745329F);
-
-        this.TuskRD2 = new ModelRenderer(this, 112, 199);
-        this.TuskRD2.addBox(-4.29F, 16.5F, -21.9F, 3, 3, 5);
-        this.TuskRD2.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRD2, 0.1745329F, 0F, 0.1745329F);
-
-        this.TuskRD3 = new ModelRenderer(this, 110, 190);
-        this.TuskRD3.addBox(-4.3F, 24.9F, -15.5F, 3, 3, 6);
-        this.TuskRD3.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRD3, -0.3490659F, 0F, 0.1745329F);
-
-        this.TuskRD4 = new ModelRenderer(this, 86, 163);
-        this.TuskRD4.addBox(-2.8F, 14.5F, -21.9F, 0, 7, 5);
-        this.TuskRD4.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRD4, 0.1745329F, 0F, 0.1745329F);
-
-        this.TuskRD5 = new ModelRenderer(this, 112, 232);
-        this.TuskRD5.addBox(-2.8F, 22.9F, -17.5F, 0, 7, 8);
-        this.TuskRD5.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRD5, -0.3490659F, 0F, 0.1745329F);
-
-        this.TuskLI1 = new ModelRenderer(this, 108, 180);
-        this.TuskLI1.addBox(1.3F, 5.5F, -24.2F, 3, 3, 7);
-        this.TuskLI1.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLI1, 0.6981317F, 0F, -0.1745329F);
-
-        this.TuskLI2 = new ModelRenderer(this, 112, 172);
-        this.TuskLI2.addBox(1.29F, 16.5F, -21.9F, 3, 3, 5);
-        this.TuskLI2.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLI2, 0.1745329F, 0F, -0.1745329F);
-
-        this.TuskLI3 = new ModelRenderer(this, 110, 163);
-        this.TuskLI3.addBox(1.3F, 24.9F, -15.5F, 3, 3, 6);
-        this.TuskLI3.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLI3, -0.3490659F, 0F, -0.1745329F);
-
-        this.TuskLI4 = new ModelRenderer(this, 96, 175);
-        this.TuskLI4.addBox(2.7F, 14.5F, -21.9F, 0, 7, 5);
-        this.TuskLI4.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLI4, 0.1745329F, 0F, -0.1745329F);
-
-        this.TuskLI5 = new ModelRenderer(this, 112, 209);
-        this.TuskLI5.addBox(2.7F, 22.9F, -17.5F, 0, 7, 8);
-        this.TuskLI5.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLI5, -0.3490659F, 0F, -0.1745329F);
-
-        this.TuskRI1 = new ModelRenderer(this, 108, 180);
-        this.TuskRI1.addBox(-4.3F, 5.5F, -24.2F, 3, 3, 7);
-        this.TuskRI1.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRI1, 0.6981317F, 0F, 0.1745329F);
-
-        this.TuskRI2 = new ModelRenderer(this, 112, 172);
-        this.TuskRI2.addBox(-4.29F, 16.5F, -21.9F, 3, 3, 5);
-        this.TuskRI2.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRI2, 0.1745329F, 0F, 0.1745329F);
-
-        this.TuskRI3 = new ModelRenderer(this, 110, 163);
-        this.TuskRI3.addBox(-4.3F, 24.9F, -15.5F, 3, 3, 6);
-        this.TuskRI3.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRI3, -0.3490659F, 0F, 0.1745329F);
-
-        this.TuskRI4 = new ModelRenderer(this, 96, 163);
-        this.TuskRI4.addBox(-2.8F, 14.5F, -21.9F, 0, 7, 5);
-        this.TuskRI4.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRI4, 0.1745329F, 0F, 0.1745329F);
-
-        this.TuskRI5 = new ModelRenderer(this, 112, 216);
-        this.TuskRI5.addBox(-2.8F, 22.9F, -17.5F, 0, 7, 8);
-        this.TuskRI5.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRI5, -0.3490659F, 0F, 0.1745329F);
-
-        this.TuskLW1 = new ModelRenderer(this, 56, 166);
-        this.TuskLW1.addBox(1.3F, 5.5F, -24.2F, 3, 3, 7);
-        this.TuskLW1.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLW1, 0.6981317F, 0F, -0.1745329F);
-
-        this.TuskLW2 = new ModelRenderer(this, 60, 158);
-        this.TuskLW2.addBox(1.29F, 16.5F, -21.9F, 3, 3, 5);
-        this.TuskLW2.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLW2, 0.1745329F, 0F, -0.1745329F);
-
-        this.TuskLW3 = new ModelRenderer(this, 58, 149);
-        this.TuskLW3.addBox(1.3F, 24.9F, -15.5F, 3, 3, 6);
-        this.TuskLW3.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLW3, -0.3490659F, 0F, -0.1745329F);
-
-        this.TuskLW4 = new ModelRenderer(this, 46, 164);
-        this.TuskLW4.addBox(2.7F, 14.5F, -21.9F, 0, 7, 5);
-        this.TuskLW4.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLW4, 0.1745329F, 0F, -0.1745329F);
-
-        this.TuskLW5 = new ModelRenderer(this, 52, 192);
-        this.TuskLW5.addBox(2.7F, 22.9F, -17.5F, 0, 7, 8);
-        this.TuskLW5.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskLW5, -0.3490659F, 0F, -0.1745329F);
-
-        this.TuskRW1 = new ModelRenderer(this, 56, 166);
-        this.TuskRW1.addBox(-4.3F, 5.5F, -24.2F, 3, 3, 7);
-        this.TuskRW1.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRW1, 0.6981317F, 0F, 0.1745329F);
-
-        this.TuskRW2 = new ModelRenderer(this, 60, 158);
-        this.TuskRW2.addBox(-4.29F, 16.5F, -21.9F, 3, 3, 5);
-        this.TuskRW2.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRW2, 0.1745329F, 0F, 0.1745329F);
-
-        this.TuskRW3 = new ModelRenderer(this, 58, 149);
-        this.TuskRW3.addBox(-4.3F, 24.9F, -15.5F, 3, 3, 6);
-        this.TuskRW3.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRW3, -0.3490659F, 0F, 0.1745329F);
-
-        this.TuskRW4 = new ModelRenderer(this, 46, 157);
-        this.TuskRW4.addBox(-2.8F, 14.5F, -21.9F, 0, 7, 5);
-        this.TuskRW4.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRW4, 0.1745329F, 0F, 0.1745329F);
-
-        this.TuskRW5 = new ModelRenderer(this, 52, 199);
-        this.TuskRW5.addBox(-2.8F, 22.9F, -17.5F, 0, 7, 8);
-        this.TuskRW5.setRotationPoint(0F, -10F, -16.5F);
-        setRotation(this.TuskRW5, -0.3490659F, 0F, 0.1745329F);
-
-        this.FortFloor1 = new ModelRenderer(this, 0, 176);
-        this.FortFloor1.addBox(-0.5F, -20F, -6F, 1, 8, 12);
-        this.FortFloor1.setRotationPoint(0F, -16F, 10F);
-        setRotation(this.FortFloor1, 1.570796F, 0F, 1.570796F);
-
-        this.FortFloor2 = new ModelRenderer(this, 0, 176);
-        this.FortFloor2.addBox(-0.5F, -12F, -6F, 1, 8, 12);
-        this.FortFloor2.setRotationPoint(0F, -16F, 10F);
-        setRotation(this.FortFloor2, 1.570796F, 0F, 1.570796F);
-
-        this.FortFloor3 = new ModelRenderer(this, 0, 176);
-        this.FortFloor3.addBox(-0.5F, -4F, -6F, 1, 8, 12);
-        this.FortFloor3.setRotationPoint(0F, -16F, 10F);
-        setRotation(this.FortFloor3, 1.570796F, 0F, 1.570796F);
-
-        this.FortBackWall = new ModelRenderer(this, 0, 176);
-        this.FortBackWall.addBox(-5F, -6.2F, -6F, 1, 8, 12);
-        this.FortBackWall.setRotationPoint(0F, -16F, 10F);
-        setRotation(this.FortBackWall, 0F, 1.570796F, 0F);
-
-        this.FortBackLeftWall = new ModelRenderer(this, 0, 176);
-        this.FortBackLeftWall.addBox(6F, -6F, -7F, 1, 8, 12);
-        this.FortBackLeftWall.setRotationPoint(0F, -16F, 10F);
-
-        this.FortBackRightWall = new ModelRenderer(this, 0, 176);
-        this.FortBackRightWall.addBox(-7F, -6F, -7F, 1, 8, 12);
-        this.FortBackRightWall.setRotationPoint(0F, -16F, 10F);
-
-        this.StorageUpLeft = new ModelRenderer(this, 76, 226);
-        this.StorageUpLeft.addBox(6.5F, 1F, -14F, 5, 8, 10);
-        this.StorageUpLeft.setRotationPoint(0F, -16F, 10F);
-        setRotation(this.StorageUpLeft, 0F, 0F, -0.3839724F);
-
-        this.StorageUpRight = new ModelRenderer(this, 76, 208);
-        this.StorageUpRight.addBox(-11.5F, 1F, -14F, 5, 8, 10);
-        this.StorageUpRight.setRotationPoint(0F, -16F, 10F);
-        setRotation(this.StorageUpRight, 0F, 0F, 0.3839724F);
+    public MoCModelElephant(ModelPart root) {
+        this.head                  = root.getChild("head");
+        this.neck                  = root.getChild("neck");
+        this.headBump              = root.getChild("headBump");
+        this.chin                  = root.getChild("chin");
+        this.lowerLip              = root.getChild("lowerLip");
+        this.back                  = root.getChild("back");
+        this.leftSmallEar          = root.getChild("leftSmallEar");
+        this.leftBigEar            = root.getChild("leftBigEar");
+        this.rightSmallEar         = root.getChild("rightSmallEar");
+        this.rightBigEar           = root.getChild("rightBigEar");
+        this.hump                  = root.getChild("hump");
+        this.body                  = root.getChild("body");
+        this.skirt                 = root.getChild("skirt");
+        this.rightTuskA            = root.getChild("rightTuskA");
+        this.rightTuskB            = root.getChild("rightTuskB");
+        this.rightTuskC            = root.getChild("rightTuskC");
+        this.rightTuskD            = root.getChild("rightTuskD");
+        this.leftTuskA             = root.getChild("leftTuskA");
+        this.leftTuskB             = root.getChild("leftTuskB");
+        this.leftTuskC             = root.getChild("leftTuskC");
+        this.leftTuskD             = root.getChild("leftTuskD");
+        this.trunkA                = root.getChild("trunkA");
+        this.trunkB                = root.getChild("trunkB");
+        this.trunkC                = root.getChild("trunkC");
+        this.trunkD                = root.getChild("trunkD");
+        this.trunkE                = root.getChild("trunkE");
+        this.frontRightUpperLeg    = root.getChild("frontRightUpperLeg");
+        this.frontRightLowerLeg    = root.getChild("frontRightLowerLeg");
+        this.frontLeftUpperLeg     = root.getChild("frontLeftUpperLeg");
+        this.frontLeftLowerLeg     = root.getChild("frontLeftLowerLeg");
+        this.backRightUpperLeg     = root.getChild("backRightUpperLeg");
+        this.backRightLowerLeg     = root.getChild("backRightLowerLeg");
+        this.backLeftUpperLeg      = root.getChild("backLeftUpperLeg");
+        this.backLeftLowerLeg      = root.getChild("backLeftLowerLeg");
+        this.tailRoot              = root.getChild("tailRoot");
+        this.tail                  = root.getChild("tail");
+        this.tailPlush             = root.getChild("tailPlush");
+        this.storageRightBedroll   = root.getChild("storageRightBedroll");
+        this.storageLeftBedroll    = root.getChild("storageLeftBedroll");
+        this.storageFrontRightChest= root.getChild("storageFrontRightChest");
+        this.storageBackRightChest = root.getChild("storageBackRightChest");
+        this.storageFrontLeftChest = root.getChild("storageFrontLeftChest");
+        this.storageBackLeftChest  = root.getChild("storageBackLeftChest");
+        this.storageRightBlankets  = root.getChild("storageRightBlankets");
+        this.storageLeftBlankets   = root.getChild("storageLeftBlankets");
+        this.harnessBlanket        = root.getChild("harnessBlanket");
+        this.harnessUpperBelt      = root.getChild("harnessUpperBelt");
+        this.harnessLowerBelt      = root.getChild("harnessLowerBelt");
+        this.cabinPillow           = root.getChild("cabinPillow");
+        this.cabinLeftRail         = root.getChild("cabinLeftRail");
+        this.cabin                 = root.getChild("cabin");
+        this.cabinRightRail        = root.getChild("cabinRightRail");
+        this.cabinBackRail         = root.getChild("cabinBackRail");
+        this.cabinRoof             = root.getChild("cabinRoof");
+        this.fortNeckBeam          = root.getChild("fortNeckBeam");
+        this.fortBackBeam          = root.getChild("fortBackBeam");
+        this.tuskLD1               = root.getChild("tuskLD1");
+        this.tuskLD2               = root.getChild("tuskLD2");
+        this.tuskLD3               = root.getChild("tuskLD3");
+        this.tuskLD4               = root.getChild("tuskLD4");
+        this.tuskLD5               = root.getChild("tuskLD5");
+        this.tuskRD1               = root.getChild("tuskRD1");
+        this.tuskRD2               = root.getChild("tuskRD2");
+        this.tuskRD3               = root.getChild("tuskRD3");
+        this.tuskRD4               = root.getChild("tuskRD4");
+        this.tuskRD5               = root.getChild("tuskRD5");
+        this.tuskLI1               = root.getChild("tuskLI1");
+        this.tuskLI2               = root.getChild("tuskLI2");
+        this.tuskLI3               = root.getChild("tuskLI3");
+        this.tuskLI4               = root.getChild("tuskLI4");
+        this.tuskLI5               = root.getChild("tuskLI5");
+        this.tuskRI1               = root.getChild("tuskRI1");
+        this.tuskRI2               = root.getChild("tuskRI2");
+        this.tuskRI3               = root.getChild("tuskRI3");
+        this.tuskRI4               = root.getChild("tuskRI4");
+        this.tuskRI5               = root.getChild("tuskRI5");
+        this.tuskLW1               = root.getChild("tuskLW1");
+        this.tuskLW2               = root.getChild("tuskLW2");
+        this.tuskLW3               = root.getChild("tuskLW3");
+        this.tuskLW4               = root.getChild("tuskLW4");
+        this.tuskLW5               = root.getChild("tuskLW5");
+        this.tuskRW1               = root.getChild("tuskRW1");
+        this.tuskRW2               = root.getChild("tuskRW2");
+        this.tuskRW3               = root.getChild("tuskRW3");
+        this.tuskRW4               = root.getChild("tuskRW4");
+        this.tuskRW5               = root.getChild("tuskRW5");
+        this.fortFloor1            = root.getChild("fortFloor1");
+        this.fortFloor2            = root.getChild("fortFloor2");
+        this.fortFloor3            = root.getChild("fortFloor3");
+        this.fortBackWall          = root.getChild("fortBackWall");
+        this.fortBackLeftWall      = root.getChild("fortBackLeftWall");
+        this.fortBackRightWall     = root.getChild("fortBackRightWall");
+        this.storageUpLeft         = root.getChild("storageUpLeft");
+        this.storageUpRight        = root.getChild("storageUpRight");
+    }
+    
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // HEAD
+        root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(60, 0)
+                        .addBox(-5.5F, -6F, -8F, 11, 15, 10),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.1745329F, 0F, 0F)
+        );
+
+        // NECK
+        root.addOrReplaceChild("neck",
+                CubeListBuilder.create()
+                        .texOffs(46, 48)
+                        .addBox(-4.95F, -6F, -8F, 10, 14, 8),
+                PartPose.offsetAndRotation(0F, -8F, -10F, -0.2617994F, 0F, 0F)
+        );
+
+        // HEAD BUMP
+        root.addOrReplaceChild("headBump",
+                CubeListBuilder.create()
+                        .texOffs(104, 41)
+                        .addBox(-3F, -9F, -6F, 6, 3, 6),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.1745329F, 0F, 0F)
+        );
+
+        // CHIN
+        root.addOrReplaceChild("chin",
+                CubeListBuilder.create()
+                        .texOffs(86, 56)
+                        .addBox(-1.5F, -6F, -10.7F, 3, 5, 4),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 2.054118F, 0F, 0F)
+        );
+
+        // LOWER LIP
+        root.addOrReplaceChild("lowerLip",
+                CubeListBuilder.create()
+                        .texOffs(80, 65)
+                        .addBox(-2F, -2F, -14F, 4, 2, 6),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 1.570796F, 0F, 0F)
+        );
+
+        // BACK
+        root.addOrReplaceChild("back",
+                CubeListBuilder.create()
+                        .texOffs(0, 48)
+                        .addBox(-5F, -10F, -10F, 10, 2, 26),
+                PartPose.offset(0F, -4F, -3F)
+        );
+
+        // LEFT SMALL EAR
+        root.addOrReplaceChild("leftSmallEar",
+                CubeListBuilder.create()
+                        .texOffs(102, 0)
+                        .addBox(2F, -8F, -5F, 8, 10, 1),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.1745329F, -0.5235988F, 0.5235988F)
+        );
+
+        // LEFT BIG EAR
+        root.addOrReplaceChild("leftBigEar",
+                CubeListBuilder.create()
+                        .texOffs(102, 0)
+                        .addBox(2F, -8F, -5F, 12, 14, 1),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.1745329F, -0.5235988F, 0.5235988F)
+        );
+
+        // RIGHT SMALL EAR
+        root.addOrReplaceChild("rightSmallEar",
+                CubeListBuilder.create()
+                        .texOffs(106, 15)
+                        .addBox(-10F, -8F, -5F, 8, 10, 1),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.1745329F, 0.5235988F, -0.5235988F)
+        );
+
+        // RIGHT BIG EAR
+        root.addOrReplaceChild("rightBigEar",
+                CubeListBuilder.create()
+                        .texOffs(102, 15)
+                        .addBox(-14F, -8F, -5F, 12, 14, 1),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.1745329F, 0.5235988F, -0.5235988F)
+        );
+
+        // HUMP
+        root.addOrReplaceChild("hump",
+                CubeListBuilder.create()
+                        .texOffs(88, 30)
+                        .addBox(-6F, -2F, -3F, 12, 3, 8),
+                PartPose.offset(0F, -13F, -5.5F)
+        );
+
+        // BODY
+        root.addOrReplaceChild("body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-8F, -10F, -10F, 16, 20, 28),
+                PartPose.offset(0F, -2F, -3F)
+        );
+
+        // SKIRT
+        root.addOrReplaceChild("skirt",
+                CubeListBuilder.create()
+                        .texOffs(28, 94)
+                        .addBox(-8F, -10F, -6F, 16, 28, 6),
+                PartPose.offsetAndRotation(0F, 8F, -3F, 1.570796F, 0F, 0F)
+        );
+
+        // RIGHT TUSK A
+        root.addOrReplaceChild("rightTuskA",
+                CubeListBuilder.create()
+                        .texOffs(2, 60)
+                        .addBox(-3.8F, -3.5F, -19F, 2, 2, 10),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 1.22173F, 0F, 0.1745329F)
+        );
+
+        // RIGHT TUSK B
+        root.addOrReplaceChild("rightTuskB",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-3.8F, 6.2F, -24.2F, 2, 2, 7),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 0.6981317F, 0F, 0.1745329F)
+        );
+
+        // RIGHT TUSK C
+        root.addOrReplaceChild("rightTuskC",
+                CubeListBuilder.create()
+                        .texOffs(0, 18)
+                        .addBox(-3.8F, 17.1F, -21.9F, 2, 2, 5),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 0.1745329F, 0F, 0.1745329F)
+        );
+
+        // RIGHT TUSK D
+        root.addOrReplaceChild("rightTuskD",
+                CubeListBuilder.create()
+                        .texOffs(14, 18)
+                        .addBox(-3.8F, 25.5F, -14.5F, 2, 2, 5),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.3490659F, 0F, 0.1745329F)
+        );
+
+        // LEFT TUSK A
+        root.addOrReplaceChild("leftTuskA",
+                CubeListBuilder.create()
+                        .texOffs(2, 48)
+                        .addBox(1.8F, -3.5F, -19F, 2, 2, 10),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 1.22173F, 0F, -0.1745329F)
+        );
+
+        // LEFT TUSK B
+        root.addOrReplaceChild("leftTuskB",
+                CubeListBuilder.create()
+                        .texOffs(0, 9)
+                        .addBox(1.8F, 6.2F, -24.2F, 2, 2, 7),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 0.6981317F, 0F, -0.1745329F)
+        );
+
+        // LEFT TUSK C
+        root.addOrReplaceChild("leftTuskC",
+                CubeListBuilder.create()
+                        .texOffs(0, 18)
+                        .addBox(1.8F, 17.1F, -21.9F, 2, 2, 5),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, 0.1745329F, 0F, -0.1745329F)
+        );
+
+        // LEFT TUSK D
+        root.addOrReplaceChild("leftTuskD",
+                CubeListBuilder.create()
+                        .texOffs(14, 18)
+                        .addBox(1.8F, 25.5F, -14.5F, 2, 2, 5),
+                PartPose.offsetAndRotation(0F, -10F, -16.5F, -0.3490659F, 0F, -0.1745329F)
+        );
+
+        // TRUNK A
+        root.addOrReplaceChild("trunkA",
+                CubeListBuilder.create()
+                        .texOffs(0, 76)
+                        .addBox(-4F, -2.5F, -18F, 8, 7, 10),
+                PartPose.offsetAndRotation(0F, -3F, -22.46667F, 1.570796F, 0F, 0F)
+        );
+
+        // TRUNK B
+        root.addOrReplaceChild("trunkB",
+                CubeListBuilder.create()
+                        .texOffs(0, 93)
+                        .addBox(-3F, -2.5F, -7F, 6, 5, 7),
+                PartPose.offsetAndRotation(0F, 6.5F, -22.5F, 1.658063F, 0F, 0F)
+        );
+
+        // TRUNK C
+        root.addOrReplaceChild("trunkC",
+                CubeListBuilder.create()
+                        .texOffs(0, 105)
+                        .addBox(-2.5F, -2F, -4F, 5, 4, 5),
+                PartPose.offsetAndRotation(0F, 13F, -22.0F, 1.919862F, 0F, 0F)
+        );
+
+        // TRUNK D
+        root.addOrReplaceChild("trunkD",
+                CubeListBuilder.create()
+                        .texOffs(0, 114)
+                        .addBox(-2F, -1.5F, -5F, 4, 3, 5),
+                PartPose.offsetAndRotation(0F, 16F, -21.5F, 2.216568F, 0F, 0F)
+        );
+
+        // TRUNK E
+        root.addOrReplaceChild("trunkE",
+                CubeListBuilder.create()
+                        .texOffs(0, 122)
+                        .addBox(-1.5F, -1F, -4F, 3, 2, 4),
+                PartPose.offsetAndRotation(0F, 19.5F, -19F, 2.530727F, 0F, 0F)
+        );
+
+        // FRONT RIGHT UPPER LEG
+        root.addOrReplaceChild("frontRightUpperLeg",
+                CubeListBuilder.create()
+                        .texOffs(100, 109)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 12, 7),
+                PartPose.offset( -4.6F, 4F, -9.6F)
+        );
+
+        // FRONT RIGHT LOWER LEG
+        root.addOrReplaceChild("frontRightLowerLeg",
+                CubeListBuilder.create()
+                        .texOffs(100, 73)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 10, 7),
+                PartPose.offset( -4.6F, 14F, -9.6F)
+        );
+
+        // FRONT LEFT UPPER LEG
+        root.addOrReplaceChild("frontLeftUpperLeg",
+                CubeListBuilder.create()
+                        .texOffs(100, 90)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 12, 7),
+                PartPose.offset( 4.6F, 4F, -9.6F)
+        );
+
+        // FRONT LEFT LOWER LEG
+        root.addOrReplaceChild("frontLeftLowerLeg",
+                CubeListBuilder.create()
+                        .texOffs(72, 73)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 10, 7),
+                PartPose.offset( 4.6F, 14F, -9.6F)
+        );
+
+        // BACK RIGHT UPPER LEG
+        root.addOrReplaceChild("backRightUpperLeg",
+                CubeListBuilder.create()
+                        .texOffs(72, 109)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 12, 7),
+                PartPose.offset( -4.6F, 4F, 11.6F)
+        );
+
+        // BACK RIGHT LOWER LEG
+        root.addOrReplaceChild("backRightLowerLeg",
+                CubeListBuilder.create()
+                        .texOffs(100, 56)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 10, 7),
+                PartPose.offset( -4.6F, 14F, 11.6F)
+        );
+
+        // BACK LEFT UPPER LEG
+        root.addOrReplaceChild("backLeftUpperLeg",
+                CubeListBuilder.create()
+                        .texOffs(72, 90)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 12, 7),
+                PartPose.offset( 4.6F, 4F, 11.6F)
+        );
+
+        // BACK LEFT LOWER LEG
+        root.addOrReplaceChild("backLeftLowerLeg",
+                CubeListBuilder.create()
+                        .texOffs(44, 77)
+                        .addBox(-3.5F, 0F, -3.5F, 7, 10, 7),
+                PartPose.offset( 4.6F, 14F, 11.6F)
+        );
+
+        // TAIL ROOT
+        root.addOrReplaceChild("tailRoot",
+                CubeListBuilder.create()
+                        .texOffs(20, 105)
+                        .addBox(-1F, 0F, -2F, 2, 10, 2),
+                PartPose.offsetAndRotation(0F, -8F, 15F, 0.296706F, 0F, 0F)
+        );
+
+        // TAIL
+        root.addOrReplaceChild("tail",
+                CubeListBuilder.create()
+                        .texOffs(20, 117)
+                        .addBox(-1F, 9.7F, -0.2F, 2, 6, 2),
+                PartPose.offsetAndRotation(0F, -8F, 15F, 0.1134464F, 0F, 0F)
+        );
+
+        // TAIL PLUSH
+        root.addOrReplaceChild("tailPlush",
+                CubeListBuilder.create()
+                        .texOffs(26, 76)
+                        .addBox(-1.5F, 15.5F, -0.7F, 3, 6, 3),
+                PartPose.offsetAndRotation(0F, -8F, 15F, 0.1134464F, 0F, 0F)
+        );
+
+        // STORAGE RIGHT BEDROLL
+        root.addOrReplaceChild("storageRightBedroll",
+                CubeListBuilder.create()
+                        .texOffs(90, 231)
+                        .addBox(-2.5F, 8F, -8F, 3, 3, 16),
+                PartPose.offsetAndRotation(-9F, -10.2F, 1F, 0F, 0F, 0.418879F)
+        );
+
+        // STORAGE LEFT BEDROLL
+        root.addOrReplaceChild("storageLeftBedroll",
+                CubeListBuilder.create()
+                        .texOffs(90, 231)
+                        .addBox(-0.5F, 8F, -8F, 3, 3, 16),
+                PartPose.offsetAndRotation(9F, -10.2F, 1F, 0F, 0F, -0.418879F)
+        );
+
+        // STORAGE FRONT RIGHT CHEST
+        root.addOrReplaceChild("storageFrontRightChest",
+                CubeListBuilder.create()
+                        .texOffs(76, 208)
+                        .addBox(-3.5F, 0F, -5F, 5, 8, 10),
+                PartPose.offsetAndRotation(-11F, -1.2F, -4.5F, 0F, 0F, -0.2617994F)
+        );
+
+        // STORAGE BACK RIGHT CHEST
+        root.addOrReplaceChild("storageBackRightChest",
+                CubeListBuilder.create()
+                        .texOffs(76, 208)
+                        .addBox(-3.5F, 0F, -5F, 5, 8, 10),
+                PartPose.offsetAndRotation(-11F, -1.2F, 6.5F, 0F, 0F, -0.2617994F)
+        );
+
+        // STORAGE FRONT LEFT CHEST
+        root.addOrReplaceChild("storageFrontLeftChest",
+                CubeListBuilder.create()
+                        .texOffs(76, 226)
+                        .addBox(-1.5F, 0F, -5F, 5, 8, 10),
+                PartPose.offsetAndRotation(11F, -1.2F, -4.5F, 0F, 0F, 0.2617994F)
+        );
+
+        // STORAGE BACK LEFT CHEST
+        root.addOrReplaceChild("storageBackLeftChest",
+                CubeListBuilder.create()
+                        .texOffs(76, 226)
+                        .addBox(-1.5F, 0F, -5F, 5, 8, 10),
+                PartPose.offsetAndRotation(11F, -1.2F, 6.5F, 0F, 0F, 0.2617994F)
+        );
+
+        // STORAGE RIGHT BLANKETS
+        root.addOrReplaceChild("storageRightBlankets",
+                CubeListBuilder.create()
+                        .texOffs(0, 228)
+                        .addBox(-4.5F, -1F, -7F, 5, 10, 14),
+                PartPose.offset( -9F, -10.2F, 1F)
+        );
+
+        // STORAGE LEFT BLANKETS
+        root.addOrReplaceChild("storageLeftBlankets",
+                CubeListBuilder.create()
+                        .texOffs(38, 228)
+                        .addBox(-0.5F, -1F, -7F, 5, 10, 14),
+                PartPose.offset( 9F, -10.2F, 1F)
+        );
+
+        // HARNESS BLANKET
+        root.addOrReplaceChild("harnessBlanket",
+                CubeListBuilder.create()
+                        .texOffs(0, 196)
+                        .addBox(-8.5F, -2F, -3F, 17, 14, 18),
+                PartPose.offset( 0F, -13.2F, -3.5F)
+        );
+
+        // HARNESS UPPER BELT
+        root.addOrReplaceChild("harnessUpperBelt",
+                CubeListBuilder.create()
+                        .texOffs(70, 196)
+                        .addBox(-8.5F, 0.5F, -2F, 17, 10, 2),
+                PartPose.offset( 0F, -2F, -2.5F)
+        );
+
+        // HARNESS LOWER BELT
+        root.addOrReplaceChild("harnessLowerBelt",
+                CubeListBuilder.create()
+                        .texOffs(70, 196)
+                        .addBox(-8.5F, 0.5F, -2.5F, 17, 10, 2),
+                PartPose.offset( 0F, -2F, 7F)
+        );
+
+        // CABIN PILLOW
+        root.addOrReplaceChild("cabinPillow",
+                CubeListBuilder.create()
+                        .texOffs(76, 146)
+                        .addBox(-6.5F, 0F, -6.5F, 13, 4, 13),
+                PartPose.offset( 0F, -16F, 2F)
+        );
+
+        // CABIN LEFT RAIL
+        root.addOrReplaceChild("cabinLeftRail",
+                CubeListBuilder.create()
+                        .texOffs(56, 147)
+                        .addBox(-7F, 0F, 7F, 14, 1, 1),
+                PartPose.offsetAndRotation(0F, -23F, 1.5F, 0F, 1.570796F, 0F)
+        );
+
+        // CABIN
+        root.addOrReplaceChild("cabin",
+                CubeListBuilder.create()
+                        .texOffs(0, 128)
+                        .addBox(-7F, 0F, -7F, 14, 20, 14),
+                PartPose.offset( 0F, -35F, 2F)
+        );
+
+        // CABIN RIGHT RAIL
+        root.addOrReplaceChild("cabinRightRail",
+                CubeListBuilder.create()
+                        .texOffs(56, 147)
+                        .addBox(-7F, 0F, 7F, 14, 1, 1),
+                PartPose.offsetAndRotation(0F, -23F, 1.5F, 0F, -1.570796F, 0F)
+        );
+
+        // CABIN BACK RAIL
+        root.addOrReplaceChild("cabinBackRail",
+                CubeListBuilder.create()
+                        .texOffs(56, 147)
+                        .addBox(-7F, 0F, 7F, 14, 1, 1),
+                PartPose.offset( 0F, -23F, 1.5F)
+        );
+
+        // CABIN ROOF
+        root.addOrReplaceChild("cabinRoof",
+                CubeListBuilder.create()
+                        .texOffs(56, 128)
+                        .addBox(-7.5F, 0F, -7.5F, 15, 4, 15),
+                PartPose.offset( 0F, -34F, 2F)
+        );
+
+        // FORT NECK BEAM
+        root.addOrReplaceChild("fortNeckBeam",
+                CubeListBuilder.create()
+                        .texOffs(26, 180)
+                        .addBox(-12F, 0F, -20.5F, 24, 4, 4),
+                PartPose.offset( 0F, -16F, 10F)
+        );
+
+        // FORT BACK BEAM
+        root.addOrReplaceChild("fortBackBeam",
+                CubeListBuilder.create()
+                        .texOffs(26, 180)
+                        .addBox(-12F, 0F, 0F, 24, 4, 4),
+                PartPose.offset( 0F, -16F, 10F)
+        );
+
+        // TUSK LD1
+        root.addOrReplaceChild("tuskLD1",
+                CubeListBuilder.create()
+                        .texOffs(108, 207)
+                        .addBox(1.3F, 5.5F, -24.2F, 3, 3, 7),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.6981317F, 0F, -0.1745329F)
+        );
+
+        // TUSK LD2
+        root.addOrReplaceChild("tuskLD2",
+                CubeListBuilder.create()
+                        .texOffs(112, 199)
+                        .addBox(1.29F, 16.5F, -21.9F, 3, 3, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, -0.1745329F)
+        );
+
+        // TUSK LD3
+        root.addOrReplaceChild("tuskLD3",
+                CubeListBuilder.create()
+                        .texOffs(110, 190)
+                        .addBox(1.3F, 24.9F, -15.5F, 3, 3, 6),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, -0.1745329F)
+        );
+
+        // TUSK LD4
+        root.addOrReplaceChild("tuskLD4",
+                CubeListBuilder.create()
+                        .texOffs(86, 175)
+                        .addBox(2.7F, 14.5F, -21.9F, 0, 7, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, -0.1745329F)
+        );
+
+        // TUSK LD5
+        root.addOrReplaceChild("tuskLD5",
+                CubeListBuilder.create()
+                        .texOffs(112, 225)
+                        .addBox(2.7F, 22.9F, -17.5F, 0, 7, 8),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, -0.1745329F)
+        );
+
+        // TUSK RD1
+        root.addOrReplaceChild("tuskRD1",
+                CubeListBuilder.create()
+                        .texOffs(108, 207)
+                        .addBox(-4.3F, 5.5F, -24.2F, 3, 3, 7),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.6981317F, 0F, 0.1745329F)
+        );
+
+        // TUSK RD2
+        root.addOrReplaceChild("tuskRD2",
+                CubeListBuilder.create()
+                        .texOffs(112, 199)
+                        .addBox(-4.29F, 16.5F, -21.9F, 3, 3, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, 0.1745329F)
+        );
+
+        // TUSK RD3
+        root.addOrReplaceChild("tuskRD3",
+                CubeListBuilder.create()
+                        .texOffs(110, 190)
+                        .addBox(-4.3F, 24.9F, -15.5F, 3, 3, 6),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, 0.1745329F)
+        );
+
+        // TUSK RD4
+        root.addOrReplaceChild("tuskRD4",
+                CubeListBuilder.create()
+                        .texOffs(86, 163)
+                        .addBox(-2.8F, 14.5F, -21.9F, 0, 7, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, 0.1745329F)
+        );
+
+        // TUSK RD5
+        root.addOrReplaceChild("tuskRD5",
+                CubeListBuilder.create()
+                        .texOffs(112, 232)
+                        .addBox(-2.8F, 22.9F, -17.5F, 0, 7, 8),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, 0.1745329F)
+        );
+
+        // TUSK LI1
+        root.addOrReplaceChild("tuskLI1",
+                CubeListBuilder.create()
+                        .texOffs(108, 180)
+                        .addBox(1.3F, 5.5F, -24.2F, 3, 3, 7),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.6981317F, 0F, -0.1745329F)
+        );
+
+        // TUSK LI2
+        root.addOrReplaceChild("tuskLI2",
+                CubeListBuilder.create()
+                        .texOffs(112, 172)
+                        .addBox(1.29F, 16.5F, -21.9F, 3, 3, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, -0.1745329F)
+        );
+
+        // TUSK LI3
+        root.addOrReplaceChild("tuskLI3",
+                CubeListBuilder.create()
+                        .texOffs(110, 163)
+                        .addBox(1.3F, 24.9F, -15.5F, 3, 3, 6),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, -0.1745329F)
+        );
+
+        // TUSK LI4
+        root.addOrReplaceChild("tuskLI4",
+                CubeListBuilder.create()
+                        .texOffs(96, 175)
+                        .addBox(2.7F, 14.5F, -21.9F, 0, 7, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, -0.1745329F)
+        );
+
+        // TUSK LI5
+        root.addOrReplaceChild("tuskLI5",
+                CubeListBuilder.create()
+                        .texOffs(112, 209)
+                        .addBox(2.7F, 22.9F, -17.5F, 0, 7, 8),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, -0.1745329F)
+        );
+
+        // TUSK RI1
+        root.addOrReplaceChild("tuskRI1",
+                CubeListBuilder.create()
+                        .texOffs(108, 180)
+                        .addBox(-4.3F, 5.5F, -24.2F, 3, 3, 7),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.6981317F, 0F, 0.1745329F)
+        );
+
+        // TUSK RI2
+        root.addOrReplaceChild("tuskRI2",
+                CubeListBuilder.create()
+                        .texOffs(112, 172)
+                        .addBox(-4.29F, 16.5F, -21.9F, 3, 3, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, 0.1745329F)
+        );
+
+        // TUSK RI3
+        root.addOrReplaceChild("tuskRI3",
+                CubeListBuilder.create()
+                        .texOffs(110, 163)
+                        .addBox(-4.3F, 24.9F, -15.5F, 3, 3, 6),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, 0.1745329F)
+        );
+
+        // TUSK RI4
+        root.addOrReplaceChild("tuskRI4",
+                CubeListBuilder.create()
+                        .texOffs(96, 163)
+                        .addBox(-2.8F, 14.5F, -21.9F, 0, 7, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, 0.1745329F)
+        );
+
+        // TUSK RI5
+        root.addOrReplaceChild("tuskRI5",
+                CubeListBuilder.create()
+                        .texOffs(112, 216)
+                        .addBox(-2.8F, 22.9F, -17.5F, 0, 7, 8),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, 0.1745329F)
+        );
+
+        // TUSK LW1
+        root.addOrReplaceChild("tuskLW1",
+                CubeListBuilder.create()
+                        .texOffs(56, 166)
+                        .addBox(1.3F, 5.5F, -24.2F, 3, 3, 7),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.6981317F, 0F, -0.1745329F)
+        );
+
+        // TUSK LW2
+        root.addOrReplaceChild("tuskLW2",
+                CubeListBuilder.create()
+                        .texOffs(60, 158)
+                        .addBox(1.29F, 16.5F, -21.9F, 3, 3, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, -0.1745329F)
+        );
+
+        // TUSK LW3
+        root.addOrReplaceChild("tuskLW3",
+                CubeListBuilder.create()
+                        .texOffs(58, 149)
+                        .addBox(1.3F, 24.9F, -15.5F, 3, 3, 6),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, -0.1745329F)
+        );
+
+        // TUSK LW4
+        root.addOrReplaceChild("tuskLW4",
+                CubeListBuilder.create()
+                        .texOffs(46, 164)
+                        .addBox(2.7F, 14.5F, -21.9F, 0, 7, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, -0.1745329F)
+        );
+
+        // TUSK LW5
+        root.addOrReplaceChild("tuskLW5",
+                CubeListBuilder.create()
+                        .texOffs(52, 192)
+                        .addBox(2.7F, 22.9F, -17.5F, 0, 7, 8),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, -0.1745329F)
+        );
+
+        // TUSK RW1
+        root.addOrReplaceChild("tuskRW1",
+                CubeListBuilder.create()
+                        .texOffs(56, 166)
+                        .addBox(-4.3F, 5.5F, -24.2F, 3, 3, 7),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.6981317F, 0F, 0.1745329F)
+        );
+
+        // TUSK RW2
+        root.addOrReplaceChild("tuskRW2",
+                CubeListBuilder.create()
+                        .texOffs(60, 158)
+                        .addBox(-4.29F, 16.5F, -21.9F, 3, 3, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, 0.1745329F)
+        );
+
+        // TUSK RW3
+        root.addOrReplaceChild("tuskRW3",
+                CubeListBuilder.create()
+                        .texOffs(58, 149)
+                        .addBox(-4.3F, 24.9F, -15.5F, 3, 3, 6),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, 0.1745329F)
+        );
+
+        // TUSK RW4
+        root.addOrReplaceChild("tuskRW4",
+                CubeListBuilder.create()
+                        .texOffs(46, 157)
+                        .addBox(-2.8F, 14.5F, -21.9F, 0, 7, 5),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, 0.1745329F, 0F, 0.1745329F)
+        );
+
+        // TUSK RW5
+        root.addOrReplaceChild("tuskRW5",
+                CubeListBuilder.create()
+                        .texOffs(52, 199)
+                        .addBox(-2.8F, 22.9F, -17.5F, 0, 7, 8),
+                PartPose.offsetAndRotation( 0F, -10F, -16.5F, -0.3490659F, 0F, 0.1745329F)
+        );
+
+        // FORT FLOOR 1
+        root.addOrReplaceChild("fortFloor1",
+                CubeListBuilder.create()
+                        .texOffs(0, 176)
+                        .addBox(-0.5F, -20F, -6F, 1, 8, 12),
+                PartPose.offsetAndRotation(0F, -16F, 10F, 1.570796F, 0F, 1.570796F)
+        );
+
+        // FORT FLOOR 2
+        root.addOrReplaceChild("fortFloor2",
+                CubeListBuilder.create()
+                        .texOffs(0, 176)
+                        .addBox(-0.5F, -12F, -6F, 1, 8, 12),
+                PartPose.offsetAndRotation(0F, -16F, 10F, 1.570796F, 0F, 1.570796F)
+        );
+
+        // FORT FLOOR 3
+        root.addOrReplaceChild("fortFloor3",
+                CubeListBuilder.create()
+                        .texOffs(0, 176)
+                        .addBox(-0.5F, -4F, -6F, 1, 8, 12),
+                PartPose.offsetAndRotation(0F, -16F, 10F, 1.570796F, 0F, 1.570796F)
+        );
+
+        // FORT BACK WALL
+        root.addOrReplaceChild("fortBackWall",
+                CubeListBuilder.create()
+                        .texOffs(0, 176)
+                        .addBox(-5F, -6.2F, -6F, 1, 8, 12),
+                PartPose.offsetAndRotation(0F, -16F, 10F, 0F, 1.570796F, 0F)
+        );
+
+        // FORT BACK LEFT WALL
+        root.addOrReplaceChild("fortBackLeftWall",
+                CubeListBuilder.create()
+                        .texOffs(0, 176)
+                        .addBox(6F, -6F, -7F, 1, 8, 12),
+                PartPose.offset(0F, -16F, 10F)
+        );
+
+        // FORT BACK RIGHT WALL
+        root.addOrReplaceChild("fortBackRightWall",
+                CubeListBuilder.create()
+                        .texOffs(0, 176)
+                        .addBox(-7F, -6F, -7F, 1, 8, 12),
+                PartPose.offset(0F, -16F, 10F)
+        );
+
+        // STORAGE UP LEFT
+        root.addOrReplaceChild("storageUpLeft",
+                CubeListBuilder.create()
+                        .texOffs(76, 226)
+                        .addBox(6.5F, 1F, -14F, 5, 8, 10),
+                PartPose.offsetAndRotation(0F, -16F, 10F, 0F, 0F, -0.3839724F)
+        );
+
+        // STORAGE UP RIGHT
+        root.addOrReplaceChild("storageUpRight",
+                CubeListBuilder.create()
+                        .texOffs(76, 208)
+                        .addBox(-11.5F, 1F, -14F, 5, 8, 10),
+                PartPose.offsetAndRotation(0F, -16F, 10F, 0F, 0F, 0.3839724F)
+        );
+
+        return LayerDefinition.create(mesh, 128, 256);
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.elephant = entityIn;
-        this.tusks = elephant.getTusks();
-        this.tailCounter = elephant.tailCounter;
-        this.earCounter = elephant.earCounter;
-        this.trunkCounter = elephant.trunkCounter;
-        this.isSitting = (elephant.sitCounter != 0);
-    }
+
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        int type = elephant.getTypeMoC();
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        this.elephant      = entity;
+        this.tusks         = elephant.getTusks();
+        this.tailCounter   = elephant.tailCounter;
+        this.earCounter    = elephant.earCounter;
+        this.trunkCounter  = elephant.trunkCounter;
+        this.isSitting     = (elephant.sitCounter != 0);
+        
+        // Call the setRotationAngles to apply all animations
+        this.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+    }
+
+
+    @Override
+    public void renderToBuffer(PoseStack matrixStack, VertexConsumer buffer, int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        int type    = elephant.getTypeMoC();
         int harness = elephant.getArmorType();
         int storage = elephant.getStorage();
-        //boolean moveTail = (elephant.tailCounter != 0);
 
-
+        // render tusks based on tusk type:
         if (tusks == 0) {
-            this.LeftTuskB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RightTuskB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            if (elephant.getIsAdult() || elephant.getAge() > 70) {
-                this.LeftTuskC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.RightTuskC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            leftTuskB.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            rightTuskB.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            if (elephant.getIsAdult() || elephant.getMoCAge() > 70) {
+                leftTuskC.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                rightTuskC.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
-            if (elephant.getIsAdult() || elephant.getAge() > 90) {
-                this.LeftTuskD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.RightTuskD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            if (elephant.getIsAdult() || elephant.getMoCAge() > 90) {
+                leftTuskD.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                rightTuskD.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
         } else if (tusks == 1) {
-            this.TuskLW1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLW2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLW3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLW4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLW5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRW1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRW2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRW3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRW4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRW5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            tuskLW1.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLW2.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLW3.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLW4.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLW5.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRW1.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRW2.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRW3.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRW4.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRW5.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         } else if (tusks == 2) {
-            this.TuskLI1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLI2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLI3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLI4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLI5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRI1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRI2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRI3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRI4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRI5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            tuskLI1.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLI2.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLI3.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLI4.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLI5.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRI1.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRI2.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRI3.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRI4.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRI5.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         } else if (tusks == 3) {
-            this.TuskLD1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLD2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLD3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLD4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskLD5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRD1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRD2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRD3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRD4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TuskRD5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            tuskLD1.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLD2.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLD3.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLD4.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskLD5.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRD1.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRD2.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRD3.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRD4.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            tuskRD5.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
 
-        if (type == 1) //african
-        {
-            this.LeftBigEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RightBigEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // ears: big if African (type=1), small otherwise
+        if (type == 1) {
+            leftBigEar.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            rightBigEar.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         } else {
-            this.LeftSmallEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RightSmallEar.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            leftSmallEar.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            rightSmallEar.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
 
-        if (type == 3 || type == 4) //mammoths
-        {
-            this.HeadBump.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Skirt.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // mammoths (type 3 or 4)
+        if (type == 3 || type == 4) {
+            headBump.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            skirt.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
 
+        // harness
         if (harness >= 1) {
-            this.HarnessBlanket.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.HarnessUpperBelt.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.HarnessLowerBelt.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            harnessBlanket.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            harnessUpperBelt.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            harnessLowerBelt.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             if (type == 5) {
-                this.Skirt.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                skirt.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
         }
 
+        // cabin or fortress
         if (harness == 3) {
             if (type == 5) {
-                this.CabinPillow.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.CabinLeftRail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Cabin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.CabinRightRail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.CabinBackRail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.CabinRoof.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                cabinPillow.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                cabinLeftRail.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                cabin.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                cabinRightRail.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                cabinBackRail.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                cabinRoof.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
-
             if (type == 4) {
-
-                this.FortBackRightWall.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.FortBackLeftWall.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.FortBackWall.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.FortFloor1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.FortFloor2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.FortFloor3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.FortNeckBeam.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.FortBackBeam.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
+                fortBackRightWall.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                fortBackLeftWall.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                fortBackWall.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                fortFloor1.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                fortFloor2.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                fortFloor3.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                fortNeckBeam.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                fortBackBeam.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
-
         }
 
+        // storage chests + blankets
         if (storage >= 1) {
-            this.StorageRightBedroll.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.StorageFrontRightChest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.StorageBackRightChest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.StorageRightBlankets.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
+            storageRightBedroll.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            storageFrontRightChest.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            storageBackRightChest.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            storageRightBlankets.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
         if (storage >= 2) {
-            this.StorageLeftBlankets.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.StorageLeftBedroll.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.StorageFrontLeftChest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.StorageBackLeftChest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
+            storageLeftBlankets.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            storageLeftBedroll.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            storageFrontLeftChest.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            storageBackLeftChest.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
         if (storage >= 3) {
-            this.StorageUpLeft.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            storageUpLeft.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
-
         if (storage >= 4) {
-            this.StorageUpRight.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            storageUpRight.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         }
 
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Chin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LowerLip.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Back.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // HEAD, NECK, CHIN, LOWER LIP, BACK, HUMP, BODY
+        head.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        neck.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        chin.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        lowerLip.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        back.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        hump.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        body.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-        this.Hump.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // TUSK A (always shown)
+        rightTuskA.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        leftTuskA.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-        this.RightTuskA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftTuskA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // TRUNK segments
+        trunkA.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        trunkB.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        trunkC.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        trunkD.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        trunkE.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-        this.TrunkA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TrunkB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TrunkC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TrunkD.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TrunkE.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontRightUpperLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontRightLowerLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontLeftUpperLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontLeftLowerLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BackRightUpperLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BackRightLowerLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BackLeftUpperLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BackLeftLowerLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TailRoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.TailPlush.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // LEGS
+        frontRightUpperLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        frontRightLowerLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        frontLeftUpperLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        frontLeftLowerLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        backRightUpperLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        backRightLowerLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        backLeftUpperLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        backLeftLowerLeg.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-    }
-
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
+        // TAIL
+        tailRoot.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        tail.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        tailPlush.render(matrixStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
     /**
-     * Used to adjust the Y offset of the model cubes
+     * Exactly the same logic as the old setRotationAngles(...) in 1.16,
+     * but all ModelRenderer.setRotationPoint() calls have already been
+     * baked into PartPose.offset in createBodyLayer().
      */
-    private void AdjustY(float limbSwing) {
-        this.Head.rotationPointY = limbSwing - 10F;
-        this.Neck.rotationPointY = limbSwing - 8F;
-        this.HeadBump.rotationPointY = limbSwing - 10F;
-        this.Chin.rotationPointY = limbSwing - 10F;
-        this.LowerLip.rotationPointY = limbSwing - 10F;
-        this.Back.rotationPointY = limbSwing - 4F;
-        this.LeftSmallEar.rotationPointY = limbSwing - 10F;
-        this.LeftBigEar.rotationPointY = limbSwing - 10F;
-        this.RightSmallEar.rotationPointY = limbSwing - 10F;
-        this.RightBigEar.rotationPointY = limbSwing - 10F;
-        this.Hump.rotationPointY = limbSwing - 13F;
-        this.Body.rotationPointY = limbSwing - 2F;
-        this.Skirt.rotationPointY = limbSwing + 8F;
-        this.RightTuskA.rotationPointY = limbSwing - 10F;
-        this.RightTuskB.rotationPointY = limbSwing - 10F;
-        this.RightTuskC.rotationPointY = limbSwing - 10F;
-        this.RightTuskD.rotationPointY = limbSwing - 10F;
-        this.LeftTuskA.rotationPointY = limbSwing - 10F;
-        this.LeftTuskB.rotationPointY = limbSwing - 10F;
-        this.LeftTuskC.rotationPointY = limbSwing - 10F;
-        this.LeftTuskD.rotationPointY = limbSwing - 10F;
-        this.TrunkA.rotationPointY = limbSwing - 3F;
-        this.TrunkB.rotationPointY = limbSwing + 5.5F;
-        this.TrunkC.rotationPointY = limbSwing + 13F;
-        this.TrunkD.rotationPointY = limbSwing + 16F;
-        this.TrunkE.rotationPointY = limbSwing + 19.5F;
-        this.FrontRightUpperLeg.rotationPointY = limbSwing + 4F;
-        this.FrontRightLowerLeg.rotationPointY = limbSwing + 14F;
-        this.FrontLeftUpperLeg.rotationPointY = limbSwing + 4F;
-        this.FrontLeftLowerLeg.rotationPointY = limbSwing + 14F;
-        this.BackRightUpperLeg.rotationPointY = limbSwing + 4F;
-        this.BackRightLowerLeg.rotationPointY = limbSwing + 14F;
-        this.BackLeftUpperLeg.rotationPointY = limbSwing + 4F;
-        this.BackLeftLowerLeg.rotationPointY = limbSwing + 14F;
-        this.TailRoot.rotationPointY = limbSwing - 8F;
-        this.Tail.rotationPointY = limbSwing - 8F;
-        this.TailPlush.rotationPointY = limbSwing - 8F;
-        this.StorageRightBedroll.rotationPointY = limbSwing - 10.2F;
-        this.StorageLeftBedroll.rotationPointY = limbSwing - 10.2F;
-        this.StorageFrontRightChest.rotationPointY = limbSwing - 1.2F;
-        this.StorageBackRightChest.rotationPointY = limbSwing - 1.2F;
-        this.StorageFrontLeftChest.rotationPointY = limbSwing - 1.2F;
-        this.StorageBackLeftChest.rotationPointY = limbSwing - 1.2F;
-        this.StorageRightBlankets.rotationPointY = limbSwing - 10.2F;
-        this.StorageLeftBlankets.rotationPointY = limbSwing - 10.2F;
-        this.HarnessBlanket.rotationPointY = limbSwing - 13.2F;
-        this.HarnessUpperBelt.rotationPointY = limbSwing - 2F;
-        this.HarnessLowerBelt.rotationPointY = limbSwing - 2F;
-        this.CabinPillow.rotationPointY = limbSwing - 16F;
-        this.CabinLeftRail.rotationPointY = limbSwing - 23F;
-        this.Cabin.rotationPointY = limbSwing - 35F;
-        this.CabinRightRail.rotationPointY = limbSwing - 23F;
-        this.CabinBackRail.rotationPointY = limbSwing - 23F;
-        this.CabinRoof.rotationPointY = limbSwing - 34F;
-        this.FortBackRightWall.rotationPointY = limbSwing - 16F;
-        this.FortBackLeftWall.rotationPointY = limbSwing - 16F;
-        this.FortBackWall.rotationPointY = limbSwing - 16F;
-        this.FortNeckBeam.rotationPointY = limbSwing - 16F;
-        this.FortBackBeam.rotationPointY = limbSwing - 16F;
-        this.FortFloor1.rotationPointY = limbSwing - 16F;
-        this.FortFloor2.rotationPointY = limbSwing - 16F;
-        this.FortFloor3.rotationPointY = limbSwing - 16F;
+    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount,
+                                  float ageInTicks, float netHeadYaw, float headPitch) {
 
-        this.StorageUpLeft.rotationPointY = limbSwing - 16F;
-        this.StorageUpRight.rotationPointY = limbSwing - 16F;
+        // Convert pitch/yaw to radians, clamp yaw to ±20°
+        if (headPitch < 0) headPitch = 0;
+        float headXRadians = headPitch / radianF;
+        float headY = Mth.clamp(netHeadYaw, -20F, 20F) / radianF;
 
-        this.TuskLD1.rotationPointY = limbSwing - 10F;
-        this.TuskLD2.rotationPointY = limbSwing - 10F;
-        this.TuskLD3.rotationPointY = limbSwing - 10F;
-        this.TuskLD4.rotationPointY = limbSwing - 10F;
-        this.TuskLD5.rotationPointY = limbSwing - 10F;
-        this.TuskRD1.rotationPointY = limbSwing - 10F;
-        this.TuskRD2.rotationPointY = limbSwing - 10F;
-        this.TuskRD3.rotationPointY = limbSwing - 10F;
-        this.TuskRD4.rotationPointY = limbSwing - 10F;
-        this.TuskRD5.rotationPointY = limbSwing - 10F;
-        this.TuskLI1.rotationPointY = limbSwing - 10F;
-        this.TuskLI2.rotationPointY = limbSwing - 10F;
-        this.TuskLI3.rotationPointY = limbSwing - 10F;
-        this.TuskLI4.rotationPointY = limbSwing - 10F;
-        this.TuskLI5.rotationPointY = limbSwing - 10F;
-        this.TuskRI1.rotationPointY = limbSwing - 10F;
-        this.TuskRI2.rotationPointY = limbSwing - 10F;
-        this.TuskRI3.rotationPointY = limbSwing - 10F;
-        this.TuskRI4.rotationPointY = limbSwing - 10F;
-        this.TuskRI5.rotationPointY = limbSwing - 10F;
-        this.TuskLW1.rotationPointY = limbSwing - 10F;
-        this.TuskLW2.rotationPointY = limbSwing - 10F;
-        this.TuskLW3.rotationPointY = limbSwing - 10F;
-        this.TuskLW4.rotationPointY = limbSwing - 10F;
-        this.TuskLW5.rotationPointY = limbSwing - 10F;
-        this.TuskRW1.rotationPointY = limbSwing - 10F;
-        this.TuskRW2.rotationPointY = limbSwing - 10F;
-        this.TuskRW3.rotationPointY = limbSwing - 10F;
-        this.TuskRW4.rotationPointY = limbSwing - 10F;
-        this.TuskRW5.rotationPointY = limbSwing - 10F;
+        // leg swinging
+        float rLegX = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float lLegX = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
 
-    }
+        // adjust overall vertical offset if sitting
+        float yOffset = isSitting ? 8F : 0F;
+        adjustY(yOffset);
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {//, byte tusks, boolean sitting, boolean tail) {
-
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
-
-        if (headPitch < 0) {
-            headPitch = 0;
-        }
-
-        float HeadXRot = (headPitch / 57.29578F);
-        if (netHeadYaw > 20F) {
-            netHeadYaw = 20F;
-        }
-        if (netHeadYaw < -20F) {
-            netHeadYaw = -20F;
-        }
-        float HeadYRot = (netHeadYaw / 57.29578F);
-
-        float f10 = 0F;
-        if (isSitting) {
-            f10 = 8F;
-        }
-        AdjustY(f10);
-
-        /*
-         * Random Trunk animation
-         */
-        float TrunkXRot = 0F;
-
+        // trunk oscillation
+        float trunkOsc = 0F;
         if (trunkCounter != 0) {
-            HeadXRot = 0F;
-            TrunkXRot = MathHelper.cos(this.trunkCounter * 0.2F) * 12F;
+            headXRadians = 0F;
+            trunkOsc = Mth.cos(trunkCounter * 0.2F) * 12F;
         }
         if (isSitting) {
-            HeadXRot = 0F;
-            TrunkXRot = 25F;
-        }
-        this.Head.rotateAngleX = (-10F / this.radianF) + HeadXRot;
-
-        this.Head.rotateAngleY = HeadYRot;
-        this.HeadBump.rotateAngleY = this.Head.rotateAngleY;
-        this.HeadBump.rotateAngleX = this.Head.rotateAngleX;
-
-        this.RightTuskA.rotateAngleY = HeadYRot;
-        this.LeftTuskA.rotateAngleY = HeadYRot;
-        this.RightTuskA.rotateAngleX = (70F / this.radianF) + HeadXRot;
-        this.LeftTuskA.rotateAngleX = (70F / this.radianF) + HeadXRot;
-
-        this.Chin.rotateAngleY = HeadYRot;
-        this.Chin.rotateAngleX = (113F / this.radianF) + HeadXRot;
-        this.LowerLip.rotateAngleY = HeadYRot;
-        this.LowerLip.rotateAngleX = (85F / this.radianF) + HeadXRot;
-
-        //ears
-        /*
-         * limbSwing = distance walked limbSwingAmount = speed 0 - 1 ageInTicks = timer
-         */
-        /*
-         * Ear random animation
-         */
-        float EarF = 0F;
-
-        /*float f2a = ageInTicks % 100F;
-        if (f2a > 60 & f2a < 90) {
-            EarF = MathHelper.cos(ageInTicks * 0.5F) * 0.35F;
-        }*/
-
-        if (this.earCounter != 0) {
-            EarF = MathHelper.cos(this.earCounter * 0.5F) * 0.35F;
+            headXRadians = 0F;
+            trunkOsc = 25F;
         }
 
-        this.RightBigEar.rotateAngleY = (30F / this.radianF) + HeadYRot + EarF;
-        this.RightSmallEar.rotateAngleY = (30F / this.radianF) + HeadYRot + EarF;
-        this.LeftBigEar.rotateAngleY = (-30F / this.radianF) + HeadYRot - EarF;
-        this.LeftSmallEar.rotateAngleY = (-30F / this.radianF) + HeadYRot - EarF;
+        // HEAD orientation + bump, chin, lower lip align
+        head.xRot = -10F / radianF + headXRadians;
+        head.yRot = headY;
+        headBump.xRot = head.xRot;
+        headBump.yRot = headY;
+        chin.yRot = headY;
+        chin.xRot = 113F / radianF + headXRadians;
+        lowerLip.yRot = headY;
+        lowerLip.xRot = 85F / radianF + headXRadians;
 
-        this.RightBigEar.rotateAngleX = (-10F / this.radianF) + HeadXRot;
-        this.RightSmallEar.rotateAngleX = (-10F / this.radianF) + HeadXRot;
-        this.LeftBigEar.rotateAngleX = (-10F / this.radianF) + HeadXRot;
-        this.LeftSmallEar.rotateAngleX = (-10F / this.radianF) + HeadXRot;
+        // tusk A always rotates along with head
+        rightTuskA.yRot = headY;
+        rightTuskA.xRot = 70F / radianF + headXRadians;
+        leftTuskA.yRot = headY;
+        leftTuskA.xRot = 70F / radianF + headXRadians;
 
-        //TrunkA.rotateAngleX = -50F / radianF;
-
-        //TrunkA.rotationPointY = -3F;
-        this.TrunkA.rotationPointZ = -22.50F;
-        adjustAllRotationPoints(this.TrunkA, this.Head);
-
-        this.TrunkA.rotateAngleY = HeadYRot;
-        float TrunkARotX = (90F - TrunkXRot);
-        if (TrunkARotX < 85) {
-            TrunkARotX = 85;
+        // Ear "flapping" / random wiggle
+        float earFlap = 0F;
+        if (earCounter != 0) {
+            earFlap = Mth.cos(earCounter * 0.5F) * 0.35F;
         }
-        this.TrunkA.rotateAngleX = ((TrunkARotX) / this.radianF) + HeadXRot;
+        // Big ears if African(type=1), else small ears
+        rightBigEar.yRot    = 30F / radianF + headY + earFlap;
+        rightSmallEar.yRot  = 30F / radianF + headY + earFlap;
+        leftBigEar.yRot     = -30F / radianF + headY - earFlap;
+        leftSmallEar.yRot   = -30F / radianF + headY - earFlap;
 
-        //TrunkB.rotationPointY = 5.5F;
-        this.TrunkB.rotationPointZ = -22.5F;
-        //TrunkB.setRotationPoint(0F, 6.5F, -22.5F);
-        adjustAllRotationPoints(this.TrunkB, this.TrunkA);
-        this.TrunkB.rotateAngleY = HeadYRot;
-        this.TrunkB.rotateAngleX = ((95F - TrunkXRot * 1.5F) / this.radianF) + HeadXRot;
+        rightBigEar.xRot    = -10F / radianF + headXRadians;
+        rightSmallEar.xRot  = -10F / radianF + headXRadians;
+        leftBigEar.xRot     = -10F / radianF + headXRadians;
+        leftSmallEar.xRot   = -10F / radianF + headXRadians;
 
-        //TrunkC.setRotationPoint(0F, 13F, -22.0F);
-        //TrunkC.rotationPointY = 13F;
-        this.TrunkC.rotationPointZ = -22.5F;
-        adjustAllRotationPoints(this.TrunkC, this.TrunkB);
-        this.TrunkC.rotateAngleY = HeadYRot;
-        this.TrunkC.rotateAngleX = ((110F - TrunkXRot * 3F) / this.radianF) + HeadXRot;
+        // TRUNK chaining: each segment's origin is "attached" to previous.
+        // We must recalculate trunkB,C,D,E pivot points so they move with trunkA's rotation.
 
-        //TrunkD.rotationPointY = 16F;
-        this.TrunkD.rotationPointZ = -21.5F;
-        adjustAllRotationPoints(this.TrunkD, this.TrunkC);
-        this.TrunkD.rotateAngleY = HeadYRot;
-        this.TrunkD.rotateAngleX = ((127F - TrunkXRot * 4.5F) / this.radianF) + HeadXRot;
+        trunkA.yRot = headY;
+        float trunkARot = (90F - trunkOsc);
+        if (trunkARot < 85) trunkARot = 85;
+        trunkA.xRot = trunkARot / radianF + headXRadians;
+        // Apply position adjustment to follow head
+        repositionChildFromParent(trunkA, head);
 
-        //TrunkE.rotationPointY = 19.5F;
-        this.TrunkE.rotationPointZ = -19F;
-        adjustAllRotationPoints(this.TrunkE, this.TrunkD);
-        this.TrunkE.rotateAngleY = HeadYRot;
-        this.TrunkE.rotateAngleX = ((145F - TrunkXRot * 6F) / this.radianF) + HeadXRot;
+        // Reposition trunkB relative to trunkA's new pivot/rotation
+        repositionChildFromParent(trunkB, trunkA);
+        trunkB.yRot = headY;
+        trunkB.xRot = (95F - trunkOsc * 1.5F) / radianF + headXRadians;
 
-        //legs
+        repositionChildFromParent(trunkC, trunkB);
+        trunkC.yRot = headY;
+        trunkC.xRot = (110F - trunkOsc * 3F) / radianF + headXRadians;
+
+        repositionChildFromParent(trunkD, trunkC);
+        trunkD.yRot = headY;
+        trunkD.xRot = (127F - trunkOsc * 4.5F) / radianF + headXRadians;
+
+        repositionChildFromParent(trunkE, trunkD);
+        trunkE.yRot = headY;
+        trunkE.xRot = (145F - trunkOsc * 6F) / radianF + headXRadians;
+
+        // LEGS: if sitting, rotate all upper legs to -30°, lower legs to +90°
         if (isSitting) {
-            this.FrontRightUpperLeg.rotateAngleX = -30F / this.radianF;
-            this.FrontLeftUpperLeg.rotateAngleX = -30F / this.radianF;
-            this.BackLeftUpperLeg.rotateAngleX = -30F / this.radianF;
-            this.BackRightUpperLeg.rotateAngleX = -30F / this.radianF;
+            frontRightUpperLeg.xRot = -30F / radianF;
+            frontLeftUpperLeg.xRot  = -30F / radianF;
+            backRightUpperLeg.xRot   = -30F / radianF;
+            backLeftUpperLeg.xRot    = -30F / radianF;
+
+            frontRightLowerLeg.xRot = 90F / radianF;
+            frontLeftLowerLeg.xRot  = 90F / radianF;
+            backRightLowerLeg.xRot  = 90F / radianF;
+            backLeftLowerLeg.xRot   = 90F / radianF;
         } else {
-            this.FrontRightUpperLeg.rotateAngleX = RLegXRot;
-            this.FrontLeftUpperLeg.rotateAngleX = LLegXRot;
-            this.BackLeftUpperLeg.rotateAngleX = RLegXRot;
-            this.BackRightUpperLeg.rotateAngleX = LLegXRot;
+            frontRightUpperLeg.xRot = rLegX;
+            frontLeftUpperLeg.xRot  = lLegX;
+            backRightUpperLeg.xRot  = lLegX;
+            backLeftUpperLeg.xRot   = rLegX;
+
+            // compute D‐joint angles based on upper‐leg angles
+            float lDeg = (lLegX * (180F / (float)Math.PI));
+            float rDeg = (rLegX * (180F / (float)Math.PI));
+            if (lDeg > 0F) lDeg *= 2F;
+            if (rDeg > 0F) rDeg *= 2F;
+
+            frontLeftLowerLeg.xRot   = lDeg / radianF;
+            frontRightLowerLeg.xRot  = rDeg / radianF;
+            backLeftLowerLeg.xRot    = rDeg / radianF;
+            backRightLowerLeg.xRot   = lDeg / radianF;
+        }
+        // adjust leg "attach" pivots: child's pivot must match parent's moved position
+        repositionLegChild(frontRightLowerLeg, frontRightUpperLeg);
+        repositionLegChild(frontLeftLowerLeg, frontLeftUpperLeg);
+        repositionLegChild(backRightLowerLeg, backRightUpperLeg);
+        repositionLegChild(backLeftLowerLeg, backLeftUpperLeg);
+
+        // TUSKS (type‐dependent) all swivel with head
+        switch (tusks) {
+            case 0:
+                leftTuskB.yRot   = headY;
+                leftTuskC.yRot   = headY;
+                leftTuskD.yRot   = headY;
+                rightTuskB.yRot  = headY;
+                rightTuskC.yRot  = headY;
+                rightTuskD.yRot  = headY;
+
+                leftTuskB.xRot   =  40F / radianF + headXRadians;
+                leftTuskC.xRot   =  10F / radianF + headXRadians;
+                leftTuskD.xRot   = -20F / radianF + headXRadians;
+                rightTuskB.xRot  =  40F / radianF + headXRadians;
+                rightTuskC.xRot  =  10F / radianF + headXRadians;
+                rightTuskD.xRot  = -20F / radianF + headXRadians;
+                break;
+            case 1:
+                for (ModelPart m : new ModelPart[]{tuskLW1, tuskLW2, tuskLW3, tuskLW4, tuskLW5,
+                        tuskRW1, tuskRW2, tuskRW3, tuskRW4, tuskRW5}) {
+                    m.yRot = headY;
+                    m.xRot = 40F / radianF + headXRadians;
+                }
+                for (ModelPart m : new ModelPart[]{tuskLW2, tuskLW4, tuskRW2, tuskRW4}) {
+                    m.xRot = 10F / radianF + headXRadians;
+                }
+                for (ModelPart m : new ModelPart[]{tuskLW3, tuskRW3}) {
+                    m.xRot = -20F / radianF + headXRadians;
+                }
+                break;
+            case 2:
+                for (ModelPart m : new ModelPart[]{tuskLI1, tuskLI2, tuskLI3, tuskLI4, tuskLI5,
+                        tuskRI1, tuskRI2, tuskRI3, tuskRI4, tuskRI5}) {
+                    m.yRot = headY;
+                    m.xRot = 40F / radianF + headXRadians;
+                }
+                for (ModelPart m : new ModelPart[]{tuskLI2, tuskLI4, tuskRI2, tuskRI4}) {
+                    m.xRot = 10F / radianF + headXRadians;
+                }
+                for (ModelPart m : new ModelPart[]{tuskLI3, tuskRI3}) {
+                    m.xRot = -20F / radianF + headXRadians;
+                }
+                break;
+            case 3:
+                for (ModelPart m : new ModelPart[]{tuskLD1, tuskLD2, tuskLD3, tuskLD4, tuskLD5,
+                        tuskRD1, tuskRD2, tuskRD3, tuskRD4, tuskRD5}) {
+                    m.yRot = headY;
+                    m.xRot = 40F / radianF + headXRadians;
+                }
+                for (ModelPart m : new ModelPart[]{tuskLD2, tuskLD4, tuskRD2, tuskRD4}) {
+                    m.xRot = 10F / radianF + headXRadians;
+                }
+                for (ModelPart m : new ModelPart[]{tuskLD3, tuskRD3}) {
+                    m.xRot = -20F / radianF + headXRadians;
+                }
+                break;
         }
 
-        adjustXRotationPoints(this.FrontRightLowerLeg, this.FrontRightUpperLeg);
-        adjustXRotationPoints(this.BackRightLowerLeg, this.BackRightUpperLeg);
-        adjustXRotationPoints(this.FrontLeftLowerLeg, this.FrontLeftUpperLeg);
-        adjustXRotationPoints(this.BackLeftLowerLeg, this.BackLeftUpperLeg);
+        // CHEST animations (slightly bounce with legs)
+        storageLeftBedroll.xRot      = lLegX / 10F;
+        storageFrontLeftChest.xRot   = lLegX / 5F;
+        storageBackLeftChest.xRot    = lLegX / 5F;
+        storageRightBedroll.xRot     = rLegX / 10F;
+        storageFrontRightChest.xRot  = rLegX / 5F;
+        storageBackRightChest.xRot   = rLegX / 5F;
 
-        //To convert from degrees to radians, multiply by ((PI)/180o).
-        //To convert from radians to degrees, multiply by (180o/(PI)).
-        if (isSitting) {
-            this.FrontLeftLowerLeg.rotateAngleX = 90F / this.radianF;
-            this.FrontRightLowerLeg.rotateAngleX = 90F / this.radianF;
-            this.BackLeftLowerLeg.rotateAngleX = 90F / this.radianF;
-            this.BackRightLowerLeg.rotateAngleX = 90F / this.radianF;
+        fortNeckBeam.zRot            = lLegX / 50F;
+        fortBackBeam.zRot            = lLegX / 50F;
+        fortBackRightWall.zRot       = lLegX / 50F;
+        fortBackLeftWall.zRot        = lLegX / 50F;
+        fortBackWall.xRot            = -lLegX / 50F;
+
+        // TAIL swish
+        float tailSwing = limbSwingAmount * 0.9F;
+        if (tailSwing < 0) tailSwing = 0;
+        if (tailCounter != 0) {
+            tailRoot.yRot = Mth.cos(ageInTicks * 0.4F) * 1.3F;
+            tailSwing = 30F / radianF;
         } else {
-            float LLegXRotD = (LLegXRot * (float) (180 / Math.PI));
-            float RLegXRotD = (RLegXRot * (float) (180 / Math.PI));
-
-            if (LLegXRotD > 0F) {
-                LLegXRotD *= 2F;
-            }
-            if (RLegXRotD > 0F) {
-                RLegXRotD *= 2F;
-            }
-
-            this.FrontLeftLowerLeg.rotateAngleX = LLegXRotD / this.radianF;
-            this.FrontRightLowerLeg.rotateAngleX = RLegXRotD / this.radianF;
-            this.BackLeftLowerLeg.rotateAngleX = RLegXRotD / this.radianF;
-            this.BackRightLowerLeg.rotateAngleX = LLegXRotD / this.radianF;
+            tailRoot.yRot = 0;
         }
+        tailRoot.xRot   = 17F / radianF + tailSwing;
+        tail.xRot       = 6.5F / radianF + tailSwing;
+        tailPlush.xRot  = tail.xRot;
+        tailPlush.yRot  = tailRoot.yRot;
+        tail.yRot       = tailPlush.yRot;
+    }
 
-        if (tusks == 0) {
-            this.LeftTuskB.rotateAngleY = HeadYRot;
-            this.LeftTuskC.rotateAngleY = HeadYRot;
-            this.LeftTuskD.rotateAngleY = HeadYRot;
-            this.RightTuskB.rotateAngleY = HeadYRot;
-            this.RightTuskC.rotateAngleY = HeadYRot;
-            this.RightTuskD.rotateAngleY = HeadYRot;
 
-            this.LeftTuskB.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.LeftTuskC.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.LeftTuskD.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.RightTuskB.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.RightTuskC.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.RightTuskD.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-        } else if (tusks == 1) {
-            this.TuskLW1.rotateAngleY = HeadYRot;
-            this.TuskLW2.rotateAngleY = HeadYRot;
-            this.TuskLW3.rotateAngleY = HeadYRot;
-            this.TuskLW4.rotateAngleY = HeadYRot;
-            this.TuskLW5.rotateAngleY = HeadYRot;
-            this.TuskRW1.rotateAngleY = HeadYRot;
-            this.TuskRW2.rotateAngleY = HeadYRot;
-            this.TuskRW3.rotateAngleY = HeadYRot;
-            this.TuskRW4.rotateAngleY = HeadYRot;
-            this.TuskRW5.rotateAngleY = HeadYRot;
-
-            this.TuskLW1.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.TuskLW2.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskLW3.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskLW4.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskLW5.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskRW1.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.TuskRW2.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskRW3.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskRW4.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskRW5.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-        } else if (tusks == 2) {
-            this.TuskLI1.rotateAngleY = HeadYRot;
-            this.TuskLI2.rotateAngleY = HeadYRot;
-            this.TuskLI3.rotateAngleY = HeadYRot;
-            this.TuskLI4.rotateAngleY = HeadYRot;
-            this.TuskLI5.rotateAngleY = HeadYRot;
-            this.TuskRI1.rotateAngleY = HeadYRot;
-            this.TuskRI2.rotateAngleY = HeadYRot;
-            this.TuskRI3.rotateAngleY = HeadYRot;
-            this.TuskRI4.rotateAngleY = HeadYRot;
-            this.TuskRI5.rotateAngleY = HeadYRot;
-
-            this.TuskLI1.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.TuskLI2.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskLI3.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskLI4.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskLI5.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskRI1.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.TuskRI2.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskRI3.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskRI4.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskRI5.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-        } else if (tusks == 3) {
-            this.TuskLD1.rotateAngleY = HeadYRot;
-            this.TuskLD2.rotateAngleY = HeadYRot;
-            this.TuskLD3.rotateAngleY = HeadYRot;
-            this.TuskLD4.rotateAngleY = HeadYRot;
-            this.TuskLD5.rotateAngleY = HeadYRot;
-            this.TuskRD1.rotateAngleY = HeadYRot;
-            this.TuskRD2.rotateAngleY = HeadYRot;
-            this.TuskRD3.rotateAngleY = HeadYRot;
-            this.TuskRD4.rotateAngleY = HeadYRot;
-            this.TuskRD5.rotateAngleY = HeadYRot;
-
-            this.TuskLD1.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.TuskLD2.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskLD3.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskLD4.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskLD5.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskRD1.rotateAngleX = (40F / this.radianF) + HeadXRot;
-            this.TuskRD2.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskRD3.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-            this.TuskRD4.rotateAngleX = (10F / this.radianF) + HeadXRot;
-            this.TuskRD5.rotateAngleX = (-20F / this.radianF) + HeadXRot;
-        }
-
-        //chest anim
-        this.StorageLeftBedroll.rotateAngleX = LLegXRot / 10F;
-        this.StorageFrontLeftChest.rotateAngleX = LLegXRot / 5F;
-        this.StorageBackLeftChest.rotateAngleX = LLegXRot / 5F;
-
-        this.StorageRightBedroll.rotateAngleX = RLegXRot / 10F;
-        this.StorageFrontRightChest.rotateAngleX = RLegXRot / 5F;
-        this.StorageBackRightChest.rotateAngleX = RLegXRot / 5F;
-
-        this.FortNeckBeam.rotateAngleZ = LLegXRot / 50F;
-        this.FortBackBeam.rotateAngleZ = LLegXRot / 50F;
-
-        this.FortBackRightWall.rotateAngleZ = (LLegXRot / 50F);
-        this.FortBackLeftWall.rotateAngleZ = (LLegXRot / 50F);
-        this.FortBackWall.rotateAngleX = 0F - (LLegXRot / 50F);
-
-        //limbSwingAmount = movement speed!
-        //ageInTicks = timer!
-        //tail
-        float tailMov = (limbSwingAmount * 0.9F);
-        if (tailMov < 0) {
-            tailMov = 0;
-        }
-
-        if (this.tailCounter != 0) {
-            this.TailRoot.rotateAngleY = MathHelper.cos(ageInTicks * 0.4F) * 1.3F;
-            tailMov = 30F / this.radianF;
-        } else {
-            this.TailRoot.rotateAngleY = 0F;
-        }
-
-        this.TailRoot.rotateAngleX = (17F / this.radianF) + tailMov;
-        this.TailPlush.rotateAngleX = this.Tail.rotateAngleX = (6.5F / this.radianF) + tailMov;
-        this.TailPlush.rotateAngleY = this.TailRoot.rotateAngleY;
-        this.Tail.rotateAngleY = this.TailPlush.rotateAngleY;
-
+    /**
+     * Adjust all pivot Ys by the same offset when sitting (shifts entire model up/down).
+     */
+    private void adjustY(float offsetY) {
+        head.y           = -10F + offsetY;
+        neck.y           = -8F + offsetY;
+        headBump.y       = -10F + offsetY;
+        chin.y           = -10F + offsetY;
+        lowerLip.y       = -10F + offsetY;
+        back.y           = -4F + offsetY;
+        leftSmallEar.y   = -10F + offsetY;
+        leftBigEar.y     = -10F + offsetY;
+        rightSmallEar.y  = -10F + offsetY;
+        rightBigEar.y    = -10F + offsetY;
+        hump.y           = -13F + offsetY;
+        body.y           = -2F + offsetY;
+        skirt.y          = 8F + offsetY;
+        rightTuskA.y     = -10F + offsetY;
+        rightTuskB.y     = -10F + offsetY;
+        rightTuskC.y     = -10F + offsetY;
+        rightTuskD.y     = -10F + offsetY;
+        leftTuskA.y      = -10F + offsetY;
+        leftTuskB.y      = -10F + offsetY;
+        leftTuskC.y      = -10F + offsetY;
+        leftTuskD.y      = -10F + offsetY;
+        // Keep trunkA in sync with the head position
+        trunkA.y         = -3F + offsetY;  // The base Y position is adjusted with offsetY
+        trunkB.y         = 6.5F + offsetY;
+        trunkC.y         = 13F + offsetY;
+        trunkD.y         = 16F + offsetY;
+        trunkE.y         = 19.5F + offsetY;
+        frontRightUpperLeg.y = 4F + offsetY;
+        frontRightLowerLeg.y = 14F + offsetY;
+        frontLeftUpperLeg.y  = 4F + offsetY;
+        frontLeftLowerLeg.y  = 14F + offsetY;
+        backRightUpperLeg.y  = 4F + offsetY;
+        backRightLowerLeg.y  = 14F + offsetY;
+        backLeftUpperLeg.y   = 4F + offsetY;
+        backLeftLowerLeg.y   = 14F + offsetY;
+        tailRoot.y         = -8F + offsetY;
+        tail.y             = -8F + offsetY;
+        tailPlush.y         = -8F + offsetY;
+        storageRightBedroll.y   = -10.2F + offsetY;
+        storageLeftBedroll.y    = -10.2F + offsetY;
+        storageFrontRightChest.y= -1.2F + offsetY;
+        storageBackRightChest.y = -1.2F + offsetY;
+        storageFrontLeftChest.y = -1.2F + offsetY;
+        storageBackLeftChest.y  = -1.2F + offsetY;
+        storageRightBlankets.y = -10.2F + offsetY;
+        storageLeftBlankets.y  = -10.2F + offsetY;
+        harnessBlanket.y       = -13.2F + offsetY;
+        harnessUpperBelt.y     = -2F + offsetY;
+        harnessLowerBelt.y     = -2F + offsetY;
+        cabinPillow.y          = -16F + offsetY;
+        cabinLeftRail.y        = -23F + offsetY;
+        cabin.y                = -35F + offsetY;
+        cabinRightRail.y       = -23F + offsetY;
+        cabinBackRail.y        = -23F + offsetY;
+        cabinRoof.y            = -34F + offsetY;
+        fortNeckBeam.y         = -16F + offsetY;
+        fortBackBeam.y         = -16F + offsetY;
+        fortFloor1.y           = -16F + offsetY;
+        fortFloor2.y           = -16F + offsetY;
+        fortFloor3.y           = -16F + offsetY;
+        fortBackWall.y         = -16F + offsetY;
+        fortBackLeftWall.y     = -16F + offsetY;
+        fortBackRightWall.y    = -16F + offsetY;
+        storageUpLeft.y        = -16F + offsetY;
+        storageUpRight.y       = -16F + offsetY;
+        tuskLD1.y              = -10F + offsetY;
+        tuskLD2.y              = -10F + offsetY;
+        tuskLD3.y              = -10F + offsetY;
+        tuskLD4.y              = -10F + offsetY;
+        tuskLD5.y              = -10F + offsetY;
+        tuskRD1.y              = -10F + offsetY;
+        tuskRD2.y              = -10F + offsetY;
+        tuskRD3.y              = -10F + offsetY;
+        tuskRD4.y              = -10F + offsetY;
+        tuskRD5.y              = -10F + offsetY;
+        tuskLI1.y              = -10F + offsetY;
+        tuskLI2.y              = -10F + offsetY;
+        tuskLI3.y              = -10F + offsetY;
+        tuskLI4.y              = -10F + offsetY;
+        tuskLI5.y              = -10F + offsetY;
+        tuskRI1.y              = -10F + offsetY;
+        tuskRI2.y              = -10F + offsetY;
+        tuskRI3.y              = -10F + offsetY;
+        tuskRI4.y              = -10F + offsetY;
+        tuskRI5.y              = -10F + offsetY;
+        tuskLW1.y              = -10F + offsetY;
+        tuskLW2.y              = -10F + offsetY;
+        tuskLW3.y              = -10F + offsetY;
+        tuskLW4.y              = -10F + offsetY;
+        tuskLW5.y              = -10F + offsetY;
+        tuskRW1.y              = -10F + offsetY;
+        tuskRW2.y              = -10F + offsetY;
+        tuskRW3.y              = -10F + offsetY;
+        tuskRW4.y              = -10F + offsetY;
+        tuskRW5.y              = -10F + offsetY;
     }
 
     /**
-     * Used for leg adjustment - anteroposterior movement
+     * When a child part is "attached" to a rotating parent, we must recalculate
+     * the child's pivot so that it "follows" the parent.  This helper mimics
+     * the old ModelRenderer chaining, but with ModelPart coordinates.
      */
-    private void adjustXRotationPoints(ModelRenderer target, ModelRenderer origin) {
-        //rotation point Z and Y adjusted for legs =
-        //Z rotation point = attached rotation point Z + sin(attached.rotateangleX) * distance
-        //Y rotation point = attached rotation point Y + cos(attached.rotateangleX) * distance
-        float distance = target.rotationPointY - origin.rotationPointY;
-        if (distance < 0F) {
-            distance *= -1F;
-        }
-        target.rotationPointZ = origin.rotationPointZ + (MathHelper.sin(origin.rotateAngleX) * distance);
-        target.rotationPointY = origin.rotationPointY + (MathHelper.cos(origin.rotateAngleX) * distance);
+    private void repositionChildFromParent(ModelPart child, ModelPart parent) {
+        // original Y distance from parent → child
+        float dy = child.y - parent.y;
+        float dz = child.z - parent.z;
 
+        // child's new Y = parentY + sin(parentXrot)*dy
+        // child's new Z = parentZ - cos(parentYrot)*(cos(parentXrot)*dy)
+        child.y = parent.y + Mth.sin(parent.xRot) * dy;
+        child.z = parent.z - Mth.cos(parent.yRot) * (Mth.cos(parent.xRot) * dy);
+        // child.xRot, child.yRot, child.zRot remain as set in setRotationAngles
     }
 
     /**
-     * Used for trunk adjustment - lateral movement
-     *
-     * @param target : target model
-     * @param origin : origin model
+     * Same as old "AdjustXRotationPoints" for legs:
+     * replots the child "lower leg" pivot so that it sits at the bottom of the rotated "upper leg."
      */
-    @SuppressWarnings("unused")
-    private void adjustYRotationPoints(ModelRenderer target, ModelRenderer origin) {
-        //rotation point Z and X adjusted for head =
-        //Z rotation point = attached rotation point Z - cos(attached.rotateangleX) * distance
-        //Y rotation point = attached rotation point Y - sin(attached.rotateangleX) * distance
-        float distanceZ;
-        if (target.rotationPointZ > origin.rotationPointZ) {
-            distanceZ = target.rotationPointZ - origin.rotationPointZ;
-        } else {
-            distanceZ = origin.rotationPointZ - target.rotationPointZ;
-        }
-
-        target.rotationPointZ = origin.rotationPointZ - (MathHelper.cos(origin.rotateAngleY) * distanceZ);
-        target.rotationPointX = origin.rotationPointX - (MathHelper.sin(origin.rotateAngleY) * distanceZ);
-    }
-
-    @SuppressWarnings("unused")
-    private void adjustAllRotationPoints(ModelRenderer target, ModelRenderer origin) {
-
-        float distanceY;
-        if (target.rotationPointY > origin.rotationPointY) {
-            distanceY = target.rotationPointY - origin.rotationPointY;
-        } else {
-            distanceY = origin.rotationPointY - target.rotationPointY;
-        }
-
-        float distanceZ = 0F;
-        if (target.rotationPointZ > origin.rotationPointZ) {
-            distanceZ = target.rotationPointZ - origin.rotationPointZ;
-        } else {
-            distanceZ = origin.rotationPointZ - target.rotationPointZ;
-        }
-
-        target.rotationPointY = origin.rotationPointY + MathHelper.sin(origin.rotateAngleX) * distanceY;
-        target.rotationPointZ = origin.rotationPointZ - MathHelper.cos(origin.rotateAngleY) * (MathHelper.cos(origin.rotateAngleX) * distanceY);
-        target.rotationPointX = origin.rotationPointX - MathHelper.sin(origin.rotateAngleY) * (MathHelper.cos(origin.rotateAngleX) * distanceY);
-
+    private void repositionLegChild(ModelPart lower, ModelPart upper) {
+        float dY = Math.abs(lower.y - upper.y);
+        lower.z = upper.z + Mth.sin(upper.xRot) * dY;
+        lower.y = upper.y + Mth.cos(upper.xRot) * dY;
     }
 }

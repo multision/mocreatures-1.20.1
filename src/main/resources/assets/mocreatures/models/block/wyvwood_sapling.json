@@ -1,6 +1,6 @@
 {
   "parent": "block/cross",
   "textures": {
-    "cross": "mocreatures:blocks/sapling_wyvwood"
+    "cross": "mocreatures:block/sapling_wyvwood"
   }
 }

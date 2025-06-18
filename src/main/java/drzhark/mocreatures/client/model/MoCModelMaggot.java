@@ -3,82 +3,168 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+
 import drzhark.mocreatures.entity.ambient.MoCEntityMaggot;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
+
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelMaggot<T extends MoCEntityMaggot> extends EntityModel<T> {
+        
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "maggot"), "main"
+    );
 
-    ModelRenderer Head;
-    ModelRenderer Body;
-    ModelRenderer Tail;
-    ModelRenderer Tailtip;
+    // We store limbSwing & limbSwingAmount (set in prepareMobModel) for the Z‐scale in render.
     private float limbSwing;
     private float limbSwingAmount;
 
-    public MoCModelMaggot() {
-        this.textureWidth = 32;
-        this.textureHeight = 32;
+    // In 1.20.1, each child part is a ModelPart. These replace the old ModelRenderer fields.
+    private final ModelPart Head;
+    private final ModelPart Body;
+    private final ModelPart Tail;
+    private final ModelPart Tailtip;
 
-        this.Head = new ModelRenderer(this, 0, 11);
-        this.Head.addBox(-1F, -1F, -2F, 2, 2, 2);
-        this.Head.setRotationPoint(0F, 23F, -2F);
+    public MoCModelMaggot(ModelPart root) {
+        this.Head    = root.getChild("Head");
+        this.Body    = root.getChild("Body");
+        this.Tail    = root.getChild("Tail");
+        this.Tailtip = root.getChild("Tailtip");
+    }
+    
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition part = mesh.getRoot();
 
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(-1.5F, -2F, 0F, 3, 3, 4);
-        this.Body.setRotationPoint(0F, 23F, -2F);
+        //---------------------------------------------
+        // Head (was: new ModelRenderer(this, 0,11); addBox(-1,-1,-2, 2,2,2); pivot(0,23,-2))
+        //---------------------------------------------
+        part.addOrReplaceChild(
+                "Head",
+                CubeListBuilder.create()
+                        .texOffs(0, 11)
+                        .addBox(-1.0F, -1.0F, -2.0F, 2, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 23.0F, -2.0F)
+        );
 
-        this.Tail = new ModelRenderer(this, 0, 7);
-        this.Tail.addBox(-1F, -1F, 0F, 2, 2, 2);
-        this.Tail.setRotationPoint(0F, 23F, 2F);
+        //---------------------------------------------
+        // Body (was: new ModelRenderer(this, 0,0); addBox(-1.5,-2,0, 3,3,4); pivot(0,23,-2))
+        //---------------------------------------------
+        part.addOrReplaceChild(
+                "Body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1.5F, -2.0F, 0.0F, 3, 3, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 23.0F, -2.0F)
+        );
 
-        this.Tailtip = new ModelRenderer(this, 8, 7);
-        this.Tailtip.addBox(-0.5F, 0F, 0F, 1, 1, 1);
-        this.Tailtip.setRotationPoint(0F, 23F, 4F);
+        //---------------------------------------------
+        // Tail (was: new ModelRenderer(this, 0,7); addBox(-1,-1,0, 2,2,2); pivot(0,23,2))
+        //---------------------------------------------
+        part.addOrReplaceChild(
+                "Tail",
+                CubeListBuilder.create()
+                        .texOffs(0, 7)
+                        .addBox(-1.0F, -1.0F, 0.0F, 2, 2, 2, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 23.0F, 2.0F)
+        );
+
+        //---------------------------------------------
+        // Tailtip (was: new ModelRenderer(this, 8,7); addBox(-0.5,0,0, 1,1,1); pivot(0,23,4))
+        //---------------------------------------------
+        part.addOrReplaceChild(
+                "Tailtip",
+                CubeListBuilder.create()
+                        .texOffs(8, 7)
+                        .addBox(-0.5F, 0.0F, 0.0F, 1, 1, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 23.0F, 4.0F)
+        );
+
+        // The original texture sheet was 32×32
+        return LayerDefinition.create(mesh, 32, 32);
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
+    /**
+     * Capture limbSwing & limbSwingAmount before any animation logic.
+     * In 1.16.5 this was setLivingAnimations(...); in 1.20.1 we override prepareMobModel.
+     */
+    @Override
+    public void prepareMobModel(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float partialTick
+    ) {
         this.limbSwing = limbSwing;
         this.limbSwingAmount = limbSwingAmount;
     }
+
+    /**
+     * No extra rotation/pose updates—empty as in the original setRotationAngles(...)
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        //limbSwingAmount = movement speed!
-        //ageInTicks = timer!
-        //System.out.println("ageInTicks = " + ageInTicks);
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // no head/body/tail rotations beyond the Z‐scale handled in renderToBuffer
+    }
 
-        matrixStackIn.push();
+    /**
+     * Render all parts, applying the same z‐scale “wiggle” based on limbSwing & limbSwingAmount,
+     * with blending enabled exactly as in the old render(...) method.
+     */
+    @Override
+    public void renderToBuffer(
+            PoseStack        poseStack,
+            VertexConsumer   buffer,
+            int              packedLight,
+            int              packedOverlay,
+            float            red,
+            float            green,
+            float            blue,
+            float            alpha
+    ) {
+        poseStack.pushPose();
+
+        // Mirror the old RenderSystem.enableBlend() / defaultBlendFunc() calls:
         RenderSystem.enableBlend();
-        //float transparency = 0.9F;
         RenderSystem.defaultBlendFunc();
-        //RenderSystem.color4f(1.2F, 1.2F, 1.2F, transparency);
-        float f9 = -(MathHelper.cos(this.limbSwing * 3F)) * this.limbSwingAmount * 2F;
-        //matrixStackIn.scale(1.0F, 1.0F, 1.0F + (limbSwingAmount * 3F));
-        matrixStackIn.scale(1.0F, 1.0F, 1.0F + (f9));
 
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tailtip.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // f9 = -(cos(limbSwing * 3)) * limbSwingAmount * 2
+        float f9 = -Mth.cos(this.limbSwing * 3.0F) * this.limbSwingAmount * 2.0F;
+        // scale Z by (1 + f9)
+        poseStack.scale(1.0F, 1.0F, 1.0F + f9);
+
+        // Render each part with the same light/overlay/colour
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Tailtip.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Disable blending and pop
         RenderSystem.disableBlend();
-        matrixStackIn.pop();
-
-    }
-
-    @SuppressWarnings("unused")
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        poseStack.popPose();
     }
 }

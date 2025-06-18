@@ -3,49 +3,49 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.client.model.MoCModelRat;
 import drzhark.mocreatures.entity.hostile.MoCEntityRat;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.resources.ResourceLocation;
+import com.mojang.math.Axis;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderRat<T extends MoCEntityRat, M extends MoCModelRat<T>> extends MobRenderer<T, M> {
 
-    public MoCRenderRat(EntityRendererManager renderManagerIn, M modelbase, float f) {
+    public MoCRenderRat(EntityRendererProvider.Context renderManagerIn, M modelbase, float f) {
         super(renderManagerIn, modelbase, f);
     }
 
     @Override
-    public void render(T entityrat, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
-        super.render(entityrat, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
+    public void render(T entityrat, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLightIn) {
+        super.render(entityrat, entityYaw, partialTicks, poseStack, buffer, packedLightIn);
     }
 
     @Override
-    protected void preRenderCallback(T entityrat, MatrixStack matrixStackIn, float f) {
-        stretch(entityrat, matrixStackIn);
-        if (entityrat.isOnLadder()) {
-            rotateAnimal(entityrat, matrixStackIn);
+    protected void scale(T entityrat, PoseStack poseStack, float f) {
+        stretch(entityrat, poseStack);
+        if (entityrat.onClimbable()) {
+            rotateAnimal(entityrat, poseStack);
         }
     }
 
-    protected void rotateAnimal(T entityrat, MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.XN.rotationDegrees(90.0F));
-        matrixStackIn.translate(0.0F, 0.4F, 0.0F);
+    protected void rotateAnimal(T entityrat, PoseStack poseStack) {
+        poseStack.mulPose(Axis.XN.rotationDegrees(90.0F));
+        poseStack.translate(0.0F, 0.4F, 0.0F);
     }
 
-    protected void stretch(T entityrat, MatrixStack matrixStackIn) {
+    protected void stretch(T entityrat, PoseStack poseStack) {
         float f = 0.8F;
-        matrixStackIn.scale(f, f, f);
+        poseStack.scale(f, f, f);
     }
 
     @Override
-    public ResourceLocation getEntityTexture(T entityrat) {
+    public ResourceLocation getTextureLocation(T entityrat) {
         return entityrat.getTexture();
     }
 }

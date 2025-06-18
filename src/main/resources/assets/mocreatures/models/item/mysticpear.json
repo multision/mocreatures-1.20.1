@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/mystic_pear"
+    "layer0": "mocreatures:item/mystic_pear"
   }
 }

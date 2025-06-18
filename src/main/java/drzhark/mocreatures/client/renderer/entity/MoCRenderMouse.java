@@ -3,52 +3,52 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import drzhark.mocreatures.client.model.MoCModelMouse;
 import drzhark.mocreatures.entity.passive.MoCEntityMouse;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderMouse extends MoCRenderMoC<MoCEntityMouse, MoCModelMouse<MoCEntityMouse>> {
 
-    public MoCRenderMouse(EntityRendererManager renderManagerIn, MoCModelMouse modelbase, float f) {
-        super(renderManagerIn, modelbase, f);
+    public MoCRenderMouse(EntityRendererProvider.Context context, MoCModelMouse<MoCEntityMouse> modelbase, float f) {
+        super(context, modelbase, f);
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityMouse entitymouse, MatrixStack matrixStackIn, float partialTickTime) {
-        stretch(matrixStackIn);
+    protected void scale(MoCEntityMouse entitymouse, PoseStack poseStack, float partialTickTime) {
+        stretch(poseStack);
         // When mice are picked up
         if (entitymouse.upsideDown()) {
-            upsideDown(matrixStackIn);
+            upsideDown(poseStack);
         }
 
-        if (entitymouse.isOnLadder()) {
-            rotateAnimal(matrixStackIn);
+        if (entitymouse.onClimbable()) {
+            rotateAnimal(poseStack);
         }
     }
 
-    protected void rotateAnimal(MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.XN.rotationDegrees(90.0F));
-        matrixStackIn.translate(0.0F, 0.4F, 0.0F);
+    protected void rotateAnimal(PoseStack poseStack) {
+        poseStack.mulPose(Axis.XN.rotationDegrees(90.0F));
+        poseStack.translate(0.0F, 0.4F, 0.0F);
     }
 
-    protected void stretch(MatrixStack matrixStackIn) {
+    protected void stretch(PoseStack poseStack) {
         float f = 0.6F;
-        matrixStackIn.scale(f, f, f);
+        poseStack.scale(f, f, f);
     }
 
-    protected void upsideDown(MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.XN.rotationDegrees(-90.0F));
-        matrixStackIn.translate(-0.55F, 0.0F, 0.0F);
+    protected void upsideDown(PoseStack poseStack) {
+        poseStack.mulPose(Axis.XN.rotationDegrees(-90.0F));
+        poseStack.translate(-0.55F, 0.0F, 0.0F);
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityMouse entitymouse) {
+    public ResourceLocation getTextureLocation(MoCEntityMouse entitymouse) {
         return entitymouse.getTexture();
     }
 }

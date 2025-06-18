@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/hide_helmet"
+    "layer0": "mocreatures:item/hide_helmet"
   }
 }

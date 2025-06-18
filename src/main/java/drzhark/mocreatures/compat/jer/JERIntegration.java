@@ -5,7 +5,6 @@ package drzhark.mocreatures.compat.jer;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityData;
-import net.minecraftforge.common.BiomeDictionary;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +101,7 @@ public class JERIntegration {
 //        jerMobRegistry.register(new MoCEntityWyvern(jerWorld), LightLevel.any, getBiomeTypeNames("Wyvern"), MoCLootTables.WYVERN);
     }
 
-    public static String[] getBiomeTypeNames(String entityName) {
+    /*public static String[] getBiomeTypeNames(String entityName) {
         MoCEntityData entityData = MoCreatures.mocEntityMap.get(entityName);
         List<String> biomeTypes = new ArrayList<>();
         if (entityData != null) {
@@ -111,5 +110,5 @@ public class JERIntegration {
             }
         }
         return biomeTypes.toArray(new String[0]);
-    }
+    }*/
 }

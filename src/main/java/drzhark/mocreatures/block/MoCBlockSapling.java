@@ -3,21 +3,47 @@
  */
 package drzhark.mocreatures.block;
 
-import drzhark.mocreatures.dimension.worldgen.WyvernTreeGrower;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.SaplingBlock;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.trees.Tree;
+import drzhark.mocreatures.init.MoCBlocks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.SaplingBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
 
-public class MoCBlockSapling extends SaplingBlock{
+public class MoCBlockSapling extends SaplingBlock {
 
-    public MoCBlockSapling(AbstractBlock.Properties properties) {
-        //super(treeIn, properties.sound(SoundType.PLANT).doesNotBlockMovement().tickRandomly());
-        super(new WyvernTreeGrower(), AbstractBlock.Properties.create(Material.PLANTS)
-                .tickRandomly()
-                .doesNotBlockMovement()
-                .zeroHardnessAndResistance()
-                .sound(SoundType.PLANT));
+    public MoCBlockSapling(BlockBehaviour.Properties properties) {
+        super(new WyvwoodTreeGrower(), properties
+                .noCollission()
+                .randomTicks()
+                .strength(0.0F)
+                .sound(SoundType.GRASS)
+                .pushReaction(PushReaction.DESTROY));
+    }
+    
+    @Override
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+        BlockPos blockpos = pos.below();
+        BlockState blockstate = level.getBlockState(blockpos);
+        
+        // Allow saplings on wyvgrass and wyvdirt
+        if (blockstate.is(MoCBlocks.wyvgrass.get()) || blockstate.is(MoCBlocks.wyvdirt.get())) {
+            return true;
+        }
+        
+        // Also allow on vanilla soils as fallback
+        return blockstate.is(BlockTags.DIRT) || super.canSurvive(state, level, pos);
+    }
+    
+    @Override
+    protected boolean mayPlaceOn(BlockState state, BlockGetter level, BlockPos pos) {
+        // Same as canSurvive but for actual placement
+        return state.is(MoCBlocks.wyvgrass.get()) || 
+               state.is(MoCBlocks.wyvdirt.get()) || 
+               state.is(BlockTags.DIRT);
     }
 }

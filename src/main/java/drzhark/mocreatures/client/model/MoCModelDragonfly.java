@@ -1,166 +1,231 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.ambient.MoCEntityDragonfly;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelDragonfly<T extends MoCEntityDragonfly> extends EntityModel<T> {
 
-    ModelRenderer Abdomen;
-    ModelRenderer FrontLegs;
-    ModelRenderer RAntenna;
-    ModelRenderer LAntenna;
-    ModelRenderer RearLegs;
-    ModelRenderer MidLegs;
-    ModelRenderer Mouth;
-    ModelRenderer WingRearRight;
-    ModelRenderer Thorax;
-    ModelRenderer WingFrontRight;
-    ModelRenderer WingFrontLeft;
-    ModelRenderer WingRearLeft;
-    ModelRenderer Head;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "dragonfly"), "main"
+    );
 
-    public MoCModelDragonfly() {
-        this.textureWidth = 32;
-        this.textureHeight = 32;
+    private final ModelPart Head;
+    private final ModelPart RAntenna;
+    private final ModelPart LAntenna;
+    private final ModelPart Mouth;
+    private final ModelPart Thorax;
+    private final ModelPart Abdomen;
+    private final ModelPart FrontLegs;
+    private final ModelPart MidLegs;
+    private final ModelPart RearLegs;
+    private final ModelPart WingFrontRight;
+    private final ModelPart WingFrontLeft;
+    private final ModelPart WingRearRight;
+    private final ModelPart WingRearLeft;
 
-        this.Head = new ModelRenderer(this, 0, 4);
-        this.Head.addBox(-1F, 0F, -1F, 2, 1, 2);
-        this.Head.setRotationPoint(0F, 21F, -2F);
-        setRotation(this.Head, -2.171231F, 0F, 0F);
-
-        this.RAntenna = new ModelRenderer(this, 0, 7);
-        this.RAntenna.addBox(-0.5F, 0F, -1F, 1, 0, 1);
-        this.RAntenna.setRotationPoint(-0.5F, 19.7F, -2.3F);
-        setRotation(this.RAntenna, -1.041001F, 0.7853982F, 0F);
-
-        this.LAntenna = new ModelRenderer(this, 4, 7);
-        this.LAntenna.addBox(-0.5F, 0F, -1F, 1, 0, 1);
-        this.LAntenna.setRotationPoint(0.5F, 19.7F, -2.3F);
-        setRotation(this.LAntenna, -1.041001F, -0.7853982F, 0F);
-
-        this.Mouth = new ModelRenderer(this, 0, 11);
-        this.Mouth.addBox(-0.5F, 0F, 0F, 1, 1, 1);
-        this.Mouth.setRotationPoint(0F, 21.1F, -2.3F);
-        setRotation(this.Mouth, -2.171231F, 0F, 0F);
-
-        this.Thorax = new ModelRenderer(this, 0, 0);
-        this.Thorax.addBox(-1F, 0F, -1F, 2, 2, 2);
-        this.Thorax.setRotationPoint(0F, 20F, -1F);
-
-        this.Abdomen = new ModelRenderer(this, 8, 0);
-        this.Abdomen.addBox(-0.5F, 0F, -1F, 1, 7, 1);
-        this.Abdomen.setRotationPoint(0F, 20.5F, 0F);
-        setRotation(this.Abdomen, 1.427659F, 0F, 0F);
-
-        this.FrontLegs = new ModelRenderer(this, 0, 8);
-        this.FrontLegs.addBox(-1F, 0F, 0F, 2, 3, 0);
-        this.FrontLegs.setRotationPoint(0F, 21.5F, -1.8F);
-        setRotation(this.FrontLegs, 0.1487144F, 0F, 0F);
-
-        this.MidLegs = new ModelRenderer(this, 4, 8);
-        this.MidLegs.addBox(-1F, 0F, 0F, 2, 3, 0);
-        this.MidLegs.setRotationPoint(0F, 22F, -1.2F);
-        setRotation(this.MidLegs, 0.5948578F, 0F, 0F);
-
-        this.RearLegs = new ModelRenderer(this, 8, 8);
-        this.RearLegs.addBox(-1F, 0F, 0F, 2, 3, 0);
-        this.RearLegs.setRotationPoint(0F, 22F, -0.4F);
-        setRotation(this.RearLegs, 1.070744F, 0F, 0F);
-
-        this.WingFrontRight = new ModelRenderer(this, 0, 28);
-        this.WingFrontRight.addBox(-7F, 0F, -1F, 7, 0, 2);
-        this.WingFrontRight.setRotationPoint(-1F, 20F, -1F);
-        setRotation(this.WingFrontRight, 0F, -0.1396263F, 0.0872665F);
-
-        this.WingFrontLeft = new ModelRenderer(this, 0, 30);
-        this.WingFrontLeft.addBox(0F, 0F, -1F, 7, 0, 2);
-        this.WingFrontLeft.setRotationPoint(1F, 20F, -1F);
-        setRotation(this.WingFrontLeft, 0F, 0.1396263F, -0.0872665F);
-
-        this.WingRearRight = new ModelRenderer(this, 0, 24);
-        this.WingRearRight.addBox(-7F, 0F, -1F, 7, 0, 2);
-        this.WingRearRight.setRotationPoint(-1F, 20F, -1F);
-        setRotation(this.WingRearRight, 0F, 0.3490659F, -0.0872665F);
-
-        this.WingRearLeft = new ModelRenderer(this, 0, 26);
-        this.WingRearLeft.addBox(0F, 0F, -1F, 7, 0, 2);
-        this.WingRearLeft.setRotationPoint(1F, 20F, -1F);
-        setRotation(this.WingRearLeft, 0F, -0.3490659F, 0.0872665F);
-
+    public MoCModelDragonfly(ModelPart root) {
+        this.Head            = root.getChild("Head");
+        this.RAntenna        = root.getChild("RAntenna");
+        this.LAntenna        = root.getChild("LAntenna");
+        this.Mouth           = root.getChild("Mouth");
+        this.Thorax          = root.getChild("Thorax");
+        this.Abdomen         = root.getChild("Abdomen");
+        this.FrontLegs       = root.getChild("FrontLegs");
+        this.MidLegs         = root.getChild("MidLegs");
+        this.RearLegs        = root.getChild("RearLegs");
+        this.WingFrontRight  = root.getChild("WingFrontRight");
+        this.WingFrontLeft   = root.getChild("WingFrontLeft");
+        this.WingRearRight   = root.getChild("WingRearRight");
+        this.WingRearLeft    = root.getChild("WingRearLeft");
     }
+    
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
 
+        // Head: texOffs(0,4), addBox(-1,0,-1, 2,1,2), pivot(0,21,-2), rotateX = -2.171231
+        root.addOrReplaceChild("Head",
+                CubeListBuilder.create()
+                        .texOffs(0, 4)
+                        .addBox(-1.0F, 0.0F, -1.0F, 2, 1, 2),
+                PartPose.offsetAndRotation(0.0F, 21.0F, -2.0F, -2.171231F, 0.0F, 0.0F)
+        );
+
+        // RAntenna: texOffs(0,7), addBox(-0.5,0,-1, 1,0,1), pivot(-0.5,19.7,-2.3), rotateX=-1.041001, rotateY=0.7853982
+        root.addOrReplaceChild("RAntenna",
+                CubeListBuilder.create()
+                        .texOffs(0, 7)
+                        .addBox(-0.5F, 0.0F, -1.0F, 1, 0, 1),
+                PartPose.offsetAndRotation(-0.5F, 19.7F, -2.3F, -1.041001F, 0.7853982F, 0.0F)
+        );
+
+        // LAntenna: texOffs(4,7), addBox(-0.5,0,-1, 1,0,1), pivot(0.5,19.7,-2.3), rotateX=-1.041001, rotateY=-0.7853982
+        root.addOrReplaceChild("LAntenna",
+                CubeListBuilder.create()
+                        .texOffs(4, 7)
+                        .addBox(-0.5F, 0.0F, -1.0F, 1, 0, 1),
+                PartPose.offsetAndRotation(0.5F, 19.7F, -2.3F, -1.041001F, -0.7853982F, 0.0F)
+        );
+
+        // Mouth: texOffs(0,11), addBox(-0.5,0,0, 1,1,1), pivot(0,21.1,-2.3), rotateX=-2.171231
+        root.addOrReplaceChild("Mouth",
+                CubeListBuilder.create()
+                        .texOffs(0, 11)
+                        .addBox(-0.5F, 0.0F, 0.0F, 1, 1, 1),
+                PartPose.offsetAndRotation(0.0F, 21.1F, -2.3F, -2.171231F, 0.0F, 0.0F)
+        );
+
+        // Thorax: texOffs(0,0), addBox(-1,0,-1, 2,2,2), pivot(0,20,-1)
+        root.addOrReplaceChild("Thorax",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1.0F, 0.0F, -1.0F, 2, 2, 2),
+                PartPose.offset(0.0F, 20.0F, -1.0F)
+        );
+
+        // Abdomen: texOffs(8,0), addBox(-0.5,0,-1, 1,7,1), pivot(0,20.5,0), rotateX=1.427659
+        root.addOrReplaceChild("Abdomen",
+                CubeListBuilder.create()
+                        .texOffs(8, 0)
+                        .addBox(-0.5F, 0.0F, -1.0F, 1, 7, 1),
+                PartPose.offsetAndRotation(0.0F, 20.5F, 0.0F, 1.427659F, 0.0F, 0.0F)
+        );
+
+        // FrontLegs: texOffs(0,8), addBox(-1,0,0, 2,3,0), pivot(0,21.5,-1.8), rotateX=0.1487144
+        root.addOrReplaceChild("FrontLegs",
+                CubeListBuilder.create()
+                        .texOffs(0, 8)
+                        .addBox(-1.0F, 0.0F, 0.0F, 2, 3, 0),
+                PartPose.offsetAndRotation(0.0F, 21.5F, -1.8F, 0.1487144F, 0.0F, 0.0F)
+        );
+
+        // MidLegs: texOffs(4,8), addBox(-1,0,0, 2,3,0), pivot(0,22,-1.2), rotateX=0.5948578
+        root.addOrReplaceChild("MidLegs",
+                CubeListBuilder.create()
+                        .texOffs(4, 8)
+                        .addBox(-1.0F, 0.0F, 0.0F, 2, 3, 0),
+                PartPose.offsetAndRotation(0.0F, 22.0F, -1.2F, 0.5948578F, 0.0F, 0.0F)
+        );
+
+        // RearLegs: texOffs(8,8), addBox(-1,0,0, 2,3,0), pivot(0,22,-0.4), rotateX=1.070744
+        root.addOrReplaceChild("RearLegs",
+                CubeListBuilder.create()
+                        .texOffs(8, 8)
+                        .addBox(-1.0F, 0.0F, 0.0F, 2, 3, 0),
+                PartPose.offsetAndRotation(0.0F, 22.0F, -0.4F, 1.070744F, 0.0F, 0.0F)
+        );
+
+        // WingFrontRight: texOffs(0,28), addBox(-7,0,-1, 7,0,2), pivot(-1,20,-1), rotateY=-0.1396263, rotateZ=0.0872665
+        root.addOrReplaceChild("WingFrontRight",
+                CubeListBuilder.create()
+                        .texOffs(0, 28)
+                        .addBox(-7.0F, 0.0F, -1.0F, 7, 0, 2),
+                PartPose.offsetAndRotation(-1.0F, 20.0F, -1.0F, 0.0F, -0.1396263F, 0.0872665F)
+        );
+
+        // WingFrontLeft: texOffs(0,30), addBox(0,0,-1, 7,0,2), pivot(1,20,-1), rotateY=0.1396263, rotateZ=-0.0872665
+        root.addOrReplaceChild("WingFrontLeft",
+                CubeListBuilder.create()
+                        .texOffs(0, 30)
+                        .addBox(0.0F, 0.0F, -1.0F, 7, 0, 2),
+                PartPose.offsetAndRotation(1.0F, 20.0F, -1.0F, 0.0F, 0.1396263F, -0.0872665F)
+        );
+
+        // WingRearRight: texOffs(0,24), addBox(-7,0,-1, 7,0,2), pivot(-1,20,-1), rotateY=0.3490659, rotateZ=-0.0872665
+        root.addOrReplaceChild("WingRearRight",
+                CubeListBuilder.create()
+                        .texOffs(0, 24)
+                        .addBox(-7.0F, 0.0F, -1.0F, 7, 0, 2),
+                PartPose.offsetAndRotation(-1.0F, 20.0F, -1.0F, 0.0F, 0.3490659F, -0.0872665F)
+        );
+
+        // WingRearLeft: texOffs(0,26), addBox(0,0,-1, 7,0,2), pivot(1,20,-1), rotateY=-0.3490659, rotateZ=0.0872665
+        root.addOrReplaceChild("WingRearLeft",
+                CubeListBuilder.create()
+                        .texOffs(0, 26)
+                        .addBox(0.0F, 0.0F, -1.0F, 7, 0, 2),
+                PartPose.offsetAndRotation(1.0F, 20.0F, -1.0F, 0.0F, -0.3490659F, 0.0872665F)
+        );
+
+        return LayerDefinition.create(mesh, 32, 32);
+    }
+    
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Abdomen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontLegs.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RAntenna.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LAntenna.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RearLegs.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.MidLegs.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Mouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Thorax.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-        matrixStackIn.push();
-        RenderSystem.enableBlend();
-        float transparency = 0.6F;
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.color4f(0.8F, 0.8F, 0.8F, transparency);
-        //matrixStackIn.scale(1.3F, 1.0F, 1.3F);
-        this.WingRearRight.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.WingFrontRight.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.WingFrontLeft.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.WingRearLeft.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        RenderSystem.disableBlend();
-        matrixStackIn.pop();
-
-    }
-
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        //super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
-
-        /*
-         * limbSwing = distance walked limbSwingAmount = speed 0 - 1 ageInTicks = timer
-         */
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount,
+                          float ageInTicks, float netHeadYaw, float headPitch) {
 
         float WingRot = 0F;
         float legMov;
         float legMovB;
 
-        if (entityIn.getIsFlying() || entityIn.getMotion().getY() < -0.1D) {
-            WingRot = MathHelper.cos((ageInTicks * 2.0F)) * 0.5F;
-            legMov = (limbSwingAmount * 1.5F);
+        if (entity.getIsFlying() || entity.getDeltaMovement().y < -0.1D) {
+            WingRot = Mth.cos(ageInTicks * 2.0F) * 0.5F;
+            legMov = limbSwingAmount * 1.5F;
             legMovB = legMov;
         } else {
-            legMov = MathHelper.cos((limbSwing * 1.5F) + 3.141593F) * 2.0F * limbSwingAmount;
-            legMovB = MathHelper.cos(limbSwing * 1.5F) * 2.0F * limbSwingAmount;
+            legMov = Mth.cos((limbSwing * 1.5F) + (float)Math.PI) * 2.0F * limbSwingAmount;
+            legMovB = Mth.cos(limbSwing * 1.5F) * 2.0F * limbSwingAmount;
         }
 
-        this.WingFrontRight.rotateAngleZ = WingRot;
-        this.WingRearLeft.rotateAngleZ = WingRot;
+        // Apply Z-rotation to front/rear pair
+        this.WingFrontRight.zRot =  WingRot;
+        this.WingRearLeft.zRot   =  WingRot;
+        this.WingFrontLeft.zRot   = -WingRot;
+        this.WingRearRight.zRot   = -WingRot;
 
-        this.WingFrontLeft.rotateAngleZ = -WingRot;
-        this.WingRearRight.rotateAngleZ = -WingRot;
+        // Legs from original setRotationAngles:
+        this.FrontLegs.xRot = 0.1487144F + legMov;
+        this.MidLegs.xRot   = 0.5948578F + legMovB;
+        this.RearLegs.xRot  = 1.070744F + legMov;
+    }
+    
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer,
+                               int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
 
-        this.FrontLegs.rotateAngleX = 0.1487144F + legMov;
-        this.MidLegs.rotateAngleX = 0.5948578F + legMovB;
-        this.RearLegs.rotateAngleX = 1.070744F + legMov;
+        // Render all opaque parts first:
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Abdomen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.FrontLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RAntenna.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LAntenna.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RearLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.MidLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Mouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Thorax.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Now render wings with blending enabled:
+        poseStack.pushPose();
+        RenderSystem.enableBlend();
+        // Use default blend function (SRC_ALPHA, ONE_MINUS_SRC_ALPHA):
+        RenderSystem.defaultBlendFunc();
+        // Apply an alpha of 0.6 (as in your old code)
+        RenderSystem.clearColor(0.8F, 0.8F, 0.8F, 0.6F);
+
+        // Note: we still pass the same VertexConsumer; transparency is handled by the blend state.
+        this.WingRearRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.WingFrontRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.WingFrontLeft.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.WingRearLeft.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        RenderSystem.disableBlend();
+        poseStack.popPose();
     }
 }

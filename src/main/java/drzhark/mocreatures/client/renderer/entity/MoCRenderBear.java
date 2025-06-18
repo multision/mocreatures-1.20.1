@@ -3,39 +3,39 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.client.model.MoCModelBear;
 import drzhark.mocreatures.entity.hunter.MoCEntityBear;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderBear extends MoCRenderMoC<MoCEntityBear, MoCModelBear<MoCEntityBear>> {
 
-    public MoCRenderBear(EntityRendererManager renderManagerIn, MoCModelBear modelbase, float f) {
+    public MoCRenderBear(EntityRendererProvider.Context renderManagerIn, MoCModelBear modelbase, float f) {
         super(renderManagerIn, modelbase, f);
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityBear entitybear, MatrixStack matrixStackIn, float f) {
-        stretch(matrixStackIn, entitybear);
-        super.preRenderCallback(entitybear, matrixStackIn, f);
+    protected void scale(MoCEntityBear entitybear, PoseStack poseStack, float f) {
+        stretch(poseStack, entitybear);
+        super.scale(entitybear, poseStack, f);
 
     }
 
-    protected void stretch(MatrixStack matrixStackIn, MoCEntityBear entitybear) {
-        float sizeFactor = entitybear.getAge() * 0.01F;
+    protected void stretch(PoseStack poseStack, MoCEntityBear entitybear) {
+        float sizeFactor = entitybear.getMoCAge() * 0.01F;
         if (entitybear.getIsAdult()) {
             sizeFactor = 1.0F;
         }
         sizeFactor *= entitybear.getBearSize();
-        matrixStackIn.scale(sizeFactor, sizeFactor, sizeFactor);
+        poseStack.scale(sizeFactor, sizeFactor, sizeFactor);
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityBear entitybear) {
+    public ResourceLocation getTextureLocation(MoCEntityBear entitybear) {
         return entitybear.getTexture();
     }
 }

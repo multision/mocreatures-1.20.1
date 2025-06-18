@@ -1,14 +1,12 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.item;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 
 public class MoCItemTurtleSoup extends MoCItemFood {
 
@@ -16,21 +14,23 @@ public class MoCItemTurtleSoup extends MoCItemFood {
         super(builder);
     }
 
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-        ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
-        return entityLiving instanceof PlayerEntity && ((PlayerEntity)entityLiving).abilities.isCreativeMode ? itemstack : new ItemStack(Items.BOWL);
+    @Override
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+        ItemStack resultStack = super.finishUsingItem(stack, level, entity);
+        return (entity instanceof Player && ((Player) entity).isCreative()) ? resultStack : new ItemStack(Items.BOWL);
     }
+
     public static class Builder extends MoCItemFood.Builder {
-        public Builder(Item.Properties properties, String name, int amount) {
-            this(properties, name, amount, 0.6F, false);
+        public Builder(Item.Properties properties, int nutrition) {
+            this(properties, nutrition, 0.6F, false);
         }
 
-        public Builder(Item.Properties properties, String name, int amount, float saturation, boolean isWolfFood) {
-            this(properties, name, amount, saturation, isWolfFood, 32);
+        public Builder(Item.Properties properties, int nutrition, float saturation, boolean isWolfFood) {
+            this(properties, nutrition, saturation, isWolfFood, 32);
         }
 
-        public Builder(Item.Properties properties, String name, int amount, float saturation, boolean isWolfFood, int eatingSpeed) {
-            super(properties, name, amount, saturation, isWolfFood, eatingSpeed);
+        public Builder(Item.Properties properties, int nutrition, float saturation, boolean isWolfFood, int eatingSpeed) {
+            super(properties, nutrition, saturation, isWolfFood, eatingSpeed);
         }
 
         public MoCItemTurtleSoup build() {

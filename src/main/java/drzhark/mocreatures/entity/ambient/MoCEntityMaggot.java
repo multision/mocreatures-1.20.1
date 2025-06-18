@@ -6,22 +6,22 @@ package drzhark.mocreatures.entity.ambient;
 import drzhark.mocreatures.entity.MoCEntityAmbient;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
 public class MoCEntityMaggot extends MoCEntityAmbient {
 
-    public MoCEntityMaggot(EntityType<? extends MoCEntityMaggot> type, World world) {
+    public MoCEntityMaggot(EntityType<? extends MoCEntityMaggot> type, Level world) {
         super(type, world);
         //setSize(0.2F, 0.2F);
         this.texture = "maggot.png";
@@ -32,38 +32,44 @@ public class MoCEntityMaggot extends MoCEntityAmbient {
         this.goalSelector.addGoal(1, new EntityAIWanderMoC2(this, 0.8D));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityAmbient.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 4.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.1D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityAmbient.createAttributes()
+                .add(Attributes.MAX_HEALTH, 4.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.1D);
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_SILVERFISH_STEP;
+        return SoundEvents.SILVERFISH_STEP;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.ENTITY_SILVERFISH_STEP;
+        return SoundEvents.SILVERFISH_STEP;
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.MAGGOT;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.MAGGOT;
     }
 
     @Override
-    public boolean isOnLadder() {
-        return this.collidedHorizontally;
+    public boolean onClimbable() {
+        return this.horizontalCollision;
     }
 
     public boolean climbing() {
-        return !this.onGround && isOnLadder();
+        return !this.onGround() && onClimbable();
     }
 
     @Override
-    public void jump() {
+    public void jumpFromGround() {
+        // Override to prevent jumping
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.45F;
+    @Override
+    public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.45F;
     }
 }

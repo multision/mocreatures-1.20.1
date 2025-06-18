@@ -6,7 +6,7 @@ package drzhark.mocreatures.client.renderer.texture;
 import drzhark.mocreatures.MoCConstants;
 import drzhark.mocreatures.proxy.MoCProxy;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 public class MoCTextures {
 
@@ -36,6 +36,7 @@ public class MoCTextures {
         return getTexture(MoCProxy.MISC_TEXTURE, texture);
     }
 
+    @SuppressWarnings("removal")
     public ResourceLocation getTexture(String category, String texture) {
         ResourceLocation resourceLocation = RESOURCE_CACHE.get(texture);
         if (resourceLocation == null) {

@@ -3,134 +3,294 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
 import drzhark.mocreatures.entity.passive.MoCEntityMole;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * Ported from 1.16.5 → 1.20.1. All ModelRenderer fields are now ModelParts,
+ * built via createBodyLayer(). Animations moved to setupAnim(...), rendering
+ * moved to renderToBuffer(...), and entity offsets captured in prepareMobModel(...).
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelMole<T extends MoCEntityMole> extends EntityModel<T> {
 
-    ModelRenderer Nose;
-    ModelRenderer Head;
-    ModelRenderer Body;
-    ModelRenderer Back;
-    ModelRenderer Tail;
-    ModelRenderer LLeg;
-    ModelRenderer LFingers;
-    ModelRenderer RLeg;
-    ModelRenderer RFingers;
-    ModelRenderer LRearLeg;
-    ModelRenderer RRearLeg;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "mole"),
+            "main"
+    );
+    
+    private final ModelPart Nose;
+    private final ModelPart Head;
+    private final ModelPart Body;
+    private final ModelPart Back;
+    private final ModelPart Tail;
+    private final ModelPart LLeg;
+    private final ModelPart LFingers;
+    private final ModelPart RLeg;
+    private final ModelPart RFingers;
+    private final ModelPart LRearLeg;
+    private final ModelPart RRearLeg;
+
+    // Captured offset from setLivingAnimations(...)
     private float yOffset;
 
-    public MoCModelMole() {
-        this.textureWidth = 64;
-        this.textureHeight = 32;
+    private final float RADIAN_CONV = 57.29578F;
 
-        this.Nose = new ModelRenderer(this, 0, 25);
-        this.Nose.addBox(-1F, 0F, -4F, 2, 2, 3);
-        this.Nose.setRotationPoint(0F, 20F, -6F);
-        setRotation(this.Nose, 0.2617994F, 0F, 0F);
-
-        this.Head = new ModelRenderer(this, 0, 18);
-        this.Head.addBox(-3F, -2F, -2F, 6, 4, 3);
-        this.Head.setRotationPoint(0F, 20F, -6F);
-
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(-5F, 0F, 0F, 10, 6, 10);
-        this.Body.setRotationPoint(0F, 17F, -6F);
-
-        this.Back = new ModelRenderer(this, 18, 16);
-        this.Back.addBox(-4F, -3F, 0F, 8, 5, 4);
-        this.Back.setRotationPoint(0F, 21F, 4F);
-
-        this.Tail = new ModelRenderer(this, 52, 8);
-        this.Tail.addBox(-0.5F, 0F, 1F, 1, 1, 5);
-        this.Tail.setRotationPoint(0F, 21F, 6F);
-        setRotation(this.Tail, -0.3490659F, 0F, 0F);
-
-        this.LLeg = new ModelRenderer(this, 10, 25);
-        this.LLeg.addBox(0F, -2F, -1F, 6, 4, 2);
-        this.LLeg.setRotationPoint(4F, 21F, -4F);
-        setRotation(this.LLeg, 0F, 0F, 0.2268928F);
-
-        this.LFingers = new ModelRenderer(this, 44, 8);
-        this.LFingers.addBox(5F, -2F, 1F, 1, 4, 1);
-        this.LFingers.setRotationPoint(4F, 21F, -4F);
-        setRotation(this.LFingers, 0F, 0F, 0.2268928F);
-
-        this.RLeg = new ModelRenderer(this, 26, 25);
-        this.RLeg.addBox(-6F, -2F, -1F, 6, 4, 2);
-        this.RLeg.setRotationPoint(-4F, 21F, -4F);
-        setRotation(this.RLeg, 0F, 0F, -0.2268928F);
-
-        this.RFingers = new ModelRenderer(this, 48, 8);
-        this.RFingers.addBox(-6F, -2F, 1F, 1, 4, 1);
-        this.RFingers.setRotationPoint(-4F, 21F, -4F);
-        setRotation(this.RFingers, 0F, 0F, -0.2268928F);
-
-        this.LRearLeg = new ModelRenderer(this, 36, 0);
-        this.LRearLeg.addBox(0F, -2F, -1F, 2, 3, 5);
-        this.LRearLeg.setRotationPoint(3F, 22F, 5F);
-        setRotation(this.LRearLeg, -0.2792527F, 0.5235988F, 0F);
-
-        this.RRearLeg = new ModelRenderer(this, 50, 0);
-        this.RRearLeg.addBox(-2F, -2F, -1F, 2, 3, 5);
-        this.RRearLeg.setRotationPoint(-3F, 22F, 5F);
-        setRotation(this.RRearLeg, -0.2792527F, -0.5235988F, 0F);
+    public MoCModelMole(ModelPart root) {
+        this.Nose       = root.getChild("Nose");
+        this.Head       = root.getChild("Head");
+        this.Body       = root.getChild("Body");
+        this.Back       = root.getChild("Back");
+        this.Tail       = root.getChild("Tail");
+        this.LLeg       = root.getChild("LLeg");
+        this.LFingers   = root.getChild("LFingers");
+        this.RLeg       = root.getChild("RLeg");
+        this.RFingers   = root.getChild("RFingers");
+        this.LRearLeg   = root.getChild("LRearLeg");
+        this.RRearLeg   = root.getChild("RRearLeg");
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.yOffset = entityIn.getAdjustedYOffset();
+    /**
+     * Build the LayerDefinition (MeshDefinition → PartDefinition).
+     * Each child here corresponds to one of the old ModelRenderer fields.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root  = mesh.getRoot();
+
+        //----------------------------------------------------------------
+        // Nose (texture 0,25; box(-1, 0, -4; 2×2×3); pivot(0,20,-6); rotateX=0.2617994)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Nose",
+                CubeListBuilder.create()
+                        .texOffs(0, 25)
+                        .addBox(-1.0F, 0.0F, -4.0F, 2, 2, 3, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        0.0F, 20.0F, -6.0F,
+                        0.2617994F, 0.0F, 0.0F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // Head (texture 0,18; box(-3, -2, -2; 6×4×3); pivot(0,20,-6))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Head",
+                CubeListBuilder.create()
+                        .texOffs(0, 18)
+                        .addBox(-3.0F, -2.0F, -2.0F, 6, 4, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 20.0F, -6.0F)
+        );
+
+        //----------------------------------------------------------------
+        // Body (texture 0,0; box(-5, 0, 0; 10×6×10); pivot(0,17,-6))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-5.0F, 0.0F, 0.0F, 10, 6, 10, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 17.0F, -6.0F)
+        );
+
+        //----------------------------------------------------------------
+        // Back (texture 18,16; box(-4, -3, 0; 8×5×4); pivot(0,21,4))
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Back",
+                CubeListBuilder.create()
+                        .texOffs(18, 16)
+                        .addBox(-4.0F, -3.0F, 0.0F, 8, 5, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(0.0F, 21.0F, 4.0F)
+        );
+
+        //----------------------------------------------------------------
+        // Tail (texture 52,8; box(-0.5, 0, 1; 1×1×5); pivot(0,21,6); rotateX=-0.3490659)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "Tail",
+                CubeListBuilder.create()
+                        .texOffs(52, 8)
+                        .addBox(-0.5F, 0.0F, 1.0F, 1, 1, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        0.0F, 21.0F, 6.0F,
+                        -0.3490659F, 0.0F, 0.0F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // LLeg (texture 10,25; box(0, -2, -1; 6×4×2); pivot(4,21,-4); rotateZ=0.2268928)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LLeg",
+                CubeListBuilder.create()
+                        .texOffs(10, 25)
+                        .addBox(0.0F, -2.0F, -1.0F, 6, 4, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        4.0F, 21.0F, -4.0F,
+                        0.0F, 0.0F, 0.2268928F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // LFingers (texture 44,8; box(5, -2, 1; 1×4×1); pivot(4,21,-4); rotateZ=0.2268928)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LFingers",
+                CubeListBuilder.create()
+                        .texOffs(44, 8)
+                        .addBox(5.0F, -2.0F, 1.0F, 1, 4, 1, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        4.0F, 21.0F, -4.0F,
+                        0.0F, 0.0F, 0.2268928F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // RLeg (texture 26,25; box(-6, -2, -1; 6×4×2); pivot(-4,21,-4); rotateZ=-0.2268928)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RLeg",
+                CubeListBuilder.create()
+                        .texOffs(26, 25)
+                        .addBox(-6.0F, -2.0F, -1.0F, 6, 4, 2, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -4.0F, 21.0F, -4.0F,
+                        0.0F, 0.0F, -0.2268928F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // RFingers (texture 48,8; box(-6, -2, 1; 1×4×1); pivot(-4,21,-4); rotateZ=-0.2268928)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RFingers",
+                CubeListBuilder.create()
+                        .texOffs(48, 8)
+                        .addBox(-6.0F, -2.0F, 1.0F, 1, 4, 1, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -4.0F, 21.0F, -4.0F,
+                        0.0F, 0.0F, -0.2268928F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // LRearLeg (texture 36,0; box(0, -2, -1; 2×3×5); pivot(3,22,5); rotateX=-0.2792527, Y=0.5235988)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "LRearLeg",
+                CubeListBuilder.create()
+                        .texOffs(36, 0)
+                        .addBox(0.0F, -2.0F, -1.0F, 2, 3, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        3.0F, 22.0F, 5.0F,
+                        -0.2792527F, 0.5235988F, 0.0F
+                )
+        );
+
+        //----------------------------------------------------------------
+        // RRearLeg (texture 50,0; box(-2, -2, -1; 2×3×5); pivot(-3,22,5); rotateX=-0.2792527, Y=-0.5235988)
+        //----------------------------------------------------------------
+        root.addOrReplaceChild(
+                "RRearLeg",
+                CubeListBuilder.create()
+                        .texOffs(50, 0)
+                        .addBox(-2.0F, -2.0F, -1.0F, 2, 3, 5, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(
+                        -3.0F, 22.0F, 5.0F,
+                        -0.2792527F, -0.5235988F, 0.0F
+                )
+        );
+
+        // Return a LayerDefinition with texture size 64×32
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
+    /**
+     * In 1.16.5 this was setLivingAnimations(...).
+     * In 1.20.1, override prepareMobModel(...) instead.
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        matrixStackIn.push();
-        matrixStackIn.translate(0F, yOffset, 0F);
-        this.Nose.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Back.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LFingers.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RFingers.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LRearLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RRearLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        matrixStackIn.pop();
+    public void prepareMobModel(T entity, float limbSwing, float limbSwingAmount, float partialTick) {
+        this.yOffset = entity.getAdjustedYOffset();
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
+    /**
+     * Copy the old setRotationAngles(...) logic here. Now called setupAnim(...)
+     */
+    @Override
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // Head pitch & yaw
+        this.Head.yRot  = netHeadYaw / RADIAN_CONV;
+        this.Head.xRot  = headPitch / RADIAN_CONV;
+        this.Nose.xRot  = 0.2617994F + this.Head.xRot;
+        this.Nose.yRot  = this.Head.yRot;
+
+        // Leg swing
+        float RLegXRot = Mth.cos((limbSwing) + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float LLegXRot = Mth.cos(limbSwing) * 0.8F * limbSwingAmount;
+
+        this.RLeg.yRot       = RLegXRot;
+        this.RFingers.yRot   = this.RLeg.yRot;
+        this.LLeg.yRot       = LLegXRot;
+        this.LFingers.yRot   = this.LLeg.yRot;
+        this.RRearLeg.yRot   = -0.5235988F + LLegXRot;
+        this.LRearLeg.yRot   =  0.5235988F + RLegXRot;
+
+        // Tail sway based on leg movement
+        this.Tail.zRot = this.LLeg.xRot * 0.625F;
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        //super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
+    /**
+     * Render all parts, applying the Y offset before drawing.
+     */
+    @Override
+    public void renderToBuffer(
+            PoseStack        poseStack,
+            VertexConsumer   buffer,
+            int              packedLight,
+            int              packedOverlay,
+            float            red,
+            float            green,
+            float            blue,
+            float            alpha
+    ) {
+        poseStack.pushPose();
+        poseStack.translate(0.0F, this.yOffset, 0.0F);
 
-        this.Head.rotateAngleY = netHeadYaw / 57.29578F;
-        this.Head.rotateAngleX = headPitch / 57.29578F;
-        this.Nose.rotateAngleX = 0.2617994F + this.Head.rotateAngleX;
-        this.Nose.rotateAngleY = this.Head.rotateAngleY;
+        this.Nose.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Back.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LFingers.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RFingers.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LRearLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RRearLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-        float RLegXRot = MathHelper.cos((limbSwing) + 3.141593F) * 0.8F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing) * 0.8F * limbSwingAmount;
-
-        this.RLeg.rotateAngleY = RLegXRot;
-        this.RFingers.rotateAngleY = this.RLeg.rotateAngleY;
-        this.LLeg.rotateAngleY = LLegXRot;
-        this.LFingers.rotateAngleY = this.LLeg.rotateAngleY;
-        this.RRearLeg.rotateAngleY = -0.5235988F + LLegXRot;
-        this.LRearLeg.rotateAngleY = 0.5235988F + RLegXRot;
-
-        this.Tail.rotateAngleZ = this.LLeg.rotateAngleX * 0.625F;
+        poseStack.popPose();
     }
 }

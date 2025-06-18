@@ -3,12 +3,11 @@
  */
 package drzhark.mocreatures.block;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
-// Just here for makeshift MIA compatibility
 public class MoCBlock extends Block {
-    public MoCBlock(AbstractBlock.Properties properties) {
+    public MoCBlock(BlockBehaviour.Properties properties) {
         super(properties);
     }
 }

@@ -3,76 +3,74 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.client.model.MoCModelFirefly;
 import drzhark.mocreatures.entity.ambient.MoCEntityFirefly;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.resources.ResourceLocation;
+import com.mojang.math.Axis;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderFirefly extends MoCRenderInsect<MoCEntityFirefly, MoCModelFirefly<MoCEntityFirefly>> {
 
-    public MoCRenderFirefly(EntityRendererManager renderManagerIn, MoCModelFirefly modelbase) {
+    public MoCRenderFirefly(EntityRendererProvider.Context renderManagerIn, MoCModelFirefly modelbase) {
         super(renderManagerIn, modelbase);
         this.addLayer(new LayerMoCFirefly(this));
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityFirefly entityfirefly, MatrixStack matrixStackIn, float par2) {
+    protected void scale(MoCEntityFirefly entityfirefly, PoseStack poseStack, float par2) {
         if (entityfirefly.getIsFlying()) {
-            rotateFirefly(entityfirefly, matrixStackIn);
+            rotateFirefly(entityfirefly, poseStack);
         } else if (entityfirefly.climbing()) {
-            rotateAnimal(entityfirefly, matrixStackIn);
+            rotateAnimal(entityfirefly, poseStack);
         }
-
     }
 
-    protected void rotateFirefly(MoCEntityFirefly entityfirefly, MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.XN.rotationDegrees(40F));
-
+    protected void rotateFirefly(MoCEntityFirefly entityfirefly, PoseStack poseStack) {
+        poseStack.mulPose(Axis.XN.rotationDegrees(40F));
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityFirefly entityfirefly) {
+    public ResourceLocation getTextureLocation(MoCEntityFirefly entityfirefly) {
         return entityfirefly.getTexture();
     }
 
-    private class LayerMoCFirefly extends LayerRenderer<MoCEntityFirefly, MoCModelFirefly<MoCEntityFirefly>> {
+    private class LayerMoCFirefly extends RenderLayer<MoCEntityFirefly, MoCModelFirefly<MoCEntityFirefly>> {
         private final MoCRenderFirefly mocRenderer;
-        private final MoCModelFirefly mocModel = new MoCModelFirefly();
 
-        public LayerMoCFirefly(MoCRenderFirefly p_i46112_1_) {
-            super(p_i46112_1_);
-            this.mocRenderer = p_i46112_1_;
+        public LayerMoCFirefly(MoCRenderFirefly renderer) {
+            super(renderer);
+            this.mocRenderer = renderer;
         }
 
         @Override
-        public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, MoCEntityFirefly entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-            this.setTailBrightness(matrixStackIn, entitylivingbaseIn, partialTicks);
-            this.mocModel.copyModelAttributesTo(this.mocRenderer.getEntityModel());
-            IVertexBuilder ivertexbuilder = bufferIn.getBuffer(RenderType.getEntityCutoutNoCull(MoCreatures.proxy.getModelTexture("firefly_glow.png")));
-            this.mocModel.setLivingAnimations(entitylivingbaseIn, limbSwing, limbSwingAmount, partialTicks);
-            this.mocModel.render(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLightIn, MoCEntityFirefly entity, 
+                           float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, 
+                           float netHeadYaw, float headPitch) {
+            this.setTailBrightness(poseStack, entity, partialTicks);
+            VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.entityCutoutNoCull(
+                    MoCreatures.proxy.getModelTexture("firefly_glow.png")));
+            
+            // Use the parent model directly - it will have already been set up with the right properties
+            this.getParentModel().renderToBuffer(poseStack, vertexConsumer, packedLightIn, 
+                    OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
         }
 
-        protected void setTailBrightness(MatrixStack matrixStackIn, MoCEntityFirefly entityliving, float par3) {
-            float var4 = 1.0F;
+        protected void setTailBrightness(PoseStack poseStack, MoCEntityFirefly entityliving, float partialTicks) {
             RenderSystem.enableBlend();
-            RenderSystem.disableAlphaTest();
-            RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
-            RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderSystem.color4f(1.0F, 1.0F, 1.0F, var4);
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
         }
     }
 }

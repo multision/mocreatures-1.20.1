@@ -3,196 +3,358 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.passive.MoCEntityTurkey;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.*;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * Port of MoCModelTurkey from 1.16.5 → 1.20.1 Forge.
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelTurkey<T extends MoCEntityTurkey> extends EntityModel<T> {
 
-    ModelRenderer Beak;
-    ModelRenderer Head;
-    ModelRenderer Neck;
-    ModelRenderer Chest;
-    ModelRenderer RWing;
-    ModelRenderer LWing;
-    ModelRenderer UBody;
-    ModelRenderer Body;
-    ModelRenderer Tail;
-    ModelRenderer RLeg;
-    ModelRenderer RFoot;
-    ModelRenderer LLeg;
-    ModelRenderer LFoot;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "turkey"), "main"
+    );
 
+    // All the parts that correspond to your old ModelRenderers:
+    private final ModelPart beak;
+    private final ModelPart head;
+    private final ModelPart neck;
+    private final ModelPart chest;
+    private final ModelPart rWing;
+    private final ModelPart lWing;
+    private final ModelPart uBody;
+    private final ModelPart body;
+    private final ModelPart tail;
+    private final ModelPart rLeg;
+    private final ModelPart rFoot;
+    private final ModelPart lLeg;
+    private final ModelPart lFoot;
+
+    // Animation state
     private boolean male;
 
-    public MoCModelTurkey() {
-        this.textureWidth = 64;
-        this.textureHeight = 64;
-
-        this.Beak = new ModelRenderer(this, 17, 17);
-        this.Beak.addBox(-0.5F, -1.866667F, -3.366667F, 1, 1, 2);
-        this.Beak.setRotationPoint(0F, 9.7F, -5.1F);
-        setRotation(this.Beak, 0.7807508F, 0F, 0F);
-
-        this.Head = new ModelRenderer(this, 0, 27);
-        this.Head.addBox(-1F, -2F, -2F, 2, 2, 3);
-        this.Head.setRotationPoint(0F, 9.7F, -5.1F);
-        setRotation(this.Head, 0.4833219F, 0F, 0F);
-
-        this.Neck = new ModelRenderer(this, 0, 32);
-        this.Neck.addBox(-1F, -6F, -1F, 2, 6, 2);
-        this.Neck.setRotationPoint(0F, 14.7F, -6.5F);
-        setRotation(this.Neck, -0.2246208F, 0F, 0F);
-
-        this.Chest = new ModelRenderer(this, 0, 17);
-        this.Chest.addBox(-3F, 0F, -4F, 6, 6, 4);
-        this.Chest.setRotationPoint(0F, 12.5F, -4F);
-        setRotation(this.Chest, 0.5934119F, 0F, 0F);
-
-        this.RWing = new ModelRenderer(this, 32, 30);
-        this.RWing.addBox(-1F, -2F, 0F, 1, 6, 7);
-        this.RWing.setRotationPoint(-4F, 14F, -3F);
-        setRotation(this.RWing, -0.3346075F, 0F, 0F);
-
-        this.LWing = new ModelRenderer(this, 48, 30);
-        this.LWing.addBox(0F, -2F, 0F, 1, 6, 7);
-        this.LWing.setRotationPoint(4F, 14F, -3F);
-        setRotation(this.LWing, -0.3346075F, 0F, 0F);
-
-        this.UBody = new ModelRenderer(this, 34, 0);
-        this.UBody.addBox(-2.5F, -4F, 0F, 5, 7, 9);
-        this.UBody.setRotationPoint(0F, 15F, -3F);
-
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(-4F, -4F, 0F, 8, 8, 9);
-        this.Body.setRotationPoint(0F, 16F, -4F);
-
-        this.Tail = new ModelRenderer(this, 32, 17);
-        this.Tail.addBox(-8F, -9F, 0F, 16, 12, 0);
-        this.Tail.setRotationPoint(0F, 14F, 6F);
-        setRotation(this.Tail, -0.2974289F, 0F, 0F);
-
-        this.RLeg = new ModelRenderer(this, 27, 17);
-        this.RLeg.addBox(-0.5F, 0F, -0.5F, 1, 5, 1);
-        this.RLeg.setRotationPoint(-2F, 19F, 0.5F);
-
-        this.RFoot = new ModelRenderer(this, 20, 23);
-        this.RFoot.addBox(-1.5F, 5F, -2.5F, 3, 0, 3);
-        this.RFoot.setRotationPoint(-2F, 19F, 0.5F);
-
-        this.LLeg = new ModelRenderer(this, 23, 17);
-        this.LLeg.addBox(-0.5F, 0F, -0.5F, 1, 5, 1);
-        this.LLeg.setRotationPoint(2F, 19F, 0.5F);
-
-        this.LFoot = new ModelRenderer(this, 20, 26);
-        this.LFoot.addBox(-1.5F, 5F, -2.5F, 3, 0, 3);
-        this.LFoot.setRotationPoint(2F, 19F, 0.5F);
-
+    public MoCModelTurkey(ModelPart root) {
+        // Grab each child by name from the baked root:
+        this.beak   = root.getChild("beak");
+        this.head   = root.getChild("head");
+        this.neck   = root.getChild("neck");
+        this.chest  = root.getChild("chest");
+        this.rWing  = root.getChild("rWing");
+        this.lWing  = root.getChild("lWing");
+        this.uBody  = root.getChild("uBody");
+        this.body   = root.getChild("body");
+        this.tail   = root.getChild("tail");
+        this.rLeg   = root.getChild("rLeg");
+        this.rFoot  = root.getChild("rFoot");
+        this.lLeg   = root.getChild("lLeg");
+        this.lFoot  = root.getChild("lFoot");
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.male = entityIn.getTypeMoC() == 1;
+    /**
+     * Defines all turkey parts (beak, head, neck, chest, wings, body, tail, legs, feet).
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // BEAK
+        root.addOrReplaceChild(
+                "beak",
+                CubeListBuilder.create()
+                        .texOffs(17, 17)
+                        .addBox(-0.5F, -1.866667F, -3.366667F, 1, 1, 2),
+                PartPose.offsetAndRotation(
+                        0F, 9.7F, -5.1F,
+                        0.7807508F, 0F, 0F
+                )
+        );
+
+        // HEAD
+        root.addOrReplaceChild(
+                "head",
+                CubeListBuilder.create()
+                        .texOffs(0, 27)
+                        .addBox(-1F, -2F, -2F, 2, 2, 3),
+                PartPose.offsetAndRotation(
+                        0F, 9.7F, -5.1F,
+                        0.4833219F, 0F, 0F
+                )
+        );
+
+        // NECK
+        root.addOrReplaceChild(
+                "neck",
+                CubeListBuilder.create()
+                        .texOffs(0, 32)
+                        .addBox(-1F, -6F, -1F, 2, 6, 2),
+                PartPose.offsetAndRotation(
+                        0F, 14.7F, -6.5F,
+                        -0.2246208F, 0F, 0F
+                )
+        );
+
+        // CHEST
+        root.addOrReplaceChild(
+                "chest",
+                CubeListBuilder.create()
+                        .texOffs(0, 17)
+                        .addBox(-3F, 0F, -4F, 6, 6, 4),
+                PartPose.offsetAndRotation(
+                        0F, 12.5F, -4F,
+                        0.5934119F, 0F, 0F
+                )
+        );
+
+        // RIGHT WING
+        root.addOrReplaceChild(
+                "rWing",
+                CubeListBuilder.create()
+                        .texOffs(32, 30)
+                        .addBox(-1F, -2F, 0F, 1, 6, 7),
+                PartPose.offsetAndRotation(
+                        -4F, 14F, -3F,
+                        -0.3346075F, 0F, 0F
+                )
+        );
+
+        // LEFT WING
+        root.addOrReplaceChild(
+                "lWing",
+                CubeListBuilder.create()
+                        .texOffs(48, 30)
+                        .addBox(0F, -2F, 0F, 1, 6, 7),
+                PartPose.offsetAndRotation(
+                        4F, 14F, -3F,
+                        -0.3346075F, 0F, 0F
+                )
+        );
+
+        // UPPER BODY (male tail fan)
+        root.addOrReplaceChild(
+                "uBody",
+                CubeListBuilder.create()
+                        .texOffs(34, 0)
+                        .addBox(-2.5F, -4F, 0F, 5, 7, 9),
+                PartPose.offset(0F, 15F, -3F)
+        );
+
+        // BODY
+        root.addOrReplaceChild(
+                "body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-4F, -4F, 0F, 8, 8, 9),
+                PartPose.offset(0F, 16F, -4F)
+        );
+
+        // TAIL
+        root.addOrReplaceChild(
+                "tail",
+                CubeListBuilder.create()
+                        .texOffs(32, 17)
+                        .addBox(-8F, -9F, 0F, 16, 12, 0),
+                PartPose.offsetAndRotation(
+                        0F, 14F, 6F,
+                        -0.2974289F, 0F, 0F
+                )
+        );
+
+        // RIGHT LEG
+        root.addOrReplaceChild(
+                "rLeg",
+                CubeListBuilder.create()
+                        .texOffs(27, 17)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 5, 1),
+                PartPose.offset( -2F, 19F, 0.5F )
+        );
+
+        // RIGHT FOOT
+        root.addOrReplaceChild(
+                "rFoot",
+                CubeListBuilder.create()
+                        .texOffs(20, 23)
+                        .addBox(-1.5F, 5F, -2.5F, 3, 0, 3),
+                PartPose.offset( -2F, 19F, 0.5F )
+        );
+
+        // LEFT LEG
+        root.addOrReplaceChild(
+                "lLeg",
+                CubeListBuilder.create()
+                        .texOffs(23, 17)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 5, 1),
+                PartPose.offset( 2F, 19F, 0.5F )
+        );
+
+        // LEFT FOOT
+        root.addOrReplaceChild(
+                "lFoot",
+                CubeListBuilder.create()
+                        .texOffs(20, 26)
+                        .addBox(-1.5F, 5F, -2.5F, 3, 0, 3),
+                PartPose.offset( 2F, 19F, 0.5F )
+        );
+
+        return LayerDefinition.create(mesh, 64, 64);
     }
 
+    /**
+     * Called once before rendering; store “male” flag.
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        if (this.isChild) {
-            // All children rendered as Female
-            matrixStackIn.push();
-            matrixStackIn.translate(0.0F, 5.0F, 2.0F);
-            matrixStackIn.pop();
-            matrixStackIn.push();
-            matrixStackIn.scale(0.5F, 0.5F, 0.5F);
-            matrixStackIn.translate(0.0F, 24.0F, 0.0F);
-            this.Beak.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            matrixStackIn.push();
-            matrixStackIn.scale(0.8F, 0.8F, 1F);
-            this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Chest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            matrixStackIn.pop();
-            matrixStackIn.pop();
-        } else {
-            this.Beak.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.RFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LLeg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.LFoot.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            if (male) {
-                this.UBody.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Chest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        this.male = entity.getTypeMoC() == 1;
+        // NB: Other per‐frame state (like wingF, leg rotations, etc.) happens in setRotationAngles().
+    }
 
-            } else {
-                matrixStackIn.push();
-                matrixStackIn.scale(0.8F, 0.8F, 1F);
-                this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Chest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                matrixStackIn.pop();
-            }
+    /**
+     * Called each frame to position/rotate all parts.  Mirrors your old setRotationAngles(...) exactly.
+     */
+    @Override
+    public void prepareMobModel(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float partialTick
+    ) {
+        // We call the original “setRotationAngles” inside prepareMobModel:
+        setRotationAngles(entity, limbSwing, limbSwingAmount, partialTick, entity.yHeadRot, entity.xRotO);
+    }
+
+    public void setRotationAngles(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // Copy your old logic exactly:
+        float LLegXRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+        float RLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 1.4F * limbSwingAmount;
+        float wingF    = (Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount) / 4F;
+
+        // HEAD pitch & yaw
+        this.head.xRot = 0.4833219F + headPitch / 57.29578F;
+        this.head.yRot = netHeadYaw / 57.29578F;
+
+        // BEAK follows head (slightly offset)
+        this.beak.xRot = 0.7807508F - this.head.xRot + 0.4833219F;
+        this.beak.yRot = this.head.yRot;
+
+        // LEGS
+        this.lLeg.xRot  = LLegXRot;
+        this.lFoot.xRot = this.lLeg.xRot;
+        this.rLeg.xRot  = RLegXRot;
+        this.rFoot.xRot = this.rLeg.xRot;
+
+        // WINGS
+        this.lWing.yRot = wingF;
+        this.rWing.yRot = -wingF;
+
+        // TAIL & body‐positioning
+        if (this.male) {
+            this.tail.xRot = -0.2974289F + wingF;
+            this.tail.y = 14F;
+            this.tail.z = 6F;
+            this.chest.y = 12.5F;
+            this.body.y  = 16F;
+            this.lWing.x = 4F;
+            this.rWing.x = -4F;
+        } else {
+            this.tail.xRot = wingF - (110 / 57.29578F);
+            this.tail.y = 17F;
+            this.tail.z = 7F;
+            this.chest.y = 16F;
+            this.body.y  = 20F;
+            this.lWing.x = 3.2F;
+            this.rWing.x = -3.2F;
         }
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
+    /**
+     * Renders all parts.  Mirrors your old render(...) logic, including child‐scaling.
+     */
+    @Override
+    public void renderToBuffer(
+            PoseStack poseStack,
+            VertexConsumer buffer,
+            int packedLight,
+            int packedOverlay,
+            float red,
+            float green,
+            float blue,
+            float alpha
+    ) {
+        if (this.young) {
+            // All children rendered as “female” roughly the same way your code did:
+            poseStack.pushPose();
+            poseStack.translate(0.0F, 5.0F, 2.0F);
+            poseStack.popPose();
+            poseStack.pushPose();
+            poseStack.scale(0.5F, 0.5F, 0.5F);
+            poseStack.translate(0.0F, 24.0F, 0.0F);
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+            // render head/neck/wings/tail/legs/feet
+            this.beak.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.neck.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.rWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.lWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.rLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.rFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.lLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.lFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
-        float wingF = (MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount) / 4F;
+            poseStack.pushPose();
+            poseStack.scale(0.8F, 0.8F, 1F);
+            this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.chest.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            poseStack.popPose();
 
-        this.Head.rotateAngleX = 0.4833219F + headPitch / 57.29578F;//(RLegXRot/7F) + (-headPitch / (180F / (float)Math.PI)) ;
-        this.Head.rotateAngleY = netHeadYaw / (180F / (float) Math.PI);
-        this.Beak.rotateAngleX = 0.2974F + this.Head.rotateAngleX;//0.7807508F - Head.rotateAngleX;
-        this.Beak.rotateAngleY = this.Head.rotateAngleY;
-
-        this.LLeg.rotateAngleX = LLegXRot;
-        this.LFoot.rotateAngleX = this.LLeg.rotateAngleX;
-        this.RLeg.rotateAngleX = RLegXRot;
-        this.RFoot.rotateAngleX = this.RLeg.rotateAngleX;
-
-        this.LWing.rotateAngleY = wingF;
-        this.RWing.rotateAngleY = -wingF;
-
-        if (this.male) {
-            this.Tail.rotateAngleX = -0.2974289F + wingF;
-            this.Tail.rotationPointY = 14F;
-            this.Tail.rotationPointZ = 6F;
-            this.Chest.rotationPointY = 12.5F;
-            this.Body.rotationPointY = 16F;
-            this.LWing.rotationPointX = 4F;
-            this.RWing.rotationPointX = -4F;
+            poseStack.popPose();
         } else {
-            this.Tail.rotateAngleX = wingF - (110 / 57.29578F);
-            this.Tail.rotationPointY = 17F;
-            this.Tail.rotationPointZ = 7F;
-            this.Chest.rotationPointY = 16F;
-            this.Body.rotationPointY = 20F;
-            this.LWing.rotationPointX = 3.2F;
-            this.RWing.rotationPointX = -3.2F;
+            // Adult rendering
+            this.beak.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.neck.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.rWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.lWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.rLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.rFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.lLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.lFoot.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+            if (male) {
+                this.uBody.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.chest.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            } else {
+                poseStack.pushPose();
+                poseStack.scale(0.8F, 0.8F, 1F);
+                this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.chest.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                poseStack.popPose();
+            }
         }
     }
 }

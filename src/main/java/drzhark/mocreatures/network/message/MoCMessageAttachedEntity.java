@@ -3,10 +3,10 @@
  */
 package drzhark.mocreatures.network.message;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -15,33 +15,34 @@ public class MoCMessageAttachedEntity {
     public int sourceEntityId;
     public int targetEntityId;
 
-    public MoCMessageAttachedEntity() {
-    }
-
     public MoCMessageAttachedEntity(int sourceEntityId, int targetEntityId) {
         this.sourceEntityId = sourceEntityId;
         this.targetEntityId = targetEntityId;
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeInt(this.sourceEntityId);
         buffer.writeInt(this.targetEntityId);
     }
 
-    public MoCMessageAttachedEntity(ByteBuf buffer) {
+    public MoCMessageAttachedEntity(FriendlyByteBuf buffer) {
         this.sourceEntityId = buffer.readInt();
         this.targetEntityId = buffer.readInt();
     }
 
-    public static boolean onMessage(MoCMessageAttachedEntity message, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().setPacketHandled(true);
-        Entity var2 = Minecraft.getInstance().player.world.getEntityByID(message.sourceEntityId);
-        Entity var3 = Minecraft.getInstance().player.world.getEntityByID(message.targetEntityId);
+    public static void onMessage(MoCMessageAttachedEntity message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.level != null) {
+                Entity sourceEntity = minecraft.level.getEntity(message.sourceEntityId);
+                Entity targetEntity = minecraft.level.getEntity(message.targetEntityId);
 
-        if (var2 != null) {
-            (var2).startRiding(var3);
-        }
-        return true;
+                if (sourceEntity != null && targetEntity != null) {
+                    sourceEntity.startRiding(targetEntity);
+                }
+            }
+        });
+        ctx.get().setPacketHandled(true);
     }
 
     @Override

@@ -5,26 +5,27 @@ package drzhark.mocreatures.entity.hostile;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityToxicManticore extends MoCEntityManticore {
 
-    public MoCEntityToxicManticore(EntityType<? extends MoCEntityToxicManticore> type, World world) {
+    public MoCEntityToxicManticore(EntityType<? extends MoCEntityToxicManticore> type, Level world) {
         super(type, world);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityManticore.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 45.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.4D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 6.5D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityManticore.createAttributes()
+                .add(Attributes.MAX_HEALTH, 45.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.4D)
+                .add(Attributes.ATTACK_DAMAGE, 6.5D);
     }
 
     @Override
@@ -33,18 +34,19 @@ public class MoCEntityToxicManticore extends MoCEntityManticore {
     }
 
     @Override
-    public void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn) {
-        if (!getIsPoisoning() && this.rand.nextInt(5) == 0 && entityIn instanceof LivingEntity) {
+    public void doEnchantDamageEffects(LivingEntity attacker, Entity target) {
+        if (!getIsPoisoning() && this.random.nextInt(5) == 0 && target instanceof LivingEntity livingTarget) {
             setPoisoning(true);
-            ((LivingEntity) entityIn).addPotionEffect(new EffectInstance(Effects.BLINDNESS, 15 * 20, 0)); // 15 seconds
-            ((LivingEntity) entityIn).addPotionEffect(new EffectInstance(Effects.WITHER, 15 * 20, 0));
+            livingTarget.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 15 * 20, 0)); // 15 seconds
+            livingTarget.addEffect(new MobEffectInstance(MobEffects.WITHER, 15 * 20, 0));
         } else {
             openMouth();
         }
-        super.applyEnchantments(entityLivingBaseIn, entityIn);
+        super.doEnchantDamageEffects(attacker, target);
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.TOXIC_MANTICORE;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.TOXIC_MANTICORE;
     }
 }

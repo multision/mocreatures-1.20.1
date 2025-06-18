@@ -3,175 +3,147 @@
  */
 package drzhark.mocreatures.network.command;
 
-import net.minecraft.command.CommandSource;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import drzhark.mocreatures.MoCreatures;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class CommandMoCPets {
 
+    /*
     private static final List<String> commands = new ArrayList<>();
-    private static final List<String> aliases = new ArrayList<>();
 
     static {
         commands.add("/mocpets");
     }
 
-
-    private static int execute(CommandSource source) {
-        /* int unloadedCount = 0;
-        int loadedCount = 0;
-        ArrayList<Integer> foundIds = new ArrayList<>();
-        ArrayList<String> tamedlist = new ArrayList<>();
-        if (!(sender instanceof PlayerEntity)) {
-            return;
-        }
-        PlayerEntity player = (PlayerEntity) sender;
-        UUID playerId = player.getUniqueID();
-        // search for tamed entity
-        for (int dimension : DimensionManager.getIDs()) {
-            ServerWorld world = DimensionManager.getWorld(dimension);
-            for (int j = 0; j < world.loadedEntityList.size(); j++) {
-                Entity entity = world.loadedEntityList.get(j);
-                if (IMoCTameable.class.isAssignableFrom(entity.getClass())) {
-                    IMoCTameable mocreature = (IMoCTameable) entity;
-                    if (mocreature.getOwnerId() != null && mocreature.getOwnerId().equals(playerId)) {
-                        loadedCount++;
-                        foundIds.add(mocreature.getOwnerPetId());
-                        tamedlist.add(TextFormatting.WHITE + "Found pet with " + TextFormatting.DARK_AQUA + "Type" + TextFormatting.WHITE
-                                + ":" + TextFormatting.GREEN + ((MobEntity) mocreature).getName() + TextFormatting.DARK_AQUA
-                                + ", Name" + TextFormatting.WHITE + ":" + TextFormatting.GREEN + mocreature.getPetName()
-                                + TextFormatting.DARK_AQUA + ", Owner" + TextFormatting.WHITE + ":" + TextFormatting.GREEN
-                                + mocreature.getOwnerId() + TextFormatting.DARK_AQUA + ", PetId" + TextFormatting.WHITE + ":"
-                                + TextFormatting.GREEN + mocreature.getOwnerPetId() + TextFormatting.DARK_AQUA + ", Dimension"
-                                + TextFormatting.WHITE + ":" + TextFormatting.GREEN + entity.dimension + TextFormatting.DARK_AQUA
-                                + ", Pos" + TextFormatting.WHITE + ":" + TextFormatting.LIGHT_PURPLE + Math.round(entity.getPosX())
-                                + TextFormatting.WHITE + ", " + TextFormatting.LIGHT_PURPLE + Math.round(entity.getPosY())
-                                + TextFormatting.WHITE + ", " + TextFormatting.LIGHT_PURPLE + Math.round(entity.getPosZ()));
-                    }
-                }
-            }
-        }
-        MoCPetData ownerPetData = MoCreatures.instance.mapData.getPetData(player.getUniqueID());
-        if (ownerPetData != null) {
-            MoCreatures.instance.mapData.forceSave(); // force save so we get correct information
-            for (int i = 0; i < ownerPetData.getTamedList().size(); i++) {
-                CompoundNBT nbt = ownerPetData.getTamedList().getCompound(i);
-                if (nbt.contains("PetId") && !foundIds.contains(nbt.getInt("PetId"))) {
-                    unloadedCount++;
-                    double getPosX () = nbt.getList("Pos", 6).getDouble(0);
-                    double getPosY () = nbt.getList("Pos", 6).getDouble(1);
-                    double posZ  = nbt.getList("Pos", 6).getDouble(2);
-                    if (nbt.getBoolean("InAmulet")) {
-                        tamedlist.add(TextFormatting.WHITE + "Found unloaded pet in " + TextFormatting.DARK_PURPLE + "AMULET"
-                                + TextFormatting.WHITE + " with " + TextFormatting.DARK_AQUA + "Type" + TextFormatting.WHITE + ":"
-                                + TextFormatting.GREEN + (nbt.getString("id")).replace("MoCreatures.", "") + TextFormatting.DARK_AQUA
-                                + ", Name" + TextFormatting.WHITE + ":" + TextFormatting.GREEN + nbt.getString("Name")
-                                + TextFormatting.DARK_AQUA + ", Owner" + TextFormatting.WHITE + ":" + TextFormatting.GREEN
-                                + nbt.getString("Owner") + TextFormatting.DARK_AQUA + ", PetId" + TextFormatting.WHITE + ":"
-                                + TextFormatting.GREEN + nbt.getInt("PetId") + TextFormatting.WHITE + ".");
-                    } else {
-                        tamedlist.add(TextFormatting.WHITE + "Found unloaded pet with " + TextFormatting.DARK_AQUA + "Type"
-                                + TextFormatting.WHITE + ":" + TextFormatting.GREEN + (nbt.getString("id")).replace("MoCreatures.", "")
-                                + TextFormatting.DARK_AQUA + ", Name" + TextFormatting.WHITE + ":" + TextFormatting.GREEN
-                                + nbt.getString("Name") + TextFormatting.DARK_AQUA + ", Owner" + TextFormatting.WHITE + ":"
-                                + TextFormatting.GREEN + nbt.getString("Owner") + TextFormatting.DARK_AQUA + ", PetId"
-                                + TextFormatting.WHITE + ":" + TextFormatting.GREEN + nbt.getInt("PetId") + TextFormatting.DARK_AQUA
-                                + ", Dimension" + TextFormatting.WHITE + ":" + TextFormatting.GREEN + nbt.getInt("Dimension")
-                                + TextFormatting.DARK_AQUA + ", Pos" + TextFormatting.WHITE + ":" + TextFormatting.LIGHT_PURPLE
-                                + Math.round(getPosX()) + TextFormatting.WHITE + ", " + TextFormatting.LIGHT_PURPLE + Math.round(getPosY())
-                                + TextFormatting.WHITE + ", " + TextFormatting.LIGHT_PURPLE + Math.round(posZ));
-                    }
-                }
-            }
-        }
-
-        if (tamedlist.size() > 0) {
-            sendPageHelp(sender, (byte) 10, tamedlist, args);
-            sender.sendMessage(new TranslationTextComponent("Loaded tamed count : " + TextFormatting.AQUA + loadedCount
-                    + TextFormatting.WHITE + ", Unloaded count : " + TextFormatting.AQUA + unloadedCount + TextFormatting.WHITE
-                    + ", Total count : " + TextFormatting.AQUA + (ownerPetData != null ? ownerPetData.getTamedList().size() : 0)));
-        } else {
-            sender.sendMessage(new TranslationTextComponent("Loaded tamed count : "
-                    + TextFormatting.AQUA
-                    + loadedCount
-                    + TextFormatting.WHITE
-                    + (!MoCreatures.isServer() ? ", Unloaded Count : " + TextFormatting.AQUA + unloadedCount + TextFormatting.WHITE
-                    + ", Total count : " + TextFormatting.AQUA + (loadedCount + unloadedCount) : "")));
-        } */
-        return 0; //TODO TheidenHD
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("mocpets")
+            .requires(source -> source.hasPermission(2))
+            .executes(context -> execute(context.getSource()))
+            .then(Commands.argument("page", IntegerArgumentType.integer(1))
+                .executes(context -> {
+                    int page = IntegerArgumentType.getInteger(context, "page");
+                    return execute(context.getSource(), page);
+                })
+            )
+        );
     }
 
-/*
-    public boolean teleportLoadedPet(ServerWorld world, ServerPlayerEntity player, int petId, String petName, ICommandSender par1ICommandSender) {
-        for (int j = 0; j < world.loadedEntityList.size(); j++) {
-            Entity entity = world.loadedEntityList.get(j);
-            // search for entities that are MoCEntityAnimal's
-            if (IMoCTameable.class.isAssignableFrom(entity.getClass()) && !((IMoCTameable) entity).getPetName().equals("")
-                    && ((IMoCTameable) entity).getOwnerPetId() == petId) {
-                // grab the entity data
-                CompoundNBT compound = new CompoundNBT();
-                entity.writeToNBT(compound);
-                if (!compound.isEmpty() && !compound.getString("Owner").isEmpty()) {
-                    String owner = compound.getString("Owner");
-                    String name = compound.getString("Name");
-                    if (!owner.isEmpty() && owner.equalsIgnoreCase(player.getName())) {
-                        // check if in same dimension
-                        if (entity.dimension == player.dimension) {
-                            entity.setPosition(player.getPosX(), player.getPosY(), player.getPosZ());
-                        } else if (!player.world.isRemote)// transfer entity to player dimension
-                        {
-                            Entity newEntity = EntityList.newEntity(entity.getClass(), player.world);
-                            if (newEntity != null) {
-                                MoCTools.copyDataFromOld(newEntity, entity); // transfer all existing data to our new entity
-                                newEntity.setPosition(player.getPosX(), player.getPosY(), player.getPosZ());
-                                DimensionManager.getWorld(player.dimension).addEntity(newEntity);
-                            }
-                            if (entity.getRidingEntity() != null) {
-                                entity.getRidingEntity().dismountRidingEntity();
-                            }
-                            entity.removed = true;
-                            world.resetUpdateEntityTick();
-                            DimensionManager.getWorld(player.dimension).resetUpdateEntityTick();
+    private static int execute(CommandSourceStack source) {
+        return execute(source, 1);
+    }
+
+    private static int execute(CommandSourceStack source, int page) {
+        try {
+            ServerPlayer player = source.getPlayerOrException();
+            int unloadedCount = 0;
+            int loadedCount = 0;
+            ArrayList<Integer> foundIds = new ArrayList<>();
+            ArrayList<String> tamedList = new ArrayList<>();
+            UUID playerId = player.getUUID();
+            
+            // Search for tamed entities in all dimensions
+            for (ServerLevel world : source.getServer().getAllLevels()) {
+                for (Entity entity : world.getAllEntities()) {
+                    if (entity instanceof IMoCTameable mocreature) {
+                        if (mocreature.getOwnerId() != null && mocreature.getOwnerId().equals(playerId)) {
+                            loadedCount++;
+                            foundIds.add(mocreature.getOwnerPetId());
+                            tamedList.add("Found pet with Type: " + ((Mob) mocreature).getName().getString() + 
+                                    ", Name: " + mocreature.getPetName() + 
+                                    ", Owner: " + player.getName().getString() + 
+                                    ", PetId: " + mocreature.getOwnerPetId() + 
+                                    ", Dimension: " + entity.level().dimension().location() + 
+                                    ", Pos: " + Math.round(entity.getX()) + 
+                                    ", " + Math.round(entity.getY()) + 
+                                    ", " + Math.round(entity.getZ()));
                         }
-                        par1ICommandSender.sendMessage(new TranslationTextComponent(TextFormatting.GREEN + name + TextFormatting.WHITE
-                                + " has been tp'd to location " + Math.round(player.getPosX()) + ", " + Math.round(player.getPosY()) + ", "
-                                + Math.round(player.getPosZ()) + " in dimension " + player.dimension));
-                        return true;
                     }
                 }
             }
-        }
-        return false;
-    }
-
-    public void sendCommandHelp(ICommandSender sender) {
-        sender.sendMessage(new TranslationTextComponent("§2Listing MoCreatures commands"));
-        for (String command : commands) {
-            sender.sendMessage(new TranslationTextComponent(command));
-        }
-    }
-
-    public void sendPageHelp(ICommandSender sender, byte pagelimit, ArrayList<String> list, String[] par2ArrayOfStr) {
-        int x = (list.size() - 1) / pagelimit;
-        int j = 0;
-
-        if (par2ArrayOfStr.length > 0 && Character.isDigit(par2ArrayOfStr[0].charAt(0))) {
-            try {
-                j = parseInt(par2ArrayOfStr[0], 1, x + 1) - 1;
-            } catch (NumberInvalidException numberinvalidexception) {
-                numberinvalidexception.printStackTrace();
+            
+            // Search for unloaded tamed entities
+            MoCPetData ownerPetData = MoCreatures.instance.mapData.getPetData(player.getUUID());
+            if (ownerPetData != null) {
+                MoCreatures.instance.mapData.forceSave(); // Force save to get correct information
+                for (int i = 0; i < ownerPetData.getTamedList().size(); i++) {
+                    CompoundTag nbt = ownerPetData.getTamedList().getCompound(i);
+                    if (nbt.contains("PetId") && !foundIds.contains(nbt.getInt("PetId"))) {
+                        unloadedCount++;
+                        double posX = nbt.getList("Pos", 6).getDouble(0);
+                        double posY = nbt.getList("Pos", 6).getDouble(1);
+                        double posZ = nbt.getList("Pos", 6).getDouble(2);
+                        
+                        if (nbt.getBoolean("InAmulet")) {
+                            tamedList.add("Found unloaded pet in AMULET with Type: " + 
+                                    nbt.getString("id").replace("MoCreatures.", "") + 
+                                    ", Name: " + nbt.getString("Name") + 
+                                    ", Owner: " + nbt.getString("Owner") + 
+                                    ", PetId: " + nbt.getInt("PetId"));
+                        } else {
+                            tamedList.add("Found unloaded pet with Type: " + 
+                                    nbt.getString("id").replace("MoCreatures.", "") + 
+                                    ", Name: " + nbt.getString("Name") + 
+                                    ", Owner: " + nbt.getString("Owner") + 
+                                    ", PetId: " + nbt.getInt("PetId") + 
+                                    ", Dimension: " + nbt.getString("Dimension") + 
+                                    ", Pos: " + Math.round(posX) + 
+                                    ", " + Math.round(posY) + 
+                                    ", " + Math.round(posZ));
+                        }
+                    }
+                }
             }
+            
+            if (tamedList.size() > 0) {
+                sendPageHelp(source, (byte) 10, tamedList, page);
+                source.sendSuccess(() -> Component.literal("Loaded tamed count: " + loadedCount + 
+                        ", Unloaded count: " + unloadedCount + 
+                        ", Total count: " + (ownerPetData != null ? ownerPetData.getTamedList().size() : 0)), 
+                        false);
+            } else {
+                source.sendSuccess(() -> Component.literal("Loaded tamed count: " + loadedCount + 
+                        (MoCreatures.isServer() ? "" : ", Unloaded Count: " + unloadedCount + 
+                        ", Total count: " + (loadedCount + unloadedCount))),
+                        false);
+            }
+            
+            return 1;
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("Error: " + e.getMessage()));
+            e.printStackTrace();
+            return 0;
         }
-        int k = Math.min((j + 1) * pagelimit, list.size());
-
-        sender.sendMessage(new TranslationTextComponent(TextFormatting.DARK_GREEN + "--- Showing MoCreatures Help Info "
-                + TextFormatting.AQUA + (j + 1) + TextFormatting.WHITE + " of " + TextFormatting.AQUA
-                + (x + 1) + TextFormatting.GRAY + " (/mocpets <page>)" + TextFormatting.DARK_GREEN + "---"));
-
-        for (int l = j * pagelimit; l < k; ++l) {
-            String tamedInfo = list.get(l);
-            sender.sendMessage(new TranslationTextComponent(tamedInfo));
+    }
+    
+    private static void sendPageHelp(CommandSourceStack sender, byte pageLimit, ArrayList<String> list, int page) {
+        int totalPages = (list.size() - 1) / pageLimit;
+        page = Math.max(0, Math.min(page - 1, totalPages));
+        
+        int start = page * pageLimit;
+        int end = Math.min((page + 1) * pageLimit, list.size());
+        
+        sender.sendSuccess(() -> Component.literal("--- Showing MoCreatures Help Info " + 
+                (page + 1) + " of " + (totalPages + 1) + " (/mocpets <page>) ---"), 
+                false);
+        
+        for (int i = start; i < end; i++) {
+            String tamedInfo = list.get(i);
+            sender.sendSuccess(() -> Component.literal(tamedInfo), false);
         }
-    }*/
+    }
+
+     */
 }

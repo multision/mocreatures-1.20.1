@@ -3,275 +3,339 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.hostile.MoCEntitySilverSkeleton;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+/**
+ * Ported from 1.16.5 Forge → 1.20.1 Forge.
+ * All ModelRenderer → ModelPart; setRotationAngles(...) → setupAnim(...); render(...) → renderToBuffer(...).
+ */
 @OnlyIn(Dist.CLIENT)
 public class MoCModelSilverSkeleton<T extends MoCEntitySilverSkeleton> extends EntityModel<T> {
 
-    private final float radianF = 57.29578F;
-    ModelRenderer Head;
-    ModelRenderer Body;
-    ModelRenderer Back;
-    ModelRenderer RightArm;
-    ModelRenderer RightHand;
-    ModelRenderer RightSwordA;
-    ModelRenderer RightSwordB;
-    ModelRenderer RightSwordC;
-    ModelRenderer LeftArm;
-    ModelRenderer LeftHand;
-    ModelRenderer LeftSwordA;
-    ModelRenderer LeftSwordB;
-    ModelRenderer LeftSwordC;
-    ModelRenderer RightThigh;
-    ModelRenderer RightKnee;
-    ModelRenderer RightLeg;
-    ModelRenderer RightFoot;
-    ModelRenderer LeftThigh;
-    ModelRenderer LeftKnee;
-    ModelRenderer LeftLeg;
-    ModelRenderer LeftFoot;
-    private  float limbSwingAmount;
-    private boolean sprinting;
-    private int leftAttack;
-    private int rightAttack;
-    private boolean riding;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "silver_skeleton"), "main"
+    );
 
-    public MoCModelSilverSkeleton() {
-        this.textureWidth = 64;
-        this.textureHeight = 64;
+    private final ModelPart head;
+    private final ModelPart body;
+    private final ModelPart back;
+    private final ModelPart rightArm;
+    private final ModelPart rightHand;
+    private final ModelPart rightSwordA;
+    private final ModelPart rightSwordB;
+    private final ModelPart rightSwordC;
+    private final ModelPart leftArm;
+    private final ModelPart leftHand;
+    private final ModelPart leftSwordA;
+    private final ModelPart leftSwordB;
+    private final ModelPart leftSwordC;
+    private final ModelPart rightThigh;
+    private final ModelPart rightKnee;
+    private final ModelPart rightLeg;
+    private final ModelPart rightFoot;
+    private final ModelPart leftThigh;
+    private final ModelPart leftKnee;
+    private final ModelPart leftLeg;
+    private final ModelPart leftFoot;
 
-        this.Head = new ModelRenderer(this, 0, 0);
-        this.Head.addBox(-4F, -8F, -4F, 8, 8, 8);
-        this.Head.setRotationPoint(0F, -2F, 0F);
+    // Temporary state passed in during setLivingAnimations()
+    private float limbSwingAmountStored;
+    private boolean sprintingStored;
+    private int leftAttackStored;
+    private int rightAttackStored;
+    private boolean ridingStored;
 
-        this.Body = new ModelRenderer(this, 32, 0);
-        this.Body.addBox(-4F, 0F, -2F, 8, 12, 4);
-        this.Body.setRotationPoint(0F, -2F, 0F);
-
-        this.Back = new ModelRenderer(this, 44, 54);
-        this.Back.addBox(-4F, -4F, 0.5F, 8, 8, 2);
-        this.Back.setRotationPoint(0F, 2F, 2F);
-        setRotation(this.Back, -0.1570796F, 0F, 0F);
-
-        this.RightArm = new ModelRenderer(this, 48, 31);
-        this.RightArm.addBox(-3F, -2.5F, -2.5F, 4, 11, 4);
-        this.RightArm.setRotationPoint(-5F, 1F, 0F);
-
-        this.RightHand = new ModelRenderer(this, 24, 16);
-        this.RightHand.addBox(-2.5F, -2F, -2F, 3, 12, 3);
-        this.RightHand.setRotationPoint(-5F, 1F, 0F);
-
-        this.RightSwordA = new ModelRenderer(this, 52, 46);
-        this.RightSwordA.addBox(-1.5F, 8.5F, -3F, 1, 1, 5);
-        this.RightSwordA.setRotationPoint(-5F, 1F, 0F);
-
-        this.RightSwordB = new ModelRenderer(this, 48, 50);
-        this.RightSwordB.addBox(-1.5F, 7.5F, -4F, 1, 3, 1);
-        this.RightSwordB.setRotationPoint(-5F, 1F, 0F);
-
-        this.RightSwordC = new ModelRenderer(this, 28, 28);
-        this.RightSwordC.addBox(-1F, 7.5F, -14F, 0, 3, 10);
-        this.RightSwordC.setRotationPoint(-5F, 1F, 0F);
-
-        this.LeftArm = new ModelRenderer(this, 48, 16);
-        this.LeftArm.addBox(-1F, -2.5F, -2.5F, 4, 11, 4);
-        this.LeftArm.setRotationPoint(5F, 1F, 0F);
-
-        this.LeftHand = new ModelRenderer(this, 36, 16);
-        this.LeftHand.addBox(-0.5F, -2F, -2F, 3, 12, 3);
-        this.LeftHand.setRotationPoint(5F, 1F, 0F);
-
-        this.LeftSwordA = new ModelRenderer(this, 52, 46);
-        this.LeftSwordA.addBox(0.5F, 8.5F, -3F, 1, 1, 5);
-        this.LeftSwordA.setRotationPoint(5F, 1F, 0F);
-
-        this.LeftSwordB = new ModelRenderer(this, 48, 46);
-        this.LeftSwordB.addBox(0.5F, 7.5F, -4F, 1, 3, 1);
-        this.LeftSwordB.setRotationPoint(5F, 1F, 0F);
-
-        this.LeftSwordC = new ModelRenderer(this, 28, 31);
-        this.LeftSwordC.addBox(1F, 7.5F, -14F, 0, 3, 10);
-        this.LeftSwordC.setRotationPoint(5F, 1F, 0F);
-
-        this.RightThigh = new ModelRenderer(this, 0, 16);
-        this.RightThigh.addBox(-1.5F, 0F, -1.5F, 3, 6, 3);
-        this.RightThigh.setRotationPoint(-2F, 10.5F, 0F);
-
-        this.RightKnee = new ModelRenderer(this, 0, 46);
-        this.RightKnee.addBox(-2F, 1F, -2F, 4, 4, 4);
-        this.RightKnee.setRotationPoint(-2F, 10.5F, 0F);
-
-        this.RightLeg = new ModelRenderer(this, 0, 25);
-        this.RightLeg.addBox(-1.5F, 0F, -1.5F, 3, 6, 3);
-        this.RightLeg.setRotationPoint(0F, 6F, 0F);
-        this.RightThigh.addChild(this.RightLeg);
-
-        this.RightFoot = new ModelRenderer(this, 0, 54);
-        this.RightFoot.addBox(-2F, 0F, -2F, 4, 6, 4);
-        this.RightFoot.setRotationPoint(0F, 2F, 0F);
-        this.RightLeg.addChild(this.RightFoot);
-
-        this.LeftThigh = new ModelRenderer(this, 12, 16);
-        this.LeftThigh.addBox(-1.5F, 0F, -1.5F, 3, 6, 3);
-        this.LeftThigh.setRotationPoint(2F, 10.5F, 0F);
-
-        this.LeftKnee = new ModelRenderer(this, 16, 46);
-        this.LeftKnee.addBox(-2F, 1F, -2F, 4, 4, 4);
-        this.LeftKnee.setRotationPoint(2F, 10.5F, 0F);
-
-        this.LeftLeg = new ModelRenderer(this, 12, 25);
-        this.LeftLeg.addBox(-1.5F, 0F, -1.5F, 3, 6, 3);
-        this.LeftLeg.setRotationPoint(0F, 6F, 0F);
-        this.LeftThigh.addChild(this.LeftLeg);
-
-        this.LeftFoot = new ModelRenderer(this, 16, 54);
-        this.LeftFoot.addBox(-2F, 0F, -2F, 4, 6, 4);
-        this.LeftFoot.setRotationPoint(0F, 2F, 0F);
-        this.LeftLeg.addChild(this.LeftFoot);
+    public MoCModelSilverSkeleton(ModelPart root) {
+        this.head         = root.getChild("head");
+        this.body         = root.getChild("body");
+        this.back         = this.body.getChild("back");
+        this.rightArm     = root.getChild("rightArm");
+        this.rightHand    = root.getChild("rightHand");
+        this.rightSwordA  = root.getChild("rightSwordA");
+        this.rightSwordB  = root.getChild("rightSwordB");
+        this.rightSwordC  = root.getChild("rightSwordC");
+        this.leftArm      = root.getChild("leftArm");
+        this.leftHand     = root.getChild("leftHand");
+        this.leftSwordA   = root.getChild("leftSwordA");
+        this.leftSwordB   = root.getChild("leftSwordB");
+        this.leftSwordC   = root.getChild("leftSwordC");
+        this.rightThigh   = root.getChild("rightThigh");
+        this.rightKnee    = root.getChild("rightKnee");
+        this.rightLeg     = this.rightThigh.getChild("rightLeg");
+        this.rightFoot    = this.rightLeg.getChild("rightFoot");
+        this.leftThigh    = root.getChild("leftThigh");
+        this.leftKnee     = root.getChild("leftKnee");
+        this.leftLeg      = this.leftThigh.getChild("leftLeg");
+        this.leftFoot     = this.leftLeg.getChild("leftFoot");
     }
 
+    /**
+     * Defines every part of the skeleton: cubes, offsets, rotations, etc.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // --- Head ---
+        PartDefinition head = root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(0, 0).addBox(-4F, -8F, -4F, 8, 8, 8, CubeDeformation.NONE),
+                PartPose.offset(0F, -2F, 0F)
+        );
+
+        // --- Body & Back ---
+        PartDefinition body = root.addOrReplaceChild("body",
+                CubeListBuilder.create()
+                        .texOffs(32, 0).addBox(-4F, 0F, -2F, 8, 12, 4, CubeDeformation.NONE),
+                PartPose.offset(0F, -2F, 0F)
+        );
+
+        PartDefinition back = body.addOrReplaceChild("back",
+                CubeListBuilder.create()
+                        .texOffs(44, 54).addBox(-4F, -4F, 0.5F, 8, 8, 2, CubeDeformation.NONE),
+                PartPose.offsetAndRotation(0F, 2F, 2F, -0.1570796F, 0F, 0F)
+        );
+
+        // --- Right Arm, Hand, and Swords ---
+        PartDefinition rightArm = root.addOrReplaceChild("rightArm",
+                CubeListBuilder.create()
+                        .texOffs(48, 31).addBox(-3F, -2.5F, -2.5F, 4, 11, 4, CubeDeformation.NONE),
+                PartPose.offset(-5F, 1F, 0F)
+        );
+
+        PartDefinition rightHand = root.addOrReplaceChild("rightHand",
+                CubeListBuilder.create()
+                        .texOffs(24, 16).addBox(-2.5F, -2F, -2F, 3, 12, 3, CubeDeformation.NONE),
+                PartPose.offset(-5F, 1F, 0F)
+        );
+
+        PartDefinition rightSwordA = root.addOrReplaceChild("rightSwordA",
+                CubeListBuilder.create()
+                        .texOffs(52, 46).addBox(-1.5F, 8.5F, -3F, 1, 1, 5, CubeDeformation.NONE),
+                PartPose.offset(-5F, 1F, 0F)
+        );
+        PartDefinition rightSwordB = root.addOrReplaceChild("rightSwordB",
+                CubeListBuilder.create()
+                        .texOffs(48, 50).addBox(-1.5F, 7.5F, -4F, 1, 3, 1, CubeDeformation.NONE),
+                PartPose.offset(-5F, 1F, 0F)
+        );
+        PartDefinition rightSwordC = root.addOrReplaceChild("rightSwordC",
+                CubeListBuilder.create()
+                        .texOffs(28, 28).addBox(-1F, 7.5F, -14F, 0, 3, 10, CubeDeformation.NONE),
+                PartPose.offset(-5F, 1F, 0F)
+        );
+
+        // --- Left Arm, Hand, and Swords ---
+        PartDefinition leftArm = root.addOrReplaceChild("leftArm",
+                CubeListBuilder.create()
+                        .texOffs(48, 16).addBox(-1F, -2.5F, -2.5F, 4, 11, 4, CubeDeformation.NONE),
+                PartPose.offset(5F, 1F, 0F)
+        );
+        PartDefinition leftHand = root.addOrReplaceChild("leftHand",
+                CubeListBuilder.create()
+                        .texOffs(36, 16).addBox(-0.5F, -2F, -2F, 3, 12, 3, CubeDeformation.NONE),
+                PartPose.offset(5F, 1F, 0F)
+        );
+        PartDefinition leftSwordA = root.addOrReplaceChild("leftSwordA",
+                CubeListBuilder.create()
+                        .texOffs(52, 46).addBox(0.5F, 8.5F, -3F, 1, 1, 5, CubeDeformation.NONE),
+                PartPose.offset(5F, 1F, 0F)
+        );
+        PartDefinition leftSwordB = root.addOrReplaceChild("leftSwordB",
+                CubeListBuilder.create()
+                        .texOffs(48, 46).addBox(0.5F, 7.5F, -4F, 1, 3, 1, CubeDeformation.NONE),
+                PartPose.offset(5F, 1F, 0F)
+        );
+        PartDefinition leftSwordC = root.addOrReplaceChild("leftSwordC",
+                CubeListBuilder.create()
+                        .texOffs(28, 31).addBox(1F, 7.5F, -14F, 0, 3, 10, CubeDeformation.NONE),
+                PartPose.offset(5F, 1F, 0F)
+        );
+
+        // --- Right Leg (Thigh, Knee, Leg, Foot) ---
+        PartDefinition rightThigh = root.addOrReplaceChild("rightThigh",
+                CubeListBuilder.create()
+                        .texOffs(0, 16).addBox(-1.5F, 0F, -1.5F, 3, 6, 3, CubeDeformation.NONE),
+                PartPose.offset(-2F, 10.5F, 0F)
+        );
+        PartDefinition rightKnee = root.addOrReplaceChild("rightKnee",
+                CubeListBuilder.create()
+                        .texOffs(0, 46).addBox(-2F, 1F, -2F, 4, 4, 4, CubeDeformation.NONE),
+                PartPose.offset(-2F, 10.5F, 0F)
+        );
+        PartDefinition rightLeg = rightThigh.addOrReplaceChild("rightLeg",
+                CubeListBuilder.create()
+                        .texOffs(0, 25).addBox(-1.5F, 0F, -1.5F, 3, 6, 3, CubeDeformation.NONE),
+                PartPose.offset(0F, 6F, 0F)
+        );
+        PartDefinition rightFoot = rightLeg.addOrReplaceChild("rightFoot",
+                CubeListBuilder.create()
+                        .texOffs(0, 54).addBox(-2F, 0F, -2F, 4, 6, 4, CubeDeformation.NONE),
+                PartPose.offset(0F, 2F, 0F)
+        );
+
+        // --- Left Leg (Thigh, Knee, Leg, Foot) ---
+        PartDefinition leftThigh = root.addOrReplaceChild("leftThigh",
+                CubeListBuilder.create()
+                        .texOffs(12, 16).addBox(-1.5F, 0F, -1.5F, 3, 6, 3, CubeDeformation.NONE),
+                PartPose.offset(2F, 10.5F, 0F)
+        );
+        PartDefinition leftKnee = root.addOrReplaceChild("leftKnee",
+                CubeListBuilder.create()
+                        .texOffs(16, 46).addBox(-2F, 1F, -2F, 4, 4, 4, CubeDeformation.NONE),
+                PartPose.offset(2F, 10.5F, 0F)
+        );
+        PartDefinition leftLeg = leftThigh.addOrReplaceChild("leftLeg",
+                CubeListBuilder.create()
+                        .texOffs(12, 25).addBox(-1.5F, 0F, -1.5F, 3, 6, 3, CubeDeformation.NONE),
+                PartPose.offset(0F, 6F, 0F)
+        );
+        PartDefinition leftFoot = leftLeg.addOrReplaceChild("leftFoot",
+                CubeListBuilder.create()
+                        .texOffs(16, 54).addBox(-2F, 0F, -2F, 4, 6, 4, CubeDeformation.NONE),
+                PartPose.offset(0F, 2F, 0F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 64);
+    }
+
+    /**
+     * Called first—stores sprinting/attack/riding flags so we can use them in setupAnim().
+     */
     public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.limbSwingAmount = limbSwingAmount;
-        this.sprinting = entityIn.isSprinting();
-        this.leftAttack = entityIn.attackCounterLeft;
-        this.rightAttack = entityIn.attackCounterRight;
-        this.riding = entityIn.getRidingEntity() != null;
+        this.limbSwingAmountStored = limbSwingAmount;
+        this.sprintingStored      = entityIn.isSprinting();
+        this.leftAttackStored     = entityIn.attackCounterLeft;
+        this.rightAttackStored    = entityIn.attackCounterRight;
+        this.ridingStored         = entityIn.getVehicle() != null;
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        matrixStackIn.push();
-        if (sprinting && limbSwingAmount > 0.3F) {
-            //matrixStackIn.push();
-            matrixStackIn.rotate(Vector3f.XN.rotationDegrees (limbSwingAmount * -20F));
-            //renderParts(f5);
-            //matrixStackIn.pop();
-        }
-        if (riding) {
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        float radianF = 57.29578F;
+        float hRotY = netHeadYaw / radianF;
+        float hRotX = headPitch / radianF;
 
-            matrixStackIn.translate(0.0F, 0.5F, 0.0F);
-            //renderParts(f5);
-            //matrixStackIn.pop();
-        }
-        //renderParts(f5);
+        // --- Head rotation ---
+        this.head.xRot = hRotX;
+        this.head.yRot = hRotY;
 
-        renderParts(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        matrixStackIn.pop();
-    }
+        // --- Arms swinging and attacks ---
+        float RLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float LLegXRot = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
 
-    private void renderParts(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Back.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightHand.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightSwordA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightSwordB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightSwordC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftArm.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftHand.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftSwordA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftSwordB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftSwordC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightThigh.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightKnee.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftThigh.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftKnee.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-    }
-
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float hRotY = netHeadYaw / 57.29578F;
-        float hRotX = headPitch / 57.29578F;
-
-        this.Head.rotateAngleX = hRotX;
-        this.Head.rotateAngleY = hRotY;
-
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
-        // float ClothRot = MathHelper.cos(limbSwing * 0.9F) * 0.6F * limbSwingAmount;
-
-        float RLegXRotB = RLegXRot;
-        float LLegXRotB = LLegXRot;
-
-        if (leftAttack == 0) {
-            this.LeftArm.rotateAngleZ = (MathHelper.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
-            this.LeftArm.rotateAngleX = RLegXRot;
+        // Left arm:
+        if (leftAttackStored == 0) {
+            // Idle/waving animation:
+            this.leftArm.zRot = (Mth.cos(ageInTicks * 0.09F) * 0.05F) - 0.05F;
+            this.leftArm.xRot = RLegXRot;
         } else {
-            this.LeftArm.rotateAngleX = -(MathHelper.cos((leftAttack) * 0.18F) * 3F);
+            // Attack animation: swing by cos(leftAttackStored)
+            this.leftArm.xRot = -(Mth.cos(leftAttackStored * 0.18F) * 3F);
         }
 
-        if (rightAttack == 0) {
-            this.RightArm.rotateAngleZ = -(MathHelper.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
-            this.RightArm.rotateAngleX = LLegXRot;
+        // Right arm:
+        if (rightAttackStored == 0) {
+            this.rightArm.zRot = -(Mth.cos(ageInTicks * 0.09F) * 0.05F) + 0.05F;
+            this.rightArm.xRot = LLegXRot;
         } else {
-            this.RightArm.rotateAngleX = -(MathHelper.cos((rightAttack) * 0.18F) * 3F);
+            this.rightArm.xRot = -(Mth.cos(rightAttackStored * 0.18F) * 3F);
         }
 
-        this.LeftHand.rotateAngleX =
-                this.LeftSwordA.rotateAngleX = this.LeftSwordB.rotateAngleX = this.LeftSwordC.rotateAngleX = this.LeftArm.rotateAngleX;
-        this.LeftHand.rotateAngleZ =
-                this.LeftSwordA.rotateAngleZ = this.LeftSwordB.rotateAngleZ = this.LeftSwordC.rotateAngleZ = this.LeftArm.rotateAngleZ;
+        // Synchronize hands & swords to the parent arm’s rotation:
+        this.leftHand.xRot = this.leftSwordA.xRot = this.leftSwordB.xRot = this.leftSwordC.xRot = this.leftArm.xRot;
+        this.leftHand.zRot = this.leftSwordA.zRot = this.leftSwordB.zRot = this.leftSwordC.zRot = this.leftArm.zRot;
 
-        this.RightHand.rotateAngleX =
-                this.RightSwordA.rotateAngleX = this.RightSwordB.rotateAngleX = this.RightSwordC.rotateAngleX = this.RightArm.rotateAngleX;
-        this.RightHand.rotateAngleZ =
-                this.RightSwordA.rotateAngleZ = this.RightSwordB.rotateAngleZ = this.RightSwordC.rotateAngleZ = this.RightArm.rotateAngleZ;
+        this.rightHand.xRot = this.rightSwordA.xRot = this.rightSwordB.xRot = this.rightSwordC.xRot = this.rightArm.xRot;
+        this.rightHand.zRot = this.rightSwordA.zRot = this.rightSwordB.zRot = this.rightSwordC.zRot = this.rightArm.zRot;
 
-        if (riding) {
-            this.RightLeg.rotateAngleX = 0F;
+        // --- Legs & Knees / Riding logic ---
+        if (ridingStored) {
+            // Sitting pose when riding
+            this.rightLeg.xRot    = 0F;
+            this.rightThigh.xRot  = -60F / radianF;
+            this.rightThigh.yRot  =  20F / radianF;
+            this.rightKnee.yRot   =  20F / radianF;
+            this.rightKnee.xRot   = -60F / radianF;
 
-            this.RightThigh.rotateAngleX = -60F / radianF;
-            this.RightThigh.rotateAngleY = 20F / radianF;
-            this.RightKnee.rotateAngleY = 20F / radianF;
-            this.RightKnee.rotateAngleX = -60F / radianF;
-            this.LeftLeg.rotateAngleX = 0F;
-            this.LeftThigh.rotateAngleY = -20F / radianF;
-            this.LeftKnee.rotateAngleY = -20F / radianF;
-            this.LeftThigh.rotateAngleX = -60F / radianF;
-            this.LeftKnee.rotateAngleX = -60F / radianF;
+            this.leftLeg.xRot     = 0F;
+            this.leftThigh.yRot   = -20F / radianF;
+            this.leftKnee.yRot    = -20F / radianF;
+            this.leftThigh.xRot   = -60F / radianF;
+            this.leftKnee.xRot    = -60F / radianF;
         } else {
-            this.RightThigh.rotateAngleY = 0F;
-            this.RightKnee.rotateAngleY = 0F;
-            this.LeftThigh.rotateAngleY = 0F;
-            this.LeftKnee.rotateAngleY = 0F;
-            this.RightThigh.rotateAngleX = RLegXRot;
-            this.LeftThigh.rotateAngleX = LLegXRot;
-            this.RightKnee.rotateAngleX = this.RightThigh.rotateAngleX;
-            this.LeftKnee.rotateAngleX = this.LeftThigh.rotateAngleX;
+            // Normal walking animation:
+            this.rightThigh.yRot = 0F;
+            this.rightKnee.yRot  = 0F;
+            this.leftThigh.yRot  = 0F;
+            this.leftKnee.yRot   = 0F;
 
-            float RLegXRot2 = MathHelper.cos(((limbSwing + 0.1F) * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-            float LLegXRot2 = MathHelper.cos((limbSwing + 0.1F) * 0.6662F) * 0.8F * limbSwingAmount;
+            this.rightThigh.xRot = RLegXRot;
+            this.leftThigh.xRot  = LLegXRot;
+            this.rightKnee.xRot  = this.rightThigh.xRot;
+            this.leftKnee.xRot   = this.leftThigh.xRot;
 
+            // Add a little “kick” when moving quickly:
+            float RLegXRot2 = Mth.cos(((limbSwing + 0.1F) * 0.6662F) + (float)Math.PI) * 0.8F * limbSwingAmount;
+            float LLegXRot2 = Mth.cos((limbSwing + 0.1F) * 0.6662F) * 0.8F * limbSwingAmount;
+            float RLegXRotB = RLegXRot;
+            float LLegXRotB = LLegXRot;
             if (limbSwingAmount > 0.15F) {
-                if (RLegXRot > RLegXRot2) // - - >
-                {
-                    RLegXRotB = RLegXRot + (25 / 57.29578F);
-
+                if (RLegXRot > RLegXRot2) {
+                    RLegXRotB = RLegXRot + (25F / radianF);
                 }
-
-                if (LLegXRot > LLegXRot2) // - - >
-                {
-                    LLegXRotB = LLegXRot + (25 / 57.29578F);
+                if (LLegXRot > LLegXRot2) {
+                    LLegXRotB = LLegXRot + (25F / radianF);
                 }
-
             }
-
-            this.RightLeg.rotateAngleX = (LLegXRotB);
-            this.LeftLeg.rotateAngleX = (RLegXRotB);
+            this.rightLeg.xRot = LLegXRotB;
+            this.leftLeg.xRot  = RLegXRotB;
         }
+
+        // --- Sprinting tilt on body/head if sprinting fast enough ---
+        if (sprintingStored && limbSwingAmountStored > 0.3F) {
+            this.body.xRot = -limbSwingAmountStored * 20F / radianF;
+        } else {
+            this.body.xRot = 0F;
+        }
+    }
+
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        poseStack.pushPose();
+        if (ridingStored) {
+            // Lift model slightly when riding
+            poseStack.translate(0.0D, 0.5D, 0.0D);
+        }
+        this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.back.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightHand.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightSwordA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightSwordB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightSwordC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftHand.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftSwordA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftSwordB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftSwordC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightThigh.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightKnee.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftThigh.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftKnee.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        poseStack.popPose();
     }
 }

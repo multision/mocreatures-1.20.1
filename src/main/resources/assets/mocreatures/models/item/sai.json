@@ -1,6 +1,6 @@
 {
   "parent": "item/handheld",
   "textures": {
-    "layer0": "mocreatures:items/sai"
+    "layer0": "mocreatures:item/sai"
   }
 }

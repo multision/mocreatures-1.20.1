@@ -1,15 +1,14 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.entity.tameable;
 
 import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.MoCreatures;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -17,72 +16,81 @@ import java.util.UUID;
 
 public class MoCPetData {
 
-    @SuppressWarnings("unused")
     private final UUID ownerUniqueId;
     private final BitSet idMap = new BitSet(Long.SIZE << 4);
     private final ArrayList<Integer> usedPetIds = new ArrayList<>();
-    private CompoundNBT ownerData = new CompoundNBT();
-    private ListNBT tamedList = new ListNBT();
+    private CompoundTag ownerData = new CompoundTag();
+    private ListTag tamedList = new ListTag();
 
     public MoCPetData(IMoCTameable pet) {
         this.ownerData.put("TamedList", this.tamedList);
-        this.ownerUniqueId = MoCreatures.isServer(((Entity) pet).getEntityWorld()) ? pet.getOwnerId() : Minecraft.getInstance().player.getUniqueID();
+        Level level = ((Entity) pet).level();
+        this.ownerUniqueId = MoCreatures.isServer(level) ? pet.getOwnerId() : Minecraft.getInstance().player.getUUID();
+        MoCreatures.LOGGER.debug("Created new MoCPetData for owner {}", this.ownerUniqueId);
     }
 
-    public MoCPetData(CompoundNBT nbt, UUID owner) {
+    public MoCPetData(CompoundTag nbt, UUID owner) {
         this.ownerData = nbt;
         this.tamedList = nbt.getList("TamedList", 10);
         this.ownerUniqueId = owner;
         this.loadPetDataMap(nbt.getCompound("PetIdData"));
+        MoCreatures.LOGGER.debug("Loaded MoCPetData for owner {} with {} pets", 
+                this.ownerUniqueId, this.tamedList.size());
     }
 
     public int addPet(IMoCTameable pet) {
-        BlockPos coords = new BlockPos(((Entity) pet).chunkCoordX, ((Entity) pet).chunkCoordY, ((Entity) pet).chunkCoordZ);
-        CompoundNBT petNBT = MoCTools.getEntityData((Entity) pet);
+        Entity entity = (Entity) pet;
+        ChunkPos chunkCoord = entity.chunkPosition();
+        BlockPos coords = new BlockPos(chunkCoord.x, chunkCoord.getWorldPosition().getY(), chunkCoord.z);
+        CompoundTag petNBT = MoCTools.getEntityData(entity);
+
         if (this.tamedList != null) {
             int id = getNextFreePetId();
             petNBT.putInt("PetId", id);
-            CompoundNBT petData = petNBT.copy();
+            CompoundTag petData = petNBT.copy();
             petData.putInt("ChunkX", coords.getX());
             petData.putInt("ChunkY", coords.getY());
             petData.putInt("ChunkZ", coords.getZ());
-            petData.putString("Dimension", ((Entity) pet).world.getDimensionKey().getLocation().toString());
+            petData.putString("Dimension", entity.level().dimension().location().toString());
             this.tamedList.add(petData);
             this.ownerData.put("PetIdData", savePetDataMap());
+            MoCreatures.LOGGER.debug("Added pet ID {} for owner {}", id, this.ownerUniqueId);
             return id;
         } else {
+            MoCreatures.LOGGER.error("Cannot add pet - tamedList is null for owner {}", this.ownerUniqueId);
             return -1;
         }
     }
 
     public boolean removePet(int id) {
         for (int i = this.tamedList.size() - 1; i >= 0; i--) {
-            CompoundNBT nbt = this.tamedList.getCompound(i);
+            CompoundTag nbt = this.tamedList.getCompound(i);
             if (nbt.contains("PetId") && nbt.getInt("PetId") == id) {
                 if (i >= 0 && i < this.tamedList.size()) {
                     this.tamedList.remove(i);
                 } else {
-                    System.err.println("Invalid tamedList index: " + i + " for PetId: " + id);
+                    MoCreatures.LOGGER.error("Invalid tamedList index: {} for PetId: {}", i, id);
                     return false;
                 }
-                this.usedPetIds.remove(Integer.valueOf(id)); // Use Integer.valueOf to ensure proper removal
+                this.usedPetIds.remove(Integer.valueOf(id));
                 this.idMap.clear(id);
                 if (this.usedPetIds.isEmpty()) {
                     this.idMap.clear();
                 }
                 this.ownerData.put("PetIdData", savePetDataMap());
+                MoCreatures.LOGGER.debug("Removed pet ID {} for owner {}", id, this.ownerUniqueId);
                 return true;
             }
         }
-        System.err.println("Failed to remove petId " + id + " - not found in tamedList");
+        MoCreatures.LOGGER.error("Failed to remove petId {} - not found in tamedList for owner {}", 
+                id, this.ownerUniqueId);
         return false;
     }
 
-
-    public CompoundNBT getPetData(int id) {
+    public CompoundTag getPetData(int id) {
         if (this.tamedList != null) {
             for (int i = 0; i < this.tamedList.size(); i++) {
-                CompoundNBT nbt = this.tamedList.getCompound(i);
+                CompoundTag nbt = this.tamedList.getCompound(i);
                 if (nbt.contains("PetId") && nbt.getInt("PetId") == id) {
                     return nbt;
                 }
@@ -91,42 +99,30 @@ public class MoCPetData {
         return null;
     }
 
-    public CompoundNBT getOwnerRootNBT() {
+    public CompoundTag getOwnerRootNBT() {
         return this.ownerData;
     }
 
-    public ListNBT getTamedList() {
+    public ListTag getTamedList() {
         return this.tamedList;
     }
 
     public String getOwner() {
-        if (this.ownerData != null) {
-            return this.ownerData.getString("Owner");
-        } else {
-            return null;
-        }
+        return this.ownerData != null ? this.ownerData.getString("Owner") : null;
     }
 
     public boolean getInAmulet(int petId) {
-        CompoundNBT petData = getPetData(petId);
-        if (petData != null) {
-            return petData.getBoolean("InAmulet");
-        }
-        return false;
+        CompoundTag petData = getPetData(petId);
+        return petData != null && petData.getBoolean("InAmulet");
     }
 
     public void setInAmulet(int petId, boolean flag) {
-        CompoundNBT petData = getPetData(petId);
+        CompoundTag petData = getPetData(petId);
         if (petData != null) {
             petData.putBoolean("InAmulet", flag);
         }
     }
 
-    /**
-     * Return the next free pet ID.
-     *
-     * @return the next free pet ID
-     */
     public int getNextFreePetId() {
         int next = 0;
         while (true) {
@@ -140,9 +136,9 @@ public class MoCPetData {
         }
     }
 
-    public CompoundNBT savePetDataMap() {
+    public CompoundTag savePetDataMap() {
         int[] data = new int[(this.idMap.length() + Integer.SIZE - 1) / Integer.SIZE];
-        CompoundNBT dataMap = new CompoundNBT();
+        CompoundTag dataMap = new CompoundTag();
         for (int i = 0; i < data.length; i++) {
             int val = 0;
             for (int j = 0; j < Integer.SIZE; j++) {
@@ -154,9 +150,10 @@ public class MoCPetData {
         return dataMap;
     }
 
-    public void loadPetDataMap(CompoundNBT compoundTag) {
+    public void loadPetDataMap(CompoundTag compoundTag) {
         if (compoundTag == null) {
             this.idMap.clear();
+            MoCreatures.LOGGER.debug("Reset pet ID map for owner {} (null compound tag)", this.ownerUniqueId);
         } else {
             int[] intArray = compoundTag.getIntArray("PetIdArray");
             for (int i = 0; i < intArray.length; i++) {
@@ -164,16 +161,24 @@ public class MoCPetData {
                     this.idMap.set(i * Integer.SIZE + j, (intArray[i] & (1 << j)) != 0);
                 }
             }
-            // populate our usedPetIds
             int next = 0;
+            int idsAdded = 0;
             while (true) {
-                next = this.idMap.nextClearBit(next);
+                next = this.idMap.nextSetBit(next);
+                if (next == -1) break;
+                
                 if (!this.usedPetIds.contains(next)) {
                     this.usedPetIds.add(next);
-                } else {
-                    break;
+                    idsAdded++;
                 }
+                next++;
             }
+            MoCreatures.LOGGER.debug("Loaded pet ID map for owner {} with {} IDs", 
+                    this.ownerUniqueId, idsAdded);
         }
+    }
+    
+    public UUID getOwnerUniqueId() {
+        return this.ownerUniqueId;
     }
 }

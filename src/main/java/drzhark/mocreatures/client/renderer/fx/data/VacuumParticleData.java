@@ -3,16 +3,16 @@ package drzhark.mocreatures.client.renderer.fx.data;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import drzhark.mocreatures.client.renderer.fx.MoCParticles;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.particles.IParticleData;
-import net.minecraft.particles.ParticleType;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.Locale;
 
-public class VacuumParticleData implements IParticleData {
-    public static final IDeserializer<VacuumParticleData> DESERIALIZER = new IDeserializer<VacuumParticleData>() {
+public class VacuumParticleData implements ParticleOptions {
+    public static final ParticleOptions.Deserializer<VacuumParticleData> DESERIALIZER = new ParticleOptions.Deserializer<VacuumParticleData>() {
         @Override
-        public VacuumParticleData deserialize(ParticleType<VacuumParticleData> type, StringReader reader) throws CommandSyntaxException {
+        public VacuumParticleData fromCommand(ParticleType<VacuumParticleData> type, StringReader reader) throws CommandSyntaxException {
             reader.expect(' ');
             float r = reader.readFloat();
             reader.expect(' ');
@@ -23,7 +23,7 @@ public class VacuumParticleData implements IParticleData {
         }
 
         @Override
-        public VacuumParticleData read(ParticleType<VacuumParticleData> type, PacketBuffer buffer) {
+        public VacuumParticleData fromNetwork(ParticleType<VacuumParticleData> type, FriendlyByteBuf buffer) {
             return new VacuumParticleData(buffer.readFloat(), buffer.readFloat(), buffer.readFloat());
         }
     };
@@ -37,19 +37,19 @@ public class VacuumParticleData implements IParticleData {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
+    public void writeToNetwork(FriendlyByteBuf buffer) {
         buffer.writeFloat(red);
         buffer.writeFloat(green);
         buffer.writeFloat(blue);
     }
 
     @Override
-    public String getParameters() {
-        return String.format(Locale.ROOT, "%f %f %f", red, green, blue);
+    public String writeToString() {
+        return String.format(Locale.ROOT, "%s %.2f %.2f %.2f", getType(), red, green, blue);
     }
 
     @Override
-    public ParticleType<?> getType() {
+    public ParticleType<VacuumParticleData> getType() {
         return MoCParticles.VACUUM_FX.get();
     }
 }

@@ -1,7 +1,7 @@
 {
   "parent": "block/cube_column",
   "textures": {
-    "end": "mocreatures:blocks/log_top_wyvwood",
-    "side": "mocreatures:blocks/log_side_wyvwood"
+    "end": "mocreatures:block/log_top_wyvwood",
+    "side": "mocreatures:block/log_side_wyvwood"
   }
 }

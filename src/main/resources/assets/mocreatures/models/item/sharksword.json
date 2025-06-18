@@ -1,6 +1,6 @@
 {
   "parent": "item/handheld",
   "textures": {
-    "layer0": "mocreatures:items/shark_sword"
+    "layer0": "mocreatures:item/shark_sword"
   }
 }

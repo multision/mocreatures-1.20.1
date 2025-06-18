@@ -1,113 +1,138 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.init;
 
-import com.google.common.base.Preconditions;
 import drzhark.mocreatures.MoCConstants;
-import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.block.*;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.material.MaterialColor;
-import net.minecraft.block.trees.JungleTree;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraftforge.registries.RegistryObject;
 
-import javax.annotation.Nonnull;
+import java.util.function.Supplier;
 
 @Mod.EventBusSubscriber(modid = MoCConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class MoCBlocks {
 
-    public static MoCBlockOre ancientOre;
-    public static Block ancientSilverBlock;
-    public static Block carvedSilverSandstone;
-    public static Block cobbledWyvstone;
-    public static Block cobbledDeepWyvstone;
-    public static Block deepWyvstone;
-    public static Block firestone;
-    public static Block gleamingGlass;
-    public static Block mossyCobbledWyvstone;
-    public static Block mossyCobbledDeepWyvstone;
-    public static Block silverSand;
-    public static Block silverSandstone;
-    public static Block smoothSilverSandstone;
-    public static Block tallWyvgrass;
-    public static MoCBlockOre wyvernDiamondOre;
-    public static MoCBlockOre wyvernEmeraldOre;
-    public static MoCBlockOre wyvernGoldOre;
-    public static MoCBlockOre wyvernIronOre;
-    public static MoCBlockOre wyvernLapisOre;
-    public static MoCBlockNest wyvernNestBlock;
-    public static Block wyvstone;
-    public static Block wyvgrass;
-    public static Block wyvdirt;
-    public static Block wyvwoodLeaves;
-    public static Block wyvwoodSapling;
-    public static Block wyvwoodLog;
-    public static Block wyvwoodPlanks;
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MoCConstants.MOD_ID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MoCConstants.MOD_ID);
 
-    @SubscribeEvent
-    public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        ancientSilverBlock = setup(new MoCBlockMetal(AbstractBlock.Properties.create(Material.IRON, MaterialColor.IRON).hardnessAndResistance(3.0F, 10.0F)), "ancient_silver_block");
-        cobbledWyvstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(2.0F, 10.0F)), "cobbled_wyvstone");
-        cobbledDeepWyvstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(3.5F, 10.0F)), "cobbled_deep_wyvstone");
-        wyvstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(1.5F, 10.0F)), "wyvstone");
-        deepWyvstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(3.0F, 10.0F)), "deep_wyvstone");
-        mossyCobbledWyvstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(1.5F, 10.0F)), "mossy_cobbled_wyvstone");
-        mossyCobbledDeepWyvstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(1.5F, 10.0F)), "mossy_cobbled_deep_wyvstone");
-        gleamingGlass = setup(new MoCBlockGlass(AbstractBlock.Properties.create(Material.GLASS).hardnessAndResistance(0.4F)), "gleaming_glass");
-        silverSand = setup(new MoCBlockSand(AbstractBlock.Properties.create(Material.EARTH, MaterialColor.CLAY).hardnessAndResistance(0.6F)), "silver_sand");
-        silverSandstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.CLAY).hardnessAndResistance(1.2F)), "silver_sandstone");
-        carvedSilverSandstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.CLAY).hardnessAndResistance(1.2F)), "carved_silver_sandstone");
-        smoothSilverSandstone = setup(new MoCBlockRock(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.CLAY).hardnessAndResistance(1.2F)), "smooth_silver_sandstone");
-        ancientOre = setup(new MoCBlockOre(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(3.0F, 5.0F)), "ancient_ore");
-        firestone = setup(new MoCBlockFirestone(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.ADOBE).hardnessAndResistance(3.0F).setLightLevel(state -> 7)), "firestone");
-        wyvernDiamondOre = setup(new MoCBlockOre(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(4.5F, 5.0F)), "wyvern_diamond_ore");
-        wyvernEmeraldOre = setup(new MoCBlockOre(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(4.5F, 5.0F)), "wyvern_emerald_ore");
-        wyvernGoldOre = setup(new MoCBlockOre(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(3.0F, 5.0F)), "wyvern_gold_ore");
-        wyvernIronOre = setup(new MoCBlockOre(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(3.0F, 5.0F)), "wyvern_iron_ore");
-        wyvernLapisOre = setup(new MoCBlockOre(AbstractBlock.Properties.create(Material.ROCK, MaterialColor.STONE).hardnessAndResistance(1.5F, 5.0F)), "wyvern_lapis_ore");
-        wyvgrass = setup(new MoCBlockGrass(AbstractBlock.Properties.create(Material.ORGANIC ,MaterialColor.BLUE_TERRACOTTA).hardnessAndResistance(0.7F)), "wyvgrass");
-        wyvdirt = setup(new MoCBlockDirt(AbstractBlock.Properties.create(Material.EARTH, MaterialColor.DIRT).hardnessAndResistance(0.6F)), "wyvdirt");
-        wyvwoodLeaves = setup(new MoCBlockLeaf(AbstractBlock.Properties.create(Material.LEAVES, MaterialColor.DIAMOND).hardnessAndResistance(0.2F)), "wyvwood_leaves");
-        wyvwoodSapling = setup(new MoCBlockSapling(AbstractBlock.Properties.create(Material.PLANTS, MaterialColor.FOLIAGE).zeroHardnessAndResistance()), "wyvwood_sapling");
-        wyvwoodLog = setup(new MoCBlockLog(AbstractBlock.Properties.create(Material.WOOD ,MaterialColor.CYAN_TERRACOTTA).hardnessAndResistance(2.0F)), "wyvwood_log");
-        tallWyvgrass = setup(new MoCBlockTallGrass(AbstractBlock.Properties.create(Material.PLANTS ,MaterialColor.LIGHT_BLUE_TERRACOTTA).zeroHardnessAndResistance()), "tall_wyvgrass");
-        wyvwoodPlanks = setup(new MoCBlockPlanks(AbstractBlock.Properties.create(Material.WOOD ,MaterialColor.DIAMOND).hardnessAndResistance(2.0F, 5.0F)), "wyvwood_planks");
-        wyvernNestBlock = setup(new MoCBlockNest(AbstractBlock.Properties.create(Material.ORGANIC, MaterialColor.YELLOW).hardnessAndResistance(0.5F)), "wyvern_nest_block");
+    public static final RegistryObject<Block> ancientSilverBlock = register("ancient_silver_block", () ->
+            new MoCBlockMetal(BlockBehaviour.Properties.of().strength(3.0F, 10.0F).mapColor(MapColor.METAL)));
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            RenderTypeLookup.setRenderLayer(tallWyvgrass, RenderType.getCutout());
-            RenderTypeLookup.setRenderLayer(wyvwoodSapling, RenderType.getCutout());
-            RenderTypeLookup.setRenderLayer(gleamingGlass, RenderType.getTranslucent());
-            RenderTypeLookup.setRenderLayer(wyvwoodLeaves, RenderType.getTripwire());
+    public static final RegistryObject<Block> cobbledWyvstone = register("cobbled_wyvstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(2.0F, 10.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> cobbledDeepWyvstone = register("cobbled_deep_wyvstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(3.5F, 10.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> wyvstone = register("wyvstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(1.5F, 10.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> deepWyvstone = register("deep_wyvstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(3.0F, 10.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> mossyCobbledWyvstone = register("mossy_cobbled_wyvstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(1.5F, 10.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> mossyCobbledDeepWyvstone = register("mossy_cobbled_deep_wyvstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(1.5F, 10.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> gleamingGlass = register("gleaming_glass", () ->
+            new MoCBlockGlass(BlockBehaviour.Properties.of().strength(0.4F).mapColor(MapColor.COLOR_LIGHT_GRAY).noOcclusion()));
+
+    public static final RegistryObject<Block> silverSand = register("silver_sand", () ->
+            new MoCBlockSand(BlockBehaviour.Properties.of().strength(0.6F).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
+    public static final RegistryObject<Block> silverSandstone = register("silver_sandstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(1.2F).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
+    public static final RegistryObject<Block> carvedSilverSandstone = register("carved_silver_sandstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(1.2F).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
+    public static final RegistryObject<Block> smoothSilverSandstone = register("smooth_silver_sandstone", () ->
+            new MoCBlockRock(BlockBehaviour.Properties.of().strength(1.2F).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
+    public static final RegistryObject<Block> ancientOre = register("ancient_ore", () ->
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> firestone = register("firestone", () ->
+            new MoCBlockFirestone(BlockBehaviour.Properties.of().strength(3.0F).lightLevel(state -> 7).mapColor(MapColor.COLOR_ORANGE)));
+
+    public static final RegistryObject<Block> wyvernDiamondOre = register("wyvern_diamond_ore", () ->
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(4.5F, 5.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> wyvernEmeraldOre = register("wyvern_emerald_ore", () ->
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(4.5F, 5.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> wyvernGoldOre = register("wyvern_gold_ore", () ->
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> wyvernIronOre = register("wyvern_iron_ore", () ->
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> wyvernLapisOre = register("wyvern_lapis_ore", () ->
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(1.5F, 5.0F).mapColor(MapColor.STONE)));
+
+    public static final RegistryObject<Block> wyvgrass = register("wyvgrass", () ->
+            new MoCBlockGrass(BlockBehaviour.Properties.of().strength(0.7F).mapColor(MapColor.COLOR_CYAN)));
+
+    public static final RegistryObject<Block> wyvdirt = register("wyvdirt", () ->
+            new MoCBlockDirt(BlockBehaviour.Properties.of().strength(0.6F).mapColor(MapColor.DIRT)));
+
+    public static final RegistryObject<Block> wyvwoodLeaves = register("wyvwood_leaves", () ->
+            new MoCBlockLeaf(BlockBehaviour.Properties.of().strength(0.2F).mapColor(MapColor.COLOR_LIGHT_BLUE).noOcclusion()));
+
+    public static final RegistryObject<Block> wyvwoodSapling = register("wyvwood_sapling", () ->
+            new MoCBlockSapling(BlockBehaviour.Properties.of().noCollission().randomTicks().strength(0.0F).mapColor(MapColor.PLANT)));
+
+    public static final RegistryObject<Block> wyvwoodLog = register("wyvwood_log", () ->
+            new MoCBlockLog(BlockBehaviour.Properties.of().strength(2.0F).mapColor(MapColor.COLOR_CYAN)));
+
+    public static final RegistryObject<Block> tallWyvgrass = register("tall_wyvgrass", () ->
+            new MoCBlockTallGrass(BlockBehaviour.Properties.of().noCollission().strength(0.0F).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
+    public static final RegistryObject<Block> wyvwoodPlanks = register("wyvwood_planks", () ->
+            new MoCBlockPlanks(BlockBehaviour.Properties.of().strength(2.0F, 5.0F).mapColor(MapColor.COLOR_BLUE)));
+
+    public static final RegistryObject<Block> wyvernNestBlock = register("wyvern_nest_block", () ->
+            new MoCBlockNest(BlockBehaviour.Properties.of().strength(0.5F).mapColor(MapColor.COLOR_YELLOW)));
+
+
+    private static RegistryObject<Block> register(String name, Supplier<Block> blockSupplier) {
+        RegistryObject<Block> block = BLOCKS.register(name, blockSupplier);
+        ITEMS.register(name, () -> {
+            return new BlockItem(block.get(), new Item.Properties());
+        });
+        return block;
+    }
+
+    public static void register(IEventBus eventBus) {
+        BLOCKS.register(eventBus);
+        ITEMS.register(eventBus);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @Mod.EventBusSubscriber(value = Dist.CLIENT, modid = MoCConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ClientEvents {
+        @SubscribeEvent
+        public static void registerRenderLayers(FMLClientSetupEvent event) {
+            event.enqueueWork(() -> {
+                ItemBlockRenderTypes.setRenderLayer(wyvwoodLeaves.get(), RenderType.cutoutMipped());
+                ItemBlockRenderTypes.setRenderLayer(wyvwoodSapling.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(tallWyvgrass.get(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(gleamingGlass.get(), RenderType.translucent());
+            });
         }
-    }
-
-    @Nonnull
-    public static <T extends Block> T  setup(T entry, String name) {
-        ForgeRegistries.BLOCKS.register(setup(entry, new ResourceLocation(MoCConstants.MOD_ID, name)));
-        ForgeRegistries.ITEMS.register(setup(new BlockItem(entry, new Item.Properties().group(MoCreatures.tabMoC)), new ResourceLocation(MoCConstants.MOD_ID, name)));
-        return entry;
-    }
-
-    @Nonnull
-    public static <T extends IForgeRegistryEntry<T>> T setup(T entry, ResourceLocation registryName) {
-        Preconditions.checkNotNull(entry, "Entry to setup must not be null!");
-        Preconditions.checkNotNull(registryName, "Registry name to assign must not be null!");
-        entry.setRegistryName(registryName);
-        return entry;
     }
 }

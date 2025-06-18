@@ -3,44 +3,44 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import drzhark.mocreatures.client.model.MoCModelOstrich;
 import drzhark.mocreatures.entity.neutral.MoCEntityOstrich;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderOstrich extends MoCRenderMoC<MoCEntityOstrich, MoCModelOstrich<MoCEntityOstrich>> {
 
-    public MoCRenderOstrich(EntityRendererManager renderManagerIn, MoCModelOstrich modelbase, float f) {
+    public MoCRenderOstrich(EntityRendererProvider.Context renderManagerIn, MoCModelOstrich modelbase, float f) {
         super(renderManagerIn, modelbase, 0.5F);
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityOstrich entityostrich) {
+    public ResourceLocation getTextureLocation(MoCEntityOstrich entityostrich) {
         return entityostrich.getTexture();
     }
 
-    protected void adjustHeight(MoCEntityOstrich entityliving, float FHeight, MatrixStack matrixStackIn) {
-        matrixStackIn.translate(0.0F, FHeight, 0.0F);
+    protected void adjustHeight(MoCEntityOstrich entityliving, float FHeight, PoseStack poseStack) {
+        poseStack.translate(0.0F, FHeight, 0.0F);
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityOstrich entityliving, MatrixStack matrixStackIn, float f) {
+    protected void scale(MoCEntityOstrich entityliving, PoseStack poseStack, float f) {
         MoCEntityOstrich entityostrich = entityliving;
         if (entityostrich.getTypeMoC() == 1) {
-            stretch(entityostrich, matrixStackIn);
+            stretch(entityostrich, poseStack);
         }
 
-        super.preRenderCallback(entityliving, matrixStackIn, f);
+        super.scale(entityliving, poseStack, f);
 
     }
 
-    protected void stretch(MoCEntityOstrich entityostrich, MatrixStack matrixStackIn) {
+    protected void stretch(MoCEntityOstrich entityostrich, PoseStack poseStack) {
 
-        float f = entityostrich.getAge() * 0.01F;
-        matrixStackIn.scale(f, f, f);
+        float f = entityostrich.getMoCAge() * 0.01F;
+        poseStack.scale(f, f, f);
     }
 }

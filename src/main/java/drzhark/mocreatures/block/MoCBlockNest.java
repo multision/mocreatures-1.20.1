@@ -3,26 +3,32 @@
  */
 package drzhark.mocreatures.block;
 
-import net.minecraft.block.*;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class MoCBlockNest extends Block {
 
-    public MoCBlockNest(AbstractBlock.Properties properties) {
-        super(properties.sound(SoundType.PLANT));
+    public MoCBlockNest(BlockBehaviour.Properties properties) {
+        super(properties
+                .strength(0.5F)
+                .sound(SoundType.GRASS));
     }
 
     @Override
-    public void onFallenUpon(World worldIn, BlockPos pos, Entity entityIn, float fallDistance) {
-        entityIn.onLivingFall(fallDistance, 0.2F);
+    public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float distance) {
+        entity.causeFallDamage(distance, 0.2F, level.damageSources().fall());
     }
 
     @Override
-    public int getFlammability(BlockState state, IBlockReader world, BlockPos pos, Direction face) {
-        return Blocks.HAY_BLOCK.getFlammability(state, world, pos, face);
+    public int getFlammability(BlockState state, BlockGetter getter, BlockPos pos, Direction direction) {
+        return Blocks.HAY_BLOCK.getFlammability(state, getter, pos, direction);
     }
 }

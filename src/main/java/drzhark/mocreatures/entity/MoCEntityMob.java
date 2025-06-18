@@ -7,84 +7,100 @@ import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.ai.EntityAIMoverHelperMoC;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
-import drzhark.mocreatures.entity.ai.PathNavigateFlyer;
 import drzhark.mocreatures.entity.item.MoCEntityEgg;
 import drzhark.mocreatures.entity.item.MoCEntityKittyBed;
 import drzhark.mocreatures.entity.item.MoCEntityLitterBox;
 import drzhark.mocreatures.entity.passive.MoCEntityHorse;
 import drzhark.mocreatures.network.MoCMessageHandler;
 import drzhark.mocreatures.network.message.MoCMessageHealth;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.monster.MonsterEntity;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.pathfinding.SwimmerPathNavigator;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.Difficulty;
-import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
+
+import net.minecraft.client.resources.language.I18n; // was net.minecraft.client.resources.I18n :contentReference[oaicite:0]{index=0}
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;               // was CompoundNBT
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;     // same
+import net.minecraft.server.level.ServerLevel;       // replaces IServerWorld :contentReference[oaicite:1]{index=1}
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource; // was net.minecraft.util.DamageSource
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;     // replaces AttributeModifierMap.MutableAttribute :contentReference[oaicite:4]{index=4}
+import net.minecraft.world.entity.ai.attributes.Attributes;            // same
+import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.monster.Monster;                       // replaces MonsterEntity :contentReference[oaicite:5]{index=5}
+import net.minecraft.world.entity.ai.navigation.PathNavigation;          // replaces PathNavigator :contentReference[oaicite:9]{index=9}
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;     // replaces PathNavigateFlyer
+import net.minecraft.world.level.Level;                                   // replaces World
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.phys.Vec3;                                     // replaces Vector3d :contentReference[oaicite:14]{index=14}
+import net.minecraft.network.syncher.EntityDataAccessor;                   // replaces DataParameter :contentReference[oaicite:15]{index=15}
+import net.minecraft.network.syncher.EntityDataSerializers;                // replaces DataSerializers
+import net.minecraft.network.syncher.SynchedEntityData;                    // replaces EntityDataManager
+import net.minecraft.world.Difficulty;                                     // same
+import net.minecraft.world.DifficultyInstance;                             // same
+
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.Random;
 import java.util.UUID;
 
-public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
+/**
+ * Updated for Minecraft 1.20.1 (Forge/Mojang mappings).
+ */
+public abstract class MoCEntityMob extends Monster implements IMoCEntity {
 
-    protected static final DataParameter<Boolean> ADULT = EntityDataManager.createKey(MoCEntityMob.class, DataSerializers.BOOLEAN);
-    protected static final DataParameter<Integer> TYPE = EntityDataManager.createKey(MoCEntityMob.class, DataSerializers.VARINT);
-    protected static final DataParameter<Integer> AGE = EntityDataManager.createKey(MoCEntityMob.class, DataSerializers.VARINT);
-    protected static final DataParameter<String> NAME_STR = EntityDataManager.createKey(MoCEntityMob.class, DataSerializers.STRING);
+    protected static final EntityDataAccessor<Boolean> ADULT = SynchedEntityData.defineId(MoCEntityMob.class, EntityDataSerializers.BOOLEAN);
+    protected static final EntityDataAccessor<Integer> TYPE   = SynchedEntityData.defineId(MoCEntityMob.class, EntityDataSerializers.INT);
+    protected static final EntityDataAccessor<Integer> AGE    = SynchedEntityData.defineId(MoCEntityMob.class, EntityDataSerializers.INT);
+    protected static final EntityDataAccessor<String> NAME_STR = SynchedEntityData.defineId(MoCEntityMob.class, EntityDataSerializers.STRING);
     protected boolean divePending;
     protected String texture;
-    protected PathNavigator navigatorWater;
-    protected PathNavigator navigatorFlyer;
+    protected PathNavigation navigatorWater;
+    protected PathNavigation navigatorFlyer;
     protected EntityAIWanderMoC2 wander;
 
-    protected MoCEntityMob(EntityType<? extends MoCEntityMob> type, World world) {
+    protected MoCEntityMob(EntityType<? extends MoCEntityMob> type, Level world) {
         super(type, world);
         this.texture = "blank.jpg";
-        this.moveController = new EntityAIMoverHelperMoC(this);
-        this.navigatorWater = new SwimmerPathNavigator(this, world);
-        this.navigatorFlyer = new PathNavigateFlyer(this, world);
+        this.moveControl = new EntityAIMoverHelperMoC(this); // custom MoveControl
+        this.navigatorWater = new WaterBoundPathNavigation(this, world);                 // was SwimmerPathNavigator :contentReference[oaicite:16]{index=16}
+        this.navigatorFlyer = new FlyingPathNavigation(this, world);               // custom Flyer nav
         this.wander = new EntityAIWanderMoC2(this, 1.0D, 80);
         this.goalSelector.addGoal(4, this.wander);
     }
 
     @OnlyIn(Dist.CLIENT)
     @Override
-    public ITextComponent getName() {
-        String entityString = this.getType().getTranslationKey();
-        if (!MoCreatures.proxy.verboseEntityNames || entityString == null) return super.getName();
+    public Component getName() {
+        String entityString = this.getType().getDescriptionId();
+        if (!MoCreatures.proxy.verboseEntityNames || entityString == null) {
+            return super.getName();
+        }
         String translationKey = "entity." + entityString + ".verbose.name";
-        String translatedString = I18n.format(translationKey);
-        return !translatedString.equals(translationKey) ? new TranslationTextComponent(translationKey) : super.getName();
+        String translatedString = I18n.get(translationKey);
+        return !translatedString.equals(translationKey)
+                ? Component.translatable(translationKey)
+                : super.getName();
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MonsterEntity.func_234295_eP_().createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.7F).createMutableAttribute(Attributes.ATTACK_DAMAGE, 2D).createMutableAttribute(Attributes.MAX_HEALTH, 20.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.7F)
+                .add(Attributes.ATTACK_DAMAGE, 2D)
+                .add(Attributes.MAX_HEALTH, 20.0D);
     }
 
+    @Nullable
     @Override
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty,
+                                   MobSpawnType reason, @Nullable SpawnGroupData spawnData,
+                                   @Nullable CompoundTag dataTag) {
         selectType();
-        return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+        return super.finalizeSpawn(world, difficulty, reason, spawnData, dataTag);
     }
 
     @Override
@@ -93,8 +109,7 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
     }
 
     /**
-     * Put your code to choose a texture / the mob type in here. Will be called
-     * by default MocEntity constructors.
+     * Put your code to choose a texture / the mob type in here. Will be called by default MocEntity constructors.
      */
     @Override
     public void selectType() {
@@ -102,32 +117,32 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(ADULT, false);
-        this.dataManager.register(TYPE, 0);
-        this.dataManager.register(AGE, 45);
-        this.dataManager.register(NAME_STR, "");
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(ADULT, false);
+        this.entityData.define(TYPE, 0);
+        this.entityData.define(AGE, 45);
+        this.entityData.define(NAME_STR, "");
     }
 
     @Override
     public int getTypeMoC() {
-        return this.dataManager.get(TYPE);
+        return this.entityData.get(TYPE);
     }
 
     @Override
     public void setTypeMoC(int i) {
-        this.dataManager.set(TYPE, i);
+        this.entityData.set(TYPE, i);
     }
 
     @Override
     public boolean getIsAdult() {
-        return this.dataManager.get(ADULT);
+        return this.entityData.get(ADULT);
     }
 
     @Override
     public void setAdult(boolean flag) {
-        this.dataManager.set(ADULT, flag);
+        this.entityData.set(ADULT, flag);
     }
 
     @Override
@@ -137,23 +152,23 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
 
     @Override
     public String getPetName() {
-        return this.dataManager.get(NAME_STR);
+        return this.entityData.get(NAME_STR);
     }
 
     @Override
     public void setPetName(String name) {
-        this.dataManager.set(NAME_STR, String.valueOf(name));
+        this.entityData.set(NAME_STR, name == null ? "" : name);
     }
 
     @Override
-    public int getAge() {
-        return this.dataManager.get(AGE);
+    public int getMoCAge() {
+        return this.entityData.get(AGE);
     }
 
     @Override
-    public void setAge(int i) {
-        this.dataManager.set(AGE, i);
-        if (getAge() >= getMaxAge()) {
+    public void setMoCAge(int i) {
+        this.entityData.set(AGE, i);
+        if (getMoCAge() >= getMaxAge()) {
             setAdult(true);
         }
     }
@@ -172,18 +187,25 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
     public void setOwnerPetId(int petId) {
     }
 
-    public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, IServerWorld world, SpawnReason reason, BlockPos pos, Random randomIn) {
-        boolean willSpawn = MonsterEntity.canMonsterSpawnInLight(type, world, reason, pos, randomIn);
+    public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, ServerLevel world, MobSpawnType reason, BlockPos pos, Random randomIn) {
+        boolean willSpawn = Monster.checkAnyLightMonsterSpawnRules(type, world, reason, pos, (RandomSource) randomIn);
         boolean debug = MoCreatures.proxy.debug;
-        if (willSpawn && debug)
-            MoCreatures.LOGGER.info("Mob: " + type.getName() + " at: " + pos + " State: " + world.getBlockState(pos) + " biome: " + MoCTools.biomeName(world, pos));
+        if (willSpawn && debug) {
+            MoCreatures.LOGGER.info("Mob: {} at: {} State: {} biome: {}", type.getDescription(), pos,
+                    world.getBlockState(pos), MoCTools.biomeName(world, pos));
+        }
         return willSpawn;
     }
 
     public boolean entitiesToIgnore(Entity entity) {
-        if ((!(entity instanceof MobEntity)) || (entity instanceof MonsterEntity) || (entity instanceof MoCEntityEgg))
-            return true;
-        return entity instanceof MoCEntityKittyBed || entity instanceof MoCEntityLitterBox || this.getIsTamed() && entity instanceof MoCEntityAnimal && ((MoCEntityAnimal) entity).getIsTamed() || entity instanceof WolfEntity && !MoCreatures.proxy.attackWolves || entity instanceof MoCEntityHorse && !MoCreatures.proxy.attackHorses;
+        return (!(entity instanceof Mob))
+                || (entity instanceof Monster)
+                || (entity instanceof MoCEntityEgg)
+                || entity instanceof MoCEntityKittyBed
+                || entity instanceof MoCEntityLitterBox
+                || (this.getIsTamed() && entity instanceof IMoCEntity && ((IMoCEntity) entity).getIsTamed())
+                || (entity instanceof Wolf && !MoCreatures.proxy.attackWolves)
+                || (entity instanceof MoCEntityHorse && !MoCreatures.proxy.attackHorses);
     }
 
     @Override
@@ -191,116 +213,120 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
         return true;
     }
 
+    @SuppressWarnings("deprecated")
     @Override
-    public void livingTick() {
-        if (!this.world.isRemote) {
-            if (getIsTamed() && this.rand.nextInt(200) == 0) {
-                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getPosX(), this.getPosY(), this.getPosZ(), 64, this.world.getDimensionKey())), new MoCMessageHealth(this.getEntityId(), this.getHealth()));
+    public void tick() {
+        if (!this.level().isClientSide) {
+            if (getIsTamed() && this.random.nextInt(200) == 0) {
+                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(
+                        () -> new PacketDistributor.TargetPoint(
+                                this.getX(), this.getY(), this.getZ(), 64, this.level().dimension()
+                        )
+                ), new MoCMessageHealth(this.getId(), this.getHealth()));
             }
 
-            if (this.isHarmedByDaylight() && this.world.isDaytime()) {
-                float var1 = this.getBrightness();
-                if (var1 > 0.5F && this.world.canBlockSeeSky(new BlockPos(MathHelper.floor(this.getPosX()), MathHelper.floor(this.getPosY()), MathHelper.floor(this.getPosZ()))) && this.rand.nextFloat() * 30.0F < (var1 - 0.4F) * 2.0F) {
-                    this.setFire(8);
+            if (this.isDaylightSensitive() && this.level().isDay()) {
+                float brightness = this.getLightLevelDependentMagicValue();
+                if (brightness > 0.5F
+                        && this.level().canSeeSky(new BlockPos(
+                        Mth.floor(this.getX()), Mth.floor(this.getY()), Mth.floor(this.getZ())))
+                        && this.random.nextFloat() * 30.0F < (brightness - 0.4F) * 2.0F)
+                {
+                    this.setSecondsOnFire(8);
                 }
             }
-            if (getAge() == 0) setAge(getMaxAge() - 10); //fixes tiny creatures spawned by error
-            if (!getIsAdult() && (this.rand.nextInt(300) == 0)) {
-                setAge(getAge() + 1);
-                if (getAge() >= getMaxAge()) {
+
+            if (getMoCAge() == 0) setMoCAge(getMaxAge() - 10); // fixes tiny creatures spawned by error
+            if (!getIsAdult() && this.random.nextInt(300) == 0) {
+                setMoCAge(getMoCAge() + 1);
+                if (getMoCAge() >= getMaxAge()) {
                     setAdult(true);
                 }
             }
 
-            if (getIsFlying() && this.getNavigator().noPath() && !isMovementCeased() && this.getAttackTarget() == null && this.rand.nextInt(20) == 0) {
+            if (getIsFlying() && this.getNavigation().isDone() && !isMovementCeased() && this.getTarget() == null && this.random.nextInt(20) == 0) {
                 this.wander.makeUpdate();
             }
         }
 
-        this.getNavigator().tick();
-        super.livingTick();
+        this.getNavigation().tick(); // was getNavigator().tick() :contentReference[oaicite:17]{index=17}
+        super.tick();
     }
 
     protected int getMaxAge() {
         return 100;
     }
 
-    protected boolean isHarmedByDaylight() {
+    protected boolean isDaylightSensitive() {
         return false;
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource damagesource, float i) {
-        if (!this.world.isRemote && getIsTamed()) {
-            MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getPosX(), this.getPosY(), this.getPosZ(), 64, this.world.getDimensionKey())), new MoCMessageHealth(this.getEntityId(), this.getHealth()));
+    public boolean hurt(DamageSource source, float amount) {
+        if (!this.level().isClientSide && getIsTamed()) {
+            MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(
+                    () -> new PacketDistributor.TargetPoint(
+                            this.getX(), this.getY(), this.getZ(), 64, this.level().dimension()
+                    )
+            ), new MoCMessageHealth(this.getId(), this.getHealth()));
         }
-        return super.attackEntityFrom(damagesource, i);
+        return super.hurt(source, amount);
     }
 
-    /**
-     * Boolean used to select pathfinding behavior
-     */
+    /** Boolean used to select pathfinding behavior */
     public boolean isFlyer() {
         return false;
     }
 
     @Override
-    public void writeAdditional(CompoundNBT nbttagcompound) {
-        super.writeAdditional(nbttagcompound);
-        nbttagcompound.putBoolean("Adult", getIsAdult());
-        nbttagcompound.putInt("Edad", getAge());
-        nbttagcompound.putString("Name", getPetName());
-        nbttagcompound.putInt("TypeInt", getTypeMoC());
-
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putBoolean("Adult", getIsAdult());
+        tag.putInt("Edad", getMoCAge());
+        tag.putString("Name", getPetName());
+        tag.putInt("TypeInt", getTypeMoC());
     }
 
     @Override
-    public void readAdditional(CompoundNBT nbttagcompound) {
-        super.readAdditional(nbttagcompound);
-        setAdult(nbttagcompound.getBoolean("Adult"));
-        setAge(nbttagcompound.getInt("Edad"));
-        setPetName(nbttagcompound.getString("Name"));
-        setTypeMoC(nbttagcompound.getInt("TypeInt"));
-
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        setAdult(tag.getBoolean("Adult"));
+        setMoCAge(tag.getInt("Edad"));
+        setPetName(tag.getString("Name"));
+        setTypeMoC(tag.getInt("TypeInt"));
     }
 
     @Override
-    public  boolean onLivingFall(float distance, float damageMultiplier) {
+    public boolean causeFallDamage(float distance, float damageMultiplier, DamageSource source) {
         if (!isFlyer()) {
-            return super.onLivingFall(distance, damageMultiplier);
+            return super.causeFallDamage(distance, damageMultiplier, source);
         }
         return false;
     }
 
     @Override
-    public boolean isOnLadder() {
-        if (isFlyer()) {
-            return false;
-        } else {
-            return super.isOnLadder();
-        }
+    public boolean onClimbable() {
+        return isFlyer() ? false : super.onClimbable();
     }
 
     @Override
-    public void travel(Vector3d vector) {
+    public void travel(Vec3 delta) {
         if (!isFlyer()) {
-            super.travel(vector);
+            super.travel(delta);
             return;
         }
-        this.moveEntityWithHeadingFlyer(vector);
+        this.navigateFlying(delta);
     }
 
-    public void moveEntityWithHeadingFlyer(Vector3d vector) {
-        if (this.isServerWorld()) {
-
-            this.moveRelative(0.1F, vector);
-            this.move(MoverType.SELF, this.getMotion());
-            this.setMotion(this.getMotion().mul(0.8999999761581421D, 0.8999999761581421D, 0.8999999761581421D));
+    protected void navigateFlying(Vec3 delta) {
+        if (this.isAlive() && !this.level().isClientSide) {
+            this.moveRelative(0.1F, delta);
+            this.move(MoverType.SELF, this.getDeltaMovement());
+            this.setDeltaMovement(this.getDeltaMovement().scale(0.9D));
         } else {
-            super.travel(vector);
+            super.travel(delta);
         }
     }
-
 
     /**
      * Used to synchronize the attack animation between server and client
@@ -316,12 +342,15 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
 
     @Override
     public boolean renderName() {
-        return MoCreatures.proxy.getDisplayPetName() && (getPetName() != null && !getPetName().isEmpty() && (!this.isBeingRidden()) && (this.getRidingEntity() == null));
+        return MoCreatures.proxy.getDisplayPetName()
+                && !getPetName().isEmpty()
+                && !this.isPassenger()
+                && this.getVehicle() == null;
     }
 
     @Override
     public void makeEntityJump() {
-        //TODO
+        // TODO
     }
 
     @Override
@@ -330,17 +359,12 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
     }
 
     @Override
-    public boolean canDespawn(double distanceToClosestPlayer) {
-        return !getIsTamed();
-    }
-
-    @Override
-    public void remove(boolean keepData) {
-        // Server check required to prevent tamed entities from being duplicated on client-side
-        if (!this.world.isRemote && (getIsTamed()) && (getHealth() > 0)) {
+    public void remove(RemovalReason reason) {
+        // Prevent tamed entities from being duplicated on the client
+        if (!this.level().isClientSide && getIsTamed() && this.getHealth() > 0) {
             return;
         }
-        super.remove(keepData);
+        super.remove(reason);
     }
 
     @Override
@@ -404,7 +428,7 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
 
     @Override
     public boolean shouldAttackPlayers() {
-        return this.world.getDifficulty() != Difficulty.PEACEFUL;
+        return this.level().getDifficulty() != Difficulty.PEACEFUL;
     }
 
     @Override
@@ -422,12 +446,11 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
     }
 
     @Override
-    public boolean attackEntityAsMob(Entity entityIn) {
-        boolean flag = entityIn.attackEntityFrom(DamageSource.causeMobDamage(this), ((int) this.getAttributeValue(Attributes.ATTACK_DAMAGE)));
+    public boolean doHurtTarget(Entity target) {
+        boolean flag = target.hurt(this.damageSources().mobAttack(this), (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE));
         if (flag) {
-            this.applyEnchantments(this, entityIn);
+            this.doEnchantDamageEffects(this, target);
         }
-
         return flag;
     }
 
@@ -442,14 +465,14 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
     }
 
     @Override
-    public PathNavigator getNavigator() {
+    public PathNavigation getNavigation() {
         if (this.isInWater() && this.isAmphibian()) {
             return this.navigatorWater;
         }
         if (this.isFlyer()) {
             return this.navigatorFlyer;
         }
-        return this.navigator;
+        return super.getNavigation();
     }
 
     public boolean isAmphibian() {
@@ -459,6 +482,11 @@ public abstract class MoCEntityMob extends MonsterEntity implements IMoCEntity {
     @Override
     public boolean getIsFlying() {
         return isFlyer();
+    }
+
+    @Override
+    public boolean isInvisible() {
+        return false;
     }
 
     @Override

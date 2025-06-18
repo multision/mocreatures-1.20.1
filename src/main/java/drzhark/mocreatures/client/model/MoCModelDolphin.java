@@ -1,82 +1,146 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.aquatic.MoCEntityDolphin;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class MoCModelDolphin<T extends MoCEntityDolphin> extends EntityModel<T> {
 
-    public ModelRenderer UHead;
-    public ModelRenderer DHead;
-    public ModelRenderer RTail;
-    public ModelRenderer LTail;
-    public ModelRenderer PTail;
-    public ModelRenderer Body;
-    public ModelRenderer UpperFin;
-    public ModelRenderer RTailFin;
-    public ModelRenderer LTailFin;
-    public ModelRenderer LowerFin;
-    public ModelRenderer RightFin;
-    public ModelRenderer LeftFin;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "dolphin"), "main"
+    );
 
-    public MoCModelDolphin() {
-        this.Body = new ModelRenderer(this, 4, 6);
-        this.Body.addBox(0.0F, 0.0F, 0.0F, 6, 8, 18, 0.0F);
-        this.Body.setRotationPoint(-3F, 17F, -4F);
-        this.UHead = new ModelRenderer(this, 0, 0);
-        this.UHead.addBox(0.0F, 0.0F, 0.0F, 5, 7, 8, 0.0F);
-        this.UHead.setRotationPoint(-2.5F, 18F, -10.5F);
-        this.DHead = new ModelRenderer(this, 50, 0);
-        this.DHead.addBox(0.0F, 0.0F, 0.0F, 3, 3, 4, 0.0F);
-        this.DHead.setRotationPoint(-1.5F, 21.5F, -14.5F);
-        this.PTail = new ModelRenderer(this, 34, 9);
-        this.PTail.addBox(0.0F, 0.0F, 0.0F, 5, 5, 10, 0.0F);
-        this.PTail.setRotationPoint(-2.5F, 19F, 14F);
-        this.UpperFin = new ModelRenderer(this, 4, 12);
-        this.UpperFin.addBox(0.0F, 0.0F, 0.0F, 1, 4, 8, 0.0F);
-        this.UpperFin.setRotationPoint(-0.5F, 18F, 2F);
-        this.UpperFin.rotateAngleX = 0.7853981F;
-        this.LTailFin = new ModelRenderer(this, 34, 0);
-        this.LTailFin.addBox(0.0F, 0.0F, 0.0F, 4, 1, 8, 0.3F);
-        this.LTailFin.setRotationPoint(-1F, 21.5F, 24F);
-        this.LTailFin.rotateAngleY = 0.7853981F;
-        this.RTailFin = new ModelRenderer(this, 34, 0);
-        this.RTailFin.addBox(0.0F, 0.0F, 0.0F, 4, 1, 8, 0.3F);
-        this.RTailFin.setRotationPoint(-2F, 21.5F, 21F);
-        this.RTailFin.rotateAngleY = -0.7853981F;
-        this.LeftFin = new ModelRenderer(this, 14, 0);
-        this.LeftFin.addBox(0.0F, 0.0F, 0.0F, 8, 1, 4, 0.0F);
-        this.LeftFin.setRotationPoint(3.0F, 24F, -1F);
-        this.LeftFin.rotateAngleY = -0.5235988F;
-        this.LeftFin.rotateAngleZ = 0.5235988F;
-        this.RightFin = new ModelRenderer(this, 14, 0);
-        this.RightFin.addBox(0.0F, 0.0F, 0.0F, 8, 1, 4, 0.0F);
-        this.RightFin.setRotationPoint(-9F, 27.5F, 3F);
-        this.RightFin.rotateAngleY = 0.5235988F;
-        this.RightFin.rotateAngleZ = -0.5235988F;
+    private final ModelPart Body;
+    private final ModelPart UHead;
+    private final ModelPart DHead;
+    private final ModelPart PTail;
+    private final ModelPart UpperFin;
+    private final ModelPart LTailFin;
+    private final ModelPart RTailFin;
+    private final ModelPart LeftFin;
+    private final ModelPart RightFin;
+
+    public MoCModelDolphin(ModelPart root) {
+        this.Body      = root.getChild("Body");
+        this.UHead     = root.getChild("UHead");
+        this.DHead     = root.getChild("DHead");
+        this.PTail     = root.getChild("PTail");
+        this.UpperFin  = root.getChild("UpperFin");
+        this.LTailFin  = root.getChild("LTailFin");
+        this.RTailFin  = root.getChild("RTailFin");
+        this.LeftFin   = root.getChild("LeftFin");
+        this.RightFin  = root.getChild("RightFin");
+    }
+
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // Body: texOffs(4,6), addBox(0,0,0,6,8,18), pivot(-3,17,-4)
+        root.addOrReplaceChild("Body",
+                CubeListBuilder.create()
+                        .texOffs(4, 6)
+                        .addBox(0.0F, 0.0F, 0.0F, 6, 8, 18),
+                PartPose.offset(-3.0F, 17.0F, -4.0F)
+        );
+
+        // UHead: texOffs(0,0), addBox(0,0,0,5,7,8), pivot(-2.5,18,-10.5)
+        root.addOrReplaceChild("UHead",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 5, 7, 8),
+                PartPose.offset(-2.5F, 18.0F, -10.5F)
+        );
+
+        // DHead: texOffs(50,0), addBox(0,0,0,3,3,4), pivot(-1.5,21.5,-14.5)
+        root.addOrReplaceChild("DHead",
+                CubeListBuilder.create()
+                        .texOffs(50, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 3, 3, 4),
+                PartPose.offset(-1.5F, 21.5F, -14.5F)
+        );
+
+        // PTail: texOffs(34,9), addBox(0,0,0,5,5,10), pivot(-2.5,19,14)
+        root.addOrReplaceChild("PTail",
+                CubeListBuilder.create()
+                        .texOffs(34, 9)
+                        .addBox(0.0F, 0.0F, 0.0F, 5, 5, 10),
+                PartPose.offset(-2.5F, 19.0F, 14.0F)
+        );
+
+        // UpperFin: texOffs(4,12), addBox(0,0,0,1,4,8), pivot(-0.5,18,2), rotateX = +0.7853981
+        root.addOrReplaceChild("UpperFin",
+                CubeListBuilder.create()
+                        .texOffs(4, 12)
+                        .addBox(0.0F, 0.0F, 0.0F, 1, 4, 8),
+                PartPose.offsetAndRotation(-0.5F, 18.0F, 2.0F, 0.7853981F, 0.0F, 0.0F)
+        );
+
+        // LTailFin: texOffs(34,0), addBox(0,0,0,4,1,8, 0.3), pivot(-1,21.5,24), rotateY = +0.7853981
+        root.addOrReplaceChild("LTailFin",
+                CubeListBuilder.create()
+                        .texOffs(34, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 4, 1, 8, new CubeDeformation(0.3F)),
+                PartPose.offsetAndRotation(-1.0F, 21.5F, 24.0F, 0.0F, 0.7853981F, 0.0F)
+        );
+
+        // RTailFin: texOffs(34,0), addBox(0,0,0,4,1,8,0.3), pivot(-2,21.5,21), rotateY = -0.7853981
+        root.addOrReplaceChild("RTailFin",
+                CubeListBuilder.create()
+                        .texOffs(34, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 4, 1, 8, new CubeDeformation(0.3F)),
+                PartPose.offsetAndRotation(-2.0F, 21.5F, 21.0F, 0.0F, -0.7853981F, 0.0F)
+        );
+
+        // LeftFin: texOffs(14,0), addBox(0,0,0,8,1,4), pivot(3,24,-1), rotateY=-0.5235988, rotateZ=+0.5235988
+        root.addOrReplaceChild("LeftFin",
+                CubeListBuilder.create()
+                        .texOffs(14, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 8, 1, 4),
+                PartPose.offsetAndRotation(3.0F, 24.0F, -1.0F, 0.0F, -0.5235988F, 0.5235988F)
+        );
+
+        // RightFin: texOffs(14,0), addBox(0,0,0,8,1,4), pivot(-9,27.5,3), rotateY=+0.5235988, rotateZ=-0.5235988
+        root.addOrReplaceChild("RightFin",
+                CubeListBuilder.create()
+                        .texOffs(14, 0)
+                        .addBox(0.0F, 0.0F, 0.0F, 8, 1, 4),
+                PartPose.offsetAndRotation(-9.0F, 27.5F, 3.0F, 0.0F, 0.5235988F, -0.5235988F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.PTail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.UHead.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.DHead.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.UpperFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LTailFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RTailFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightFin.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks,
+                          float netHeadYaw, float headPitch) {
+        // In your old setRotationAngles, only the two tail‐fins were animated:
+        this.RTailFin.xRot = Mth.cos(limbSwing * 0.4F) * limbSwingAmount;
+        this.LTailFin.xRot = Mth.cos(limbSwing * 0.4F) * limbSwingAmount;
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.RTailFin.rotateAngleX = MathHelper.cos(limbSwing * 0.4F) * limbSwingAmount;
-        this.LTailFin.rotateAngleX = MathHelper.cos(limbSwing * 0.4F) * limbSwingAmount;
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight,
+                               int packedOverlay, float red, float green, float blue, float alpha) {
+        this.Body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.PTail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.UHead.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.DHead.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.UpperFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LTailFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RTailFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LeftFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightFin.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

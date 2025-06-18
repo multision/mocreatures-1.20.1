@@ -3,13 +3,17 @@
  */
 package drzhark.mocreatures.block;
 
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.RotatedPillarBlock;
-import net.minecraft.block.SoundType;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
 
 public class MoCBlockLog extends RotatedPillarBlock {
 
-    public MoCBlockLog(AbstractBlock.Properties properties) {
-        super(properties.sound(SoundType.WOOD));
+    public MoCBlockLog(BlockBehaviour.Properties properties) {
+        super(properties
+                .mapColor(MapColor.WOOD)
+                .strength(2.0F)
+                .sound(SoundType.WOOD));
     }
 }

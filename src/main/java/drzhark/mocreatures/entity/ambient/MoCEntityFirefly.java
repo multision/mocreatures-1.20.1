@@ -7,16 +7,16 @@ import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.entity.MoCEntityInsect;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
@@ -24,22 +24,23 @@ public class MoCEntityFirefly extends MoCEntityInsect {
 
     private int soundCount;
 
-    public MoCEntityFirefly(EntityType<? extends MoCEntityFirefly> type, World world) {
+    public MoCEntityFirefly(EntityType<? extends MoCEntityFirefly> type, Level world) {
         super(type, world);
         this.texture = "firefly.png";
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityInsect.registerAttributes().createMutableAttribute(Attributes.ARMOR, 1.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityInsect.registerAttributes()
+                .add(Attributes.ARMOR, 1.0D);
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
 
-        if (!this.world.isRemote) {
-            PlayerEntity ep = this.world.getClosestPlayer(this, 5D);
-            if (ep != null && getIsFlying() && --this.soundCount == -1) {
+        if (!this.level().isClientSide()) {
+            Player player = this.level().getNearestPlayer(this, 5D);
+            if (player != null && getIsFlying() && --this.soundCount == -1) {
                 MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GRASSHOPPER_FLY.get());
                 this.soundCount = 20;
             }
@@ -57,7 +58,9 @@ public class MoCEntityFirefly extends MoCEntityInsect {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.FIREFLY;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.FIREFLY;
     }
 
     @Override
@@ -66,7 +69,7 @@ public class MoCEntityFirefly extends MoCEntityInsect {
     }
 
     @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         if (getIsFlying()) {
             return 0.12F;
         }
@@ -74,7 +77,7 @@ public class MoCEntityFirefly extends MoCEntityInsect {
     }
 
     @Override
-    public float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
+    public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.15F;
     }
 }

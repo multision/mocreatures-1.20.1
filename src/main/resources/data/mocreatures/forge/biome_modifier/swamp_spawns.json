@@ -1,0 +1,54 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": "#minecraft:is_swamp",
+  "spawners": [
+    {
+      "type": "mocreatures:dragonfly",
+      "weight": 15,
+      "minCount": 2,
+      "maxCount": 4
+    },
+    {
+      "type": "mocreatures:firefly",
+      "weight": 15,
+      "minCount": 2,
+      "maxCount": 4
+    },
+    {
+      "type": "mocreatures:fly",
+      "weight": 10,
+      "minCount": 1,
+      "maxCount": 3
+    },
+    {
+      "type": "mocreatures:snail",
+      "weight": 10,
+      "minCount": 1,
+      "maxCount": 3
+    },
+    {
+      "type": "mocreatures:komodo_dragon",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 2
+    },
+    {
+      "type": "mocreatures:maggot",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 3
+    },
+    {
+      "type": "mocreatures:piranha",
+      "weight": 8,
+      "minCount": 2,
+      "maxCount": 4
+    },
+    {
+      "type": "mocreatures:sting_ray",
+      "weight": 8,
+      "minCount": 1,
+      "maxCount": 2
+    }
+  ]
+} 

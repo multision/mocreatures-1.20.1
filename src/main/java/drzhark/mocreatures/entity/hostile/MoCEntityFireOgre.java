@@ -5,29 +5,30 @@ package drzhark.mocreatures.entity.hostile;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityFireOgre extends MoCEntityOgre {
 
-    public MoCEntityFireOgre(EntityType<? extends MoCEntityFireOgre> type, World world) {
+    public MoCEntityFireOgre(EntityType<? extends MoCEntityFireOgre> type, Level world) {
         super(type, world);
-        //this.isImmuneToFire = true;
+        //this.isImmuneToFire = true; - this field doesn't exist in 1.20.1
     }
 
     @Override
-    public boolean isImmuneToFire() {
+    public boolean fireImmune() {
         return true;
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityOgre.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 65.0D).createMutableAttribute(Attributes.ARMOR, 9.0D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 7.5D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityOgre.createAttributes()
+                .add(Attributes.MAX_HEALTH, 65.0D)
+                .add(Attributes.ARMOR, 9.0D)
+                .add(Attributes.ATTACK_DAMAGE, 7.5D);
     }
 
     @Override
@@ -46,15 +47,16 @@ public class MoCEntityFireOgre extends MoCEntityOgre {
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
 
-        if (this.isWet()) {
-            this.attackEntityFrom(DamageSource.DROWN, 1.0F);
+        if (this.isInWaterRainOrBubble()) {
+            this.hurt(this.damageSources().drown(), 1.0F);
         }
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.FIRE_OGRE;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.FIRE_OGRE;
     }
 }

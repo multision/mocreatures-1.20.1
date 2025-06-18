@@ -1,46 +1,75 @@
 /*
  * GNU GENERAL PUBLIC LICENSE Version 3
  */
-// TODO
-// open mouth animation (done)
-// eating animation
-// change mane to the right center (done)
-// change mule ears to the right center (done)
-// bridles to be different when not ridden (done)
-// legsaddles to extend when ridden (done)
-// butterfly wings animation
-// pegasus wing animation (done)
-// pegasus resting wings (done)
-// butterfly resting wings
-// special fx for fairy horses (magic items), zombie horses(flies), ghost horses
-// (?), unicorns (?), pegasus (?)
-// articulated legs (done)
-// frisky horse animation (done)
-// stay animation (neck down) (done)
-// when flying, the legs should stop moving and flip backwards or be flexed at
-// the knee (done)
-
-// flying pegasus:
-// about 15-20 degrees horizontal
-// about 45 when abduction
-// about -15 when adduction
-// if flying and not flapping, keep wings horizontal with small tremor and
-// perhaps variation of elbow extension
-// when user jumps, flap wings fully
-// flap wings rarely as well
 
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.passive.MoCEntityHorse;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelHorse<T extends MoCEntityHorse> extends MoCModelAbstractHorse<T> {
 
+    // Model parts
+    protected ModelPart headSaddle;
+    protected ModelPart saddle;
+    protected ModelPart saddleB;
+    protected ModelPart saddleC;
+    protected ModelPart saddleL;
+    protected ModelPart saddleL2;
+    protected ModelPart saddleR;
+    protected ModelPart saddleR2;
+    protected ModelPart saddleMouthL;
+    protected ModelPart saddleMouthR;
+    protected ModelPart saddleMouthLine;
+    protected ModelPart saddleMouthLineR;
+    protected ModelPart muleEarL;
+    protected ModelPart muleEarR;
+    protected ModelPart ear1;
+    protected ModelPart ear2;
+    protected ModelPart neck;
+    protected ModelPart head;
+    protected ModelPart uMouth;
+    protected ModelPart lMouth;
+    protected ModelPart uMouth2;
+    protected ModelPart lMouth2;
+    protected ModelPart mane;
+    protected ModelPart body;
+    protected ModelPart tailA;
+    protected ModelPart tailB;
+    protected ModelPart tailC;
+    protected ModelPart leg1A;
+    protected ModelPart leg1B;
+    protected ModelPart leg1C;
+    protected ModelPart leg2A;
+    protected ModelPart leg2B;
+    protected ModelPart leg2C;
+    protected ModelPart leg3A;
+    protected ModelPart leg3B;
+    protected ModelPart leg3C;
+    protected ModelPart leg4A;
+    protected ModelPart leg4B;
+    protected ModelPart leg4C;
+    protected ModelPart unicorn;
+    protected ModelPart bag1;
+    protected ModelPart bag2;
+    protected ModelPart midWing;
+    protected ModelPart innerWing;
+    protected ModelPart outerWing;
+    protected ModelPart innerWingR;
+    protected ModelPart midWingR;
+    protected ModelPart outerWingR;
+    protected ModelPart butterflyL;
+    protected ModelPart butterflyR;
+    
     private boolean chested;
     private boolean flyer;
     private boolean isGhost;
@@ -49,19 +78,84 @@ public class MoCModelHorse<T extends MoCEntityHorse> extends MoCModelAbstractHor
     private int vanishingInt;
     private int wingflapInt;
     private boolean openMouth;
+    
+    public MoCModelHorse(ModelPart root) {
+        super(root);
+        
+        // Initialize model parts from the provided root
+        this.headSaddle = root.getChild("headSaddle");
+        this.saddle = root.getChild("saddle");
+        this.saddleB = root.getChild("saddleB");
+        this.saddleC = root.getChild("saddleC");
+        this.saddleL = root.getChild("saddleL");
+        this.saddleL2 = root.getChild("saddleL2");
+        this.saddleR = root.getChild("saddleR");
+        this.saddleR2 = root.getChild("saddleR2");
+        this.saddleMouthL = root.getChild("saddleMouthL");
+        this.saddleMouthR = root.getChild("saddleMouthR");
+        this.saddleMouthLine = root.getChild("saddleMouthLine");
+        this.saddleMouthLineR = root.getChild("saddleMouthLineR");
+        this.muleEarL = root.getChild("muleEarL");
+        this.muleEarR = root.getChild("muleEarR");
+        this.ear1 = root.getChild("ear1");
+        this.ear2 = root.getChild("ear2");
+        this.neck = root.getChild("neck");
+        this.head = root.getChild("head");
+        this.uMouth = root.getChild("uMouth");
+        this.lMouth = root.getChild("lMouth");
+        this.uMouth2 = root.getChild("uMouth2");
+        this.lMouth2 = root.getChild("lMouth2");
+        this.mane = root.getChild("mane");
+        this.body = root.getChild("body");
+        this.tailA = root.getChild("tailA");
+        this.tailB = root.getChild("tailB");
+        this.tailC = root.getChild("tailC");
+        this.leg1A = root.getChild("leg1A");
+        this.leg1B = root.getChild("leg1B");
+        this.leg1C = root.getChild("leg1C");
+        this.leg2A = root.getChild("leg2A");
+        this.leg2B = root.getChild("leg2B");
+        this.leg2C = root.getChild("leg2C");
+        this.leg3A = root.getChild("leg3A");
+        this.leg3B = root.getChild("leg3B");
+        this.leg3C = root.getChild("leg3C");
+        this.leg4A = root.getChild("leg4A");
+        this.leg4B = root.getChild("leg4B");
+        this.leg4C = root.getChild("leg4C");
+        this.unicorn = root.getChild("unicorn");
+        this.bag1 = root.getChild("bag1");
+        this.bag2 = root.getChild("bag2");
+        this.midWing = root.getChild("midWing");
+        this.innerWing = root.getChild("innerWing");
+        this.outerWing = root.getChild("outerWing");
+        this.innerWingR = root.getChild("innerWingR");
+        this.midWingR = root.getChild("midWingR");
+        this.outerWingR = root.getChild("outerWingR");
+        this.butterflyL = root.getChild("butterflyL");
+        this.butterflyR = root.getChild("butterflyR");
+    }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
+    @Override
+    public void prepareMobModel(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
+        super.prepareMobModel(entityIn, limbSwing, limbSwingAmount, partialTick);
+    }
+
+    @Override
+    public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
+            float headPitch) {
+        super.setupAnim(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+
         type = entityIn.getTypeMoC();
         vanishingInt = entityIn.getVanishC();
         wingflapInt = entityIn.wingFlapCounter;
         saddled = entityIn.getIsRideable();
         openMouth = (entityIn.mouthCounter != 0);
-        rider = (entityIn.isBeingRidden());
+        rider = entityIn.isVehicle();
         chested = entityIn.getIsChested();
         flyer = entityIn.isFlyer();
         isGhost = entityIn.getIsGhost();
         isUnicorned = entityIn.isUnicorned();
-        if (vanishingInt != 0)// && vanishingInt > 30)
+        if (vanishingInt != 0)
         {
             transparency = 1.0F - (((float) (vanishingInt)) / 100);
         } else {
@@ -71,185 +165,202 @@ public class MoCModelHorse<T extends MoCEntityHorse> extends MoCModelAbstractHor
         shuffling = (entityIn.shuffleCounter != 0);
         wings = (entityIn.isFlyer() && !entityIn.getIsGhost() && type < 45);
         eating = entityIn.getIsSitting();
-        standing = (entityIn.standCounter != 0 && entityIn.getRidingEntity() == null);
+        standing = (entityIn.standCounter != 0 && entityIn.getVehicle() == null);
         moveTail = (entityIn.tailCounter != 0);
-        floating = (entityIn.getIsGhost() || (entityIn.isFlyer() && entityIn.isOnAir()));
-        //                || (entityhorse.getRidingEntity() == null && !entityhorse.onGround)
-        //                || (entityhorse.isBeingRidden() && !entityhorse.getRidingEntity().onGround));
+        
+        // TODO: THIS IS STILL BROKEN TO AN EXTENT. NOTED IN THE KNOWN ISSUES SECTION.
+
+        // Fix: Only set floating when the entity is actually flying or is a ghost
+        // We need to check if the entity is actively flying, not just if it's not on the ground
+        // For ghosts, set floating to true always - they should float even on the ground
+        if (entityIn.getIsGhost()) {
+            floating = true; // Ghost horses should always have floating=true
+        } else if (entityIn.isFlyer()) {
+            // For flying horses, check if they're really in the air, not just briefly stepping off a block
+            // We can use either vertical movement or fall distance to determine if it's flying
+            // If it has a rider, we don't want to use fall distance as a criterion
+            if (entityIn.isVehicle()) {
+                floating = !entityIn.onGround();
+            } else {
+                // When not ridden, we need to make sure it's actually flying and not just stepping off a block
+                floating = !entityIn.onGround() && (
+                    Math.abs(entityIn.getDeltaMovement().y) > 0.03D || // Vertical movement
+                    entityIn.fallDistance > 0.5F // Some fall distance (not just stepping off)
+                );
+            }
+        } else {
+            floating = false;
+        }
+        
+        // Force floating to false when the horse is standing on a block, EXCEPT for ghost horses
+        if (entityIn.onGround() && !entityIn.getIsGhost()) {
+            floating = false;
+        }
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        //MoCEntityHorse entityhorse = (MoCEntityHorse) entity;
-        //super.render(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, f5);
-
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         if (!isGhost && vanishingInt == 0) {
             if (saddled) {
-                this.HeadSaddle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Saddle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleMouthL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleMouthR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.headSaddle.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddle.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleL2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleR2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleMouthL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleMouthR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                 if (rider) {
-                    this.SaddleMouthLine.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    this.SaddleMouthLineR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                    this.saddleMouthLine.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                    this.saddleMouthLineR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                 }
-
             }
 
             if (type == 65 || type == 66 || type == 67) //mule, donkey or zonkey
             {
-                this.MuleEarL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.MuleEarR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.muleEarL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.muleEarR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             } else {
-                this.Ear1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Ear2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
+                this.ear1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.ear2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
-            this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.neck.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             if (openMouth) {
-                this.UMouth2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.LMouth2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.uMouth2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.lMouth2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             } else {
-                this.UMouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.LMouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.uMouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.lMouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
-            this.Mane.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TailA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TailB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TailC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.mane.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tailA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tailB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tailC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg1A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg1B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg1C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg1A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg1B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg1C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg2A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg2B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg2C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg2A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg2B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg2C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg3A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg3B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg3C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg3A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg3B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg3C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg4A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg4B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg4C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg4A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg4B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg4C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
             if (isUnicorned) {
-                this.Unicorn.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.unicorn.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
 
             if (chested) {
-                this.Bag1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Bag2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.bag1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.bag2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
 
             if (flyer && type < 45) { //pegasus
-                this.MidWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.InnerWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.OuterWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.InnerWingR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.MidWingR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.OuterWingR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.midWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.innerWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.outerWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.innerWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.midWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.outerWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             } else if (type > 44 && type < 60) { //fairys
-                matrixStackIn.push();
-                RenderSystem.enableBlend();
-                float transparency = 0.7F;
-                RenderSystem.defaultBlendFunc();
-                RenderSystem.color4f(1.2F, 1.2F, 1.2F, transparency);
-                matrixStackIn.scale(1.3F, 1.0F, 1.3F);
-                this.ButterflyL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.ButterflyR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                RenderSystem.disableBlend();
-                matrixStackIn.pop();
-            }/*
-             * else { ButterflyL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha); ButterflyR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha); }
-             */
-
+                poseStack.pushPose();
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                float transparencyVal = 0.7F;
+                com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+                com.mojang.blaze3d.systems.RenderSystem.clearColor(1.2F, 1.2F, 1.2F, transparencyVal);
+                poseStack.scale(1.3F, 1.0F, 1.3F);
+                this.butterflyL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.butterflyR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                poseStack.popPose();
+            }
         } else
         //rendering a ghost or vanishing
         {
-            matrixStackIn.push();
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.color4f(0.8F, 0.8F, 0.8F, transparency);
-            matrixStackIn.scale(1.3F, 1.0F, 1.3F);
+            poseStack.pushPose();
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+            com.mojang.blaze3d.systems.RenderSystem.clearColor(0.8F, 0.8F, 0.8F, transparency);
+            poseStack.scale(1.3F, 1.0F, 1.3F);
 
-            this.Ear1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Ear2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.ear1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.ear2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Neck.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.neck.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             if (openMouth) {
-                this.UMouth2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.LMouth2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.uMouth2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.lMouth2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             } else {
-                this.UMouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.LMouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.uMouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.lMouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
 
-            this.Mane.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TailA.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TailB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.TailC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.mane.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tailA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tailB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tailC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg1A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg1B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg1C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg1A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg1B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg1C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg2A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg2B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg2C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg2A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg2B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg2C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg3A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg3B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg3C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg3A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg3B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg3C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            this.Leg4A.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg4B.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.Leg4C.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+            this.leg4A.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg4B.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.leg4C.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
             if (type == 39 || type == 40 || type == 28) {
-                this.MidWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.InnerWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.OuterWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.InnerWingR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.MidWingR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.OuterWingR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.midWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.innerWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.outerWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.innerWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.midWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.outerWingR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
             if (type >= 50 && type < 60) {
-                this.ButterflyL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.ButterflyR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.butterflyL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.butterflyR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }
 
             if (saddled) {
-                this.HeadSaddle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.Saddle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleB.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleC.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleL2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleR2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleMouthL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.SaddleMouthR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                this.headSaddle.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddle.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleC.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleL2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleR2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleMouthL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.saddleMouthR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                 if (rider) {
-                    this.SaddleMouthLine.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                    this.SaddleMouthLineR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+                    this.saddleMouthLine.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                    this.saddleMouthLineR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                 }
-
             }
 
-            RenderSystem.disableBlend();
-            matrixStackIn.pop();
+            com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+            poseStack.popPose();
 
             if (type == 21 || type == 22)//|| (type >=50 && type <60))
             {
@@ -260,17 +371,20 @@ public class MoCModelHorse<T extends MoCEntityHorse> extends MoCModelAbstractHor
                 if (wingTransparency > transparency) {
                     wingTransparency = transparency;
                 }
-                matrixStackIn.push();
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
-                RenderSystem.color4f(0.8F, 0.8F, 0.8F, wingTransparency);
-                matrixStackIn.scale(1.3F, 1.0F, 1.3F);
-                this.ButterflyL.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                this.ButterflyR.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-                RenderSystem.disableBlend();
-                matrixStackIn.pop();
+                poseStack.pushPose();
+                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+                com.mojang.blaze3d.systems.RenderSystem.clearColor(0.8F, 0.8F, 0.8F, wingTransparency);
+                poseStack.scale(1.3F, 1.0F, 1.3F);
+                this.butterflyL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                this.butterflyR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                poseStack.popPose();
             }
         }
+    }
 
+    public static LayerDefinition createBodyLayer() {
+        return MoCModelAbstractHorse.createBodyLayer();
     }
 }

@@ -10,8 +10,8 @@ package drzhark.mocreatures.config;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
+import drzhark.mocreatures.MoCTools;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
 
@@ -480,8 +480,11 @@ public class MoCConfiguration {
                 buffer.write("# Configuration file" + NEW_LINE + NEW_LINE);
 
                 if (this.fileName.contains("MoCreatures.cfg")) {
-                    buffer.write("# Valid biome types:" + NEW_LINE);
-                    buffer.write("# " + BiomeDictionary.Type.getAll() + NEW_LINE + NEW_LINE);
+                    buffer.write("# Valid biome tags:" + NEW_LINE);
+                    for (String tag : MoCTools.getAllBiomeTags()) {
+                        buffer.write("# • " + tag + NEW_LINE);
+                    }
+
                 }
 
                 if (this.children.isEmpty()) {

@@ -1,19 +1,31 @@
 package drzhark.mocreatures.client.renderer;
 
-import net.minecraft.client.renderer.RenderState;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexFormat;
 
 public class MoCType extends RenderType {
 
-    private static final RenderType square = makeType("square", DefaultVertexFormats.POSITION_COLOR, 7, 256, false, true, RenderType.State.getBuilder().layer(RenderState.VIEW_OFFSET_Z_LAYERING).transparency(TRANSLUCENT_TRANSPARENCY).target(ITEM_ENTITY_TARGET).writeMask(COLOR_DEPTH_WRITE).build(false));
+    private static final RenderType SQUARE = create("square", 
+        DefaultVertexFormat.POSITION_COLOR, 
+        VertexFormat.Mode.QUADS, 
+        256, 
+        false, 
+        true, 
+        RenderType.CompositeState.builder()
+            .setLayeringState(VIEW_OFFSET_Z_LAYERING)
+            .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+            .setOutputState(ITEM_ENTITY_TARGET)
+            .setWriteMaskState(COLOR_DEPTH_WRITE)
+            .createCompositeState(false)
+    );
 
-    public MoCType(String nameIn, VertexFormat formatIn, int drawModeIn, int bufferSizeIn, boolean useDelegateIn, boolean needsSortingIn, Runnable setupTaskIn, Runnable clearTaskIn) {
+    public MoCType(String nameIn, VertexFormat formatIn, VertexFormat.Mode drawModeIn, int bufferSizeIn, 
+                   boolean useDelegateIn, boolean needsSortingIn, Runnable setupTaskIn, Runnable clearTaskIn) {
         super(nameIn, formatIn, drawModeIn, bufferSizeIn, useDelegateIn, needsSortingIn, setupTaskIn, clearTaskIn);
     }
 
     public static RenderType getSquare() {
-        return square;
+        return SQUARE;
     }
 }

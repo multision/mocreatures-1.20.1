@@ -266,7 +266,7 @@ public class MoCConfigCategory implements Map<String, MoCProperty> {
 
     @Override
     //Immutable copy, changes will NOT be reflected in this category
-    public Set<java.util.Map.Entry<String, MoCProperty>> entrySet() {
+    public Set<Entry<String, MoCProperty>> entrySet() {
         return ImmutableSet.copyOf(this.properties.entrySet());
     }
 

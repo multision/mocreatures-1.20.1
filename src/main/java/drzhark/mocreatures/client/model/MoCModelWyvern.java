@@ -1,141 +1,152 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.entity.neutral.MoCEntityWyvern;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelWyvern<T extends MoCEntityWyvern> extends EntityModel<T> {
 
-    private final float radianF = 57.29578F;
-    ModelRenderer back4;
-    ModelRenderer back3;
-    ModelRenderer back2;
-    ModelRenderer back1;
-    ModelRenderer Tail;
-    ModelRenderer tail1;
-    ModelRenderer tail2;
-    ModelRenderer tail3;
-    ModelRenderer tail4;
-    ModelRenderer tail5;
-    ModelRenderer chest;
-    ModelRenderer headplate;
-    ModelRenderer neckplate3;
-    ModelRenderer neck3;
-    ModelRenderer neckplate2;
-    ModelRenderer neck2;
-    ModelRenderer neckplate1;
-    ModelRenderer neck1;
-    ModelRenderer rightupleg;
-    ModelRenderer rightmidleg;
-    ModelRenderer rightlowleg;
-    ModelRenderer rightfoot;
-    ModelRenderer leftupleg;
-    ModelRenderer leftmidleg;
-    ModelRenderer leftlowleg;
-    ModelRenderer leftupjaw;
-    ModelRenderer rightupjaw;
-    ModelRenderer righteyesock;
-    ModelRenderer lefteyesock;
-    ModelRenderer beak;
-    ModelRenderer snout;
-    ModelRenderer torso;
-    ModelRenderer rightshoulder;
-    ModelRenderer leftshoulder;
-    ModelRenderer leftfoot;
-    ModelRenderer righttoe3;
-    ModelRenderer righttoe2;
-    ModelRenderer righttoe1;
-    ModelRenderer rightclaw1;
-    ModelRenderer rightclaw2;
-    ModelRenderer rightclaw3;
-    ModelRenderer lefttoe3;
-    ModelRenderer lefttoe2;
-    ModelRenderer lefttoe1;
-    ModelRenderer leftclaw1;
-    ModelRenderer leftclaw2;
-    ModelRenderer leftclaw3;
-    ModelRenderer head;
-    ModelRenderer Jaw;
-    ModelRenderer saddle;
-    ModelRenderer mouthrod;
-    ModelRenderer controlrope1;
-    ModelRenderer controlrope2;
-    ModelRenderer storage;
-    ModelRenderer helmetstrap1;
-    ModelRenderer helmetstrap2;
-    ModelRenderer leftspine1;
-    ModelRenderer leftspine2;
-    ModelRenderer leftspine3;
-    ModelRenderer leftearskin;
-    ModelRenderer rightspine3;
-    ModelRenderer rightspine2;
-    ModelRenderer rightspine1;
-    ModelRenderer rightearskin;
-    ModelRenderer chestbelt;
-    ModelRenderer stomachbelt;
-    ModelRenderer ironhelmethorn1;
-    ModelRenderer ironhelmethorn2;
-    ModelRenderer ironhelmet;
-    ModelRenderer ironhelmetsnout;
-    ModelRenderer ironrightlegarmor;
-    ModelRenderer ironleftlegarmor;
-    ModelRenderer ironchestarmor;
-    ModelRenderer ironrightshoulderpad;
-    ModelRenderer ironleftshoulderpad;
-    ModelRenderer goldleftshoulder;
-    ModelRenderer goldchestarmor;
-    ModelRenderer goldrightshoulder;
-    ModelRenderer goldleftlegarmor;
-    ModelRenderer goldrightlegarmor;
-    ModelRenderer goldhelmethorn1;
-    ModelRenderer goldhelmethorn2;
-    ModelRenderer goldhelmet;
-    ModelRenderer goldhelmetsnout;
-    ModelRenderer diamondleftshoulder;
-    ModelRenderer diamondrightshoulder;
-    ModelRenderer diamondchestarmor;
-    ModelRenderer diamondleftlegarmor;
-    ModelRenderer diamondrightlegarmor;
-    ModelRenderer diamondhelmet;
-    ModelRenderer diamondhelmethorn2;
-    ModelRenderer diamondhelmethorn1;
-    ModelRenderer diamondhelmetsnout;
-    ModelRenderer rightfing1a;
-    ModelRenderer rightfing2a;
-    ModelRenderer rightfing3a;
-    ModelRenderer rightfing1b;
-    ModelRenderer rightfing2b;
-    ModelRenderer rightfing3b;
-    ModelRenderer leftfing3a;
-    ModelRenderer leftfing2a;
-    ModelRenderer leftfing1a;
-    ModelRenderer leftfing3b;
-    ModelRenderer leftfing2b;
-    ModelRenderer leftfing1b;
-    ModelRenderer leftlowarm;
-    ModelRenderer rightlowarm;
-    ModelRenderer rightuparm;
-    ModelRenderer leftuparm;
-    ModelRenderer LeftWing;
-    ModelRenderer RightWing;
-    ModelRenderer MainHead;
-    ModelRenderer leftwingflap1;
-    ModelRenderer leftwingflap2;
-    ModelRenderer leftwingflap3;
-    ModelRenderer rightwingflap1;
-    ModelRenderer rightwingflap2;
-    ModelRenderer rightwingflap3;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "wyvern"), "main"
+    );
+
+    private final ModelPart Tail;
+    private final ModelPart back1;
+    private final ModelPart tail1;
+    private final ModelPart back2;
+    private final ModelPart tail2;
+    private final ModelPart back3;
+    private final ModelPart tail3;
+    private final ModelPart back4;
+    private final ModelPart tail4;
+    private final ModelPart tail5;
+    private final ModelPart chest;
+    private final ModelPart neckplate3;
+    private final ModelPart neck3;
+    private final ModelPart MainHead;
+    private final ModelPart neck2;
+    private final ModelPart neckplate2;
+    private final ModelPart neck1;
+    private final ModelPart neckplate1;
+    private final ModelPart head;
+    private final ModelPart snout;
+    private final ModelPart headplate;
+    private final ModelPart beak;
+    private final ModelPart righteyesock;
+    private final ModelPart lefteyesock;
+    private final ModelPart Jaw;
+    private final ModelPart leftupjaw;
+    private final ModelPart rightupjaw;
+    private final ModelPart mouthrod;
+    private final ModelPart helmetstrap1;
+    private final ModelPart helmetstrap2;
+    private final ModelPart controlrope1;
+    private final ModelPart controlrope2;
+    private final ModelPart rightearskin;
+    private final ModelPart leftearskin;
+    private final ModelPart rightspine1;
+    private final ModelPart rightspine2;
+    private final ModelPart rightspine3;
+    private final ModelPart leftspine1;
+    private final ModelPart leftspine2;
+    private final ModelPart leftspine3;
+    private final ModelPart ironhelmethorn1;
+    private final ModelPart ironhelmethorn2;
+    private final ModelPart ironhelmet;
+    private final ModelPart ironhelmetsnout;
+    private final ModelPart goldhelmethorn1;
+    private final ModelPart goldhelmethorn2;
+    private final ModelPart goldhelmet;
+    private final ModelPart goldhelmetsnout;
+    private final ModelPart diamondhelmet;
+    private final ModelPart diamondhelmethorn2;
+    private final ModelPart diamondhelmethorn1;
+    private final ModelPart diamondhelmetsnout;
+    private final ModelPart torso;
+    private final ModelPart saddle;
+    private final ModelPart rightshoulder;
+    private final ModelPart leftshoulder;
+    private final ModelPart LeftWing;
+    private final ModelPart leftuparm;
+    private final ModelPart leftlowarm;
+    private final ModelPart leftfing1a;
+    private final ModelPart leftfing1b;
+    private final ModelPart leftfing2a;
+    private final ModelPart leftfing2b;
+    private final ModelPart leftfing3a;
+    private final ModelPart leftfing3b;
+    private final ModelPart leftwingflap1;
+    private final ModelPart leftwingflap2;
+    private final ModelPart leftwingflap3;
+    private final ModelPart RightWing;
+    private final ModelPart rightuparm;
+    private final ModelPart rightlowarm;
+    private final ModelPart rightfing1a;
+    private final ModelPart rightfing1b;
+    private final ModelPart rightwingflap1;
+    private final ModelPart rightfing2a;
+    private final ModelPart rightfing2b;
+    private final ModelPart rightwingflap2;
+    private final ModelPart rightfing3a;
+    private final ModelPart rightfing3b;
+    private final ModelPart rightwingflap3;
+    private final ModelPart leftupleg;
+    private final ModelPart leftmidleg;
+    private final ModelPart leftlowleg;
+    private final ModelPart leftfoot;
+    private final ModelPart lefttoe1;
+    private final ModelPart lefttoe3;
+    private final ModelPart lefttoe2;
+    private final ModelPart leftclaw1;
+    private final ModelPart leftclaw2;
+    private final ModelPart leftclaw3;
+    private final ModelPart ironleftlegarmor;
+    private final ModelPart goldleftlegarmor;
+    private final ModelPart diamondleftlegarmor;
+    private final ModelPart rightupleg;
+    private final ModelPart rightmidleg;
+    private final ModelPart rightlowleg;
+    private final ModelPart rightfoot;
+    private final ModelPart righttoe1;
+    private final ModelPart righttoe3;
+    private final ModelPart righttoe2;
+    private final ModelPart rightclaw1;
+    private final ModelPart rightclaw2;
+    private final ModelPart rightclaw3;
+    private final ModelPart ironrightlegarmor;
+    private final ModelPart goldrightlegarmor;
+    private final ModelPart diamondrightlegarmor;
+    private final ModelPart storage;
+    private final ModelPart chestbelt;
+    private final ModelPart stomachbelt;
+    private final ModelPart ironchestarmor;
+    private final ModelPart ironrightshoulderpad;
+    private final ModelPart ironleftshoulderpad;
+    private final ModelPart goldleftshoulder;
+    private final ModelPart goldchestarmor;
+    private final ModelPart goldrightshoulder;
+    private final ModelPart diamondleftshoulder;
+    private final ModelPart diamondrightshoulder;
+    private final ModelPart diamondchestarmor;
+
+    // State flags, matching your setLivingAnimations(…):
     private int armor;
     private boolean isRidden;
     private boolean isChested;
@@ -149,1018 +160,1355 @@ public class MoCModelWyvern<T extends MoCEntityWyvern> extends EntityModel<T> {
     private float yOffset;
     private float transparency;
 
-    public MoCModelWyvern() {
-        this.textureWidth = 128;
-        this.textureHeight = 256;
-
-        //tail
-        this.Tail = new ModelRenderer(this);
-        this.Tail.setRotationPoint(0F, 0F, 0F);
-
-        this.back1 = new ModelRenderer(this, 92, 0);
-        this.back1.addBox(-3F, -2F, -12F, 6, 2, 12);
-        this.back1.setRotationPoint(0F, 0F, 0F);
-
-        this.tail1 = new ModelRenderer(this, 0, 22);
-        this.tail1.addBox(-4F, 0F, 0F, 8, 8, 10);
-        this.tail1.setRotationPoint(0F, 0F, 0F);
-        this.Tail.addChild(this.tail1);
-
-        this.back2 = new ModelRenderer(this, 100, 14);
-        this.back2.addBox(-2F, -2F, 0F, 4, 2, 10);
-        this.back2.setRotationPoint(0F, 0F, 0F);
-        this.tail1.addChild(this.back2);
-
-        this.tail2 = new ModelRenderer(this, 0, 40);
-        this.tail2.addBox(-3F, 0F, 0F, 6, 6, 9);
-        this.tail2.setRotationPoint(0F, 0F, 10F);
-        this.tail1.addChild(this.tail2);
-
-        this.back3 = new ModelRenderer(this, 104, 26);
-        this.back3.addBox(-1.5F, -2F, 0F, 3, 2, 9);
-        this.back3.setRotationPoint(0F, 0F, 0F);
-        this.tail2.addChild(this.back3);
-
-        this.tail3 = new ModelRenderer(this, 0, 55);
-        this.tail3.addBox(-2F, 0F, 0F, 4, 5, 8);
-        this.tail3.setRotationPoint(0F, 0F, 8F);
-        this.tail2.addChild(this.tail3);
-
-        this.back4 = new ModelRenderer(this, 108, 37);
-        this.back4.addBox(-1F, -2F, 0F, 2, 2, 8);
-        this.back4.setRotationPoint(0F, 0F, 0F);
-        this.tail3.addChild(this.back4);
-
-        this.tail4 = new ModelRenderer(this, 0, 68);
-        this.tail4.addBox(-1F, 0F, 0F, 2, 5, 7);
-        this.tail4.setRotationPoint(0F, -1F, 7F);
-        this.tail3.addChild(this.tail4);
-
-        this.tail5 = new ModelRenderer(this, 0, 80);
-        this.tail5.addBox(-0.5F, 0F, 0F, 1, 3, 7);
-        this.tail5.setRotationPoint(0F, 1F, 6F);
-        this.tail4.addChild(this.tail5);
-
-        this.chest = new ModelRenderer(this, 44, 0);
-        this.chest.addBox(-4.5F, 2.7F, -13F, 9, 10, 4);
-        this.chest.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.chest, -0.2602503F, 0F, 0F);
-
-        this.neckplate3 = new ModelRenderer(this, 112, 64);
-        this.neckplate3.addBox(-2F, -2F, -2F, 4, 2, 4);
-        this.neckplate3.setRotationPoint(0F, 0F, -12F);
-        setRotation(this.neckplate3, -0.669215F, 0F, 0F);
-
-        this.neck3 = new ModelRenderer(this, 100, 113);
-        this.neck3.addBox(-3F, 0F, -2F, 6, 7, 8);
-        this.neck3.setRotationPoint(0F, 0F, -12F);
-        setRotation(this.neck3, -0.669215F, 0F, 0F);
-
-        //head
-        this.MainHead = new ModelRenderer(this);
-        this.MainHead.setRotationPoint(0F, 3F, -15F);
-
-        this.neck2 = new ModelRenderer(this, 102, 99);
-        this.neck2.addBox(-2.5F, -3F, -8F, 5, 6, 8);
-        //neck2.addBox(-2.5F, -3F, -4F, 5, 6, 8);
-        this.neck2.setRotationPoint(0F, 0F, 0F);
-        //setRotation(neck2, -66F/radianF, 0F, 0F);
-        this.MainHead.addChild(this.neck2);
-
-        this.neckplate2 = new ModelRenderer(this, 106, 54);
-        this.neckplate2.addBox(-1.5F, -2F, -8F, 3, 2, 8);
-        this.neckplate2.setRotationPoint(0F, -3F, 0F);
-        this.neck2.addChild(this.neckplate2);
-
-        this.neck1 = new ModelRenderer(this, 104, 85);
-        this.neck1.addBox(-2F, -3F, -8F, 4, 6, 8);
-        //neck1.addBox(-2F, -3F, -4F, 4, 6, 8);
-        this.neck1.setRotationPoint(0F, -0.5F, -5.5F);
-        //setRotation(neck1, 30F/radianF, 0F, 0F);
-        this.neck2.addChild(this.neck1);
-
-        this.neckplate1 = new ModelRenderer(this, 80, 108);
-        this.neckplate1.addBox(-1F, -2F, -8F, 2, 2, 8);
-        this.neckplate1.setRotationPoint(0F, -3F, 0F);
-        this.neck1.addChild(this.neckplate1);
-
-        this.head = new ModelRenderer(this, 98, 70);
-        this.head.addBox(-3.5F, -3.5F, -8F, 7, 7, 8);
-        this.head.setRotationPoint(0F, 0F, -7F);
-        //setRotation(head, 45F/radianF, 0F, 0F);
-        this.neck1.addChild(this.head);
-
-        this.snout = new ModelRenderer(this, 72, 70);
-        this.snout.addBox(-2F, -1.5F, -9F, 4, 3, 9);
-        this.snout.setRotationPoint(0F, -1.5F, -8F);
-        setRotation(this.snout, 2F / this.radianF, 0F, 0F);
-        this.head.addChild(this.snout);
-
-        this.headplate = new ModelRenderer(this, 80, 118);
-        this.headplate.addBox(-1F, -1F, -4F, 2, 2, 8);
-        this.headplate.setRotationPoint(0F, -3F, -1F);
-        setRotation(this.headplate, 10F / this.radianF, 0F, 0F);
-        this.head.addChild(this.headplate);
-
-        this.beak = new ModelRenderer(this, 60, 85);
-        this.beak.addBox(-1.5F, -2.5F, -1.5F, 3, 5, 3);
-        this.beak.setRotationPoint(0F, 0.8F, -8.0F);
-        setRotation(this.beak, -6F / this.radianF, 45F / this.radianF, -6F / this.radianF);
-        this.snout.addChild(this.beak);
-
-        this.righteyesock = new ModelRenderer(this, 70, 108);
-        this.righteyesock.addBox(0F, 0F, 0F, 1, 2, 4);
-        this.righteyesock.setRotationPoint(-3.5F, -2.5F, -8F);
-        this.head.addChild(this.righteyesock);
-
-        this.lefteyesock = new ModelRenderer(this, 70, 114);
-        this.lefteyesock.addBox(0F, 0F, 0F, 1, 2, 4);
-        this.lefteyesock.setRotationPoint(2.5F, -2.5F, -8F);
-        this.head.addChild(this.lefteyesock);
-
-        this.Jaw = new ModelRenderer(this, 72, 82);
-        this.Jaw.addBox(-2F, -1F, -9F, 4, 2, 9);
-        this.Jaw.setRotationPoint(0F, 2.5F, -7.5F);
-        setRotation(this.Jaw, -10F / this.radianF, 0F, 0F);
-        this.head.addChild(this.Jaw);
-
-        this.leftupjaw = new ModelRenderer(this, 42, 93);
-        this.leftupjaw.addBox(-1F, -1F, -6.5F, 2, 2, 13);
-        this.leftupjaw.setRotationPoint(2F, 0F, -10.5F);
-        setRotation(this.leftupjaw, -10F / this.radianF, 10F / this.radianF, 0F);
-        this.head.addChild(this.leftupjaw);
-
-        this.rightupjaw = new ModelRenderer(this, 72, 93);
-        this.rightupjaw.addBox(-1F, -1F, -6.5F, 2, 2, 13);
-        this.rightupjaw.setRotationPoint(-2F, 0F, -10.5F);
-        setRotation(this.rightupjaw, -10F / this.radianF, -10F / this.radianF, 0F);
-        this.head.addChild(this.rightupjaw);
-
-        this.mouthrod = new ModelRenderer(this, 104, 50);
-        this.mouthrod.addBox(-5F, -1F, -1F, 10, 2, 2);
-        this.mouthrod.setRotationPoint(0F, 1F, -8F);
-        this.head.addChild(this.mouthrod);
-
-        this.helmetstrap1 = new ModelRenderer(this, 32, 146);
-        this.helmetstrap1.addBox(-4F, -2F, 0F, 8, 4, 1);
-        this.helmetstrap1.setRotationPoint(0F, 2F, -7.5F);
-        this.head.addChild(this.helmetstrap1);
-
-        this.helmetstrap2 = new ModelRenderer(this, 32, 141);
-        this.helmetstrap2.addBox(-4F, -2F, 0F, 8, 4, 1);
-        this.helmetstrap2.setRotationPoint(0F, 2F, -3.5F);
-        this.head.addChild(this.helmetstrap2);
-
-        this.controlrope1 = new ModelRenderer(this, 66, 43);
-        this.controlrope1.addBox(0F, -2F, 0F, 0, 4, 23);
-        this.controlrope1.setRotationPoint(4.5F, 1F, 0F);
-        this.mouthrod.addChild(this.controlrope1);
-
-        this.controlrope2 = new ModelRenderer(this, 66, 43);
-        this.controlrope2.addBox(0F, -2F, 0F, 0, 4, 23);
-        this.controlrope2.setRotationPoint(-4.5F, 1F, 0F);
-        this.mouthrod.addChild(this.controlrope2);
-
-        this.rightearskin = new ModelRenderer(this, 112, 201);
-        this.rightearskin.addBox(0F, -4F, 0F, 0, 8, 8);
-        this.rightearskin.setRotationPoint(-3F, -0.5F, 0F);
-        this.head.addChild(this.rightearskin);
-
-        this.leftearskin = new ModelRenderer(this, 96, 201);
-        this.leftearskin.addBox(0F, -4F, 0F, 0, 8, 8);
-        this.leftearskin.setRotationPoint(3F, -0.5F, 0F);
-        this.head.addChild(this.leftearskin);
-
-        this.rightspine1 = new ModelRenderer(this, 50, 141);
-        this.rightspine1.addBox(-0.5F, -1F, 0F, 1, 2, 8);
-        this.rightspine1.setRotationPoint(0F, -2F, 0F);
-        setRotation(this.rightspine1, 15F / this.radianF, 0F, 0F);
-        this.rightearskin.addChild(this.rightspine1);
-
-        this.rightspine2 = new ModelRenderer(this, 50, 141);
-        this.rightspine2.addBox(-0.5F, -1F, 0F, 1, 2, 8);
-        this.rightspine2.setRotationPoint(0F, 0F, 0F);
-        //setRotation(rightspine2, 0F, 0F, 0F);
-        this.rightearskin.addChild(this.rightspine2);
-
-        this.rightspine3 = new ModelRenderer(this, 50, 141);
-        this.rightspine3.addBox(-0.5F, -1F, 0F, 1, 2, 8);
-        this.rightspine3.setRotationPoint(0F, 2F, 0F);
-        setRotation(this.rightspine3, -15F / this.radianF, 0F, 0F);
-        this.rightearskin.addChild(this.rightspine3);
-
-        this.leftspine1 = new ModelRenderer(this, 68, 141);
-        this.leftspine1.addBox(-0.5F, -1F, 0F, 1, 2, 8);
-        this.leftspine1.setRotationPoint(0F, -2F, 0F);
-        setRotation(this.leftspine1, 15F / this.radianF, 0F, 0F);
-        this.leftearskin.addChild(this.leftspine1);
-
-        this.leftspine2 = new ModelRenderer(this, 68, 141);
-        this.leftspine2.addBox(-0.5F, -1F, 0F, 1, 2, 8);
-        this.leftspine2.setRotationPoint(0F, 0F, 0F);
-        this.leftearskin.addChild(this.leftspine2);
-
-        this.leftspine3 = new ModelRenderer(this, 68, 141);
-        this.leftspine3.addBox(-0.5F, -1F, 0F, 1, 2, 8);
-        this.leftspine3.setRotationPoint(0F, 2F, 0F);
-        setRotation(this.leftspine3, -15F / this.radianF, 0F, 0F);
-        this.leftearskin.addChild(this.leftspine3);
-
-        //helmet
-        this.ironhelmethorn1 = new ModelRenderer(this, 106, 139);
-        this.ironhelmethorn1.addBox(-1.5F, -1.5F, 0F, 3, 3, 8);
-        this.ironhelmethorn1.setRotationPoint(-0.5F, 0F, 0.1F);
-        this.leftspine1.addChild(this.ironhelmethorn1);
-
-        this.ironhelmethorn2 = new ModelRenderer(this, 106, 128);
-        this.ironhelmethorn2.addBox(-1.5F, -1.5F, 0F, 3, 3, 8);
-        this.ironhelmethorn2.setRotationPoint(0.5F, 0F, 0.1F);
-        this.rightspine1.addChild(this.ironhelmethorn2);
-
-        this.ironhelmet = new ModelRenderer(this, 32, 128);
-        this.ironhelmet.addBox(-4F, -4F, -9F, 8, 4, 9);
-        this.ironhelmet.setRotationPoint(0F, 0F, 0F);
-        this.head.addChild(this.ironhelmet);
-
-        this.ironhelmetsnout = new ModelRenderer(this, 0, 144);
-        this.ironhelmetsnout.addBox(-2.5F, -2F, -7F, 5, 2, 7);
-        this.ironhelmetsnout.setRotationPoint(0F, 0F, -1F);
-        this.snout.addChild(this.ironhelmetsnout);
-
-        this.goldhelmethorn1 = new ModelRenderer(this, 106, 161);
-        this.goldhelmethorn1.addBox(-1.5F, -1.5F, 0F, 3, 3, 8);
-        this.goldhelmethorn1.setRotationPoint(-0.5F, 0F, 0.1F);
-        this.leftspine1.addChild(this.goldhelmethorn1);
-
-        this.goldhelmethorn2 = new ModelRenderer(this, 106, 150);
-        this.goldhelmethorn2.addBox(-1.5F, -1.5F, 0F, 3, 3, 8);
-        this.goldhelmethorn2.setRotationPoint(0.5F, 0F, 0.1F);
-        this.rightspine1.addChild(this.goldhelmethorn2);
-
-        this.goldhelmet = new ModelRenderer(this, 94, 226);
-        this.goldhelmet.addBox(-4F, -4F, -9F, 8, 4, 9);
-        this.goldhelmet.setRotationPoint(0F, 0F, 0F);
-        this.head.addChild(this.goldhelmet);
-
-        this.goldhelmetsnout = new ModelRenderer(this, 71, 235);
-        this.goldhelmetsnout.addBox(-2.5F, -2F, -7F, 5, 2, 7);
-        this.goldhelmetsnout.setRotationPoint(0F, 0F, -1F);
-        this.snout.addChild(this.goldhelmetsnout);
-
-        this.diamondhelmet = new ModelRenderer(this, 23, 226);
-        this.diamondhelmet.addBox(-4F, -4F, -9F, 8, 4, 9);
-        this.diamondhelmet.setRotationPoint(0F, 0F, 0F);
-        this.head.addChild(this.diamondhelmet);
-
-        this.diamondhelmethorn2 = new ModelRenderer(this, 49, 234);
-        this.diamondhelmethorn2.addBox(-1.5F, -1.5F, 0F, 3, 3, 8);
-        this.diamondhelmethorn2.setRotationPoint(0.5F, 0F, 0.1F);
-        this.rightspine1.addChild(this.diamondhelmethorn2);
-
-        this.diamondhelmethorn1 = new ModelRenderer(this, 49, 245);
-        this.diamondhelmethorn1.addBox(-1.5F, -1.5F, 0F, 3, 3, 8);
-        this.diamondhelmethorn1.setRotationPoint(-0.5F, 0F, 0.1F);
-        this.leftspine1.addChild(this.diamondhelmethorn1);
-
-        this.diamondhelmetsnout = new ModelRenderer(this, 0, 235);
-        this.diamondhelmetsnout.addBox(-2.5F, -2F, -7F, 5, 2, 7);
-        this.diamondhelmetsnout.setRotationPoint(0F, 0F, -1F);
-        this.snout.addChild(this.diamondhelmetsnout);
-
-        this.torso = new ModelRenderer(this, 0, 0);
-        this.torso.addBox(-5F, 0F, -12F, 10, 10, 12);
-        this.torso.setRotationPoint(0F, 0F, 0F);
-
-        this.saddle = new ModelRenderer(this, 38, 70);
-        this.saddle.addBox(-3.5F, -2.5F, -8F, 7, 3, 10);
-        this.saddle.setRotationPoint(0F, 0F, 0F);
-
-        this.rightshoulder = new ModelRenderer(this, 42, 83);
-        this.rightshoulder.addBox(-6F, 1F, -12.5F, 4, 5, 5);
-        this.rightshoulder.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.rightshoulder, -0.2617994F, 0F, 0F);
-
-        this.leftshoulder = new ModelRenderer(this, 24, 83);
-        this.leftshoulder.addBox(2F, 1F, -12.5F, 4, 5, 5);
-        this.leftshoulder.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.leftshoulder, -0.2617994F, 0F, 0F);
-
-        //left wing
-        this.LeftWing = new ModelRenderer(this);
-        this.LeftWing.setRotationPoint(4F, 1F, -11F);
-
-        this.leftuparm = new ModelRenderer(this, 44, 14);
-        this.leftuparm.addBox(0F, -2F, -2F, 10, 4, 4);
-        this.leftuparm.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.leftuparm, 0F, -10F / this.radianF, 0F);
-        this.LeftWing.addChild(this.leftuparm);
-
-        this.leftlowarm = new ModelRenderer(this, 72, 14);
-        this.leftlowarm.addBox(0F, -2F, -2F, 10, 4, 4);
-        this.leftlowarm.setRotationPoint(9F, 0F, 0F);
-        setRotation(this.leftlowarm, 0F, 10F / this.radianF, 0F);
-        this.leftuparm.addChild(this.leftlowarm);
-
-        this.leftfing1a = new ModelRenderer(this, 52, 30);
-        this.leftfing1a.addBox(0F, 0F, -1F, 2, 15, 2);
-        this.leftfing1a.setRotationPoint(9F, 1F, 0F);
-        setRotation(this.leftfing1a, 90F / this.radianF, 70F / this.radianF, 0F);
-        this.leftlowarm.addChild(this.leftfing1a);
-
-        this.leftfing1b = new ModelRenderer(this, 52, 47);
-        this.leftfing1b.addBox(0F, 0F, -1F, 2, 10, 2);
-        this.leftfing1b.setRotationPoint(0F, 14F, 0F);
-        setRotation(this.leftfing1b, 0F, 0F, 35F / this.radianF);
-        this.leftfing1a.addChild(this.leftfing1b);
-
-        this.leftfing2a = new ModelRenderer(this, 44, 30);
-        this.leftfing2a.addBox(-1F, 0F, 0F, 2, 15, 2);
-        this.leftfing2a.setRotationPoint(9F, 1F, 0F);
-        setRotation(this.leftfing2a, 90F / this.radianF, 35F / this.radianF, 0F);
-        this.leftlowarm.addChild(this.leftfing2a);
-
-        this.leftfing2b = new ModelRenderer(this, 44, 47);
-        this.leftfing2b.addBox(-1F, 0F, 0F, 2, 10, 2);
-        this.leftfing2b.setRotationPoint(0F, 14F, 0F);
-        setRotation(this.leftfing2b, 0F, 0F, 30F / this.radianF);
-        this.leftfing2a.addChild(this.leftfing2b);
-
-        this.leftfing3a = new ModelRenderer(this, 36, 30);
-        this.leftfing3a.addBox(-1F, 0F, 1F, 2, 15, 2);
-        this.leftfing3a.setRotationPoint(9F, 1F, 0F);
-        setRotation(this.leftfing3a, 90F / this.radianF, -5F / this.radianF, 0F);
-        this.leftlowarm.addChild(this.leftfing3a);
-
-        this.leftfing3b = new ModelRenderer(this, 36, 47);
-        this.leftfing3b.addBox(-1F, 0F, 1F, 2, 10, 2);
-        this.leftfing3b.setRotationPoint(0F, 14F, 0F);
-        setRotation(this.leftfing3b, 0F, 0F, 30F / this.radianF);
-        this.leftfing3a.addChild(this.leftfing3b);
-
-        this.leftwingflap1 = new ModelRenderer(this, 74, 153);
-        this.leftwingflap1.addBox(3.5F, -3F, 0.95F, 14, 24, 0);
-        this.leftwingflap1.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.leftwingflap1, 0F, 0F, 70F / this.radianF);
-        this.leftfing1a.addChild(this.leftwingflap1);
-
-        this.leftwingflap2 = new ModelRenderer(this, 36, 153);
-        this.leftwingflap2.addBox(-7F, 1.05F, 1.05F, 19, 24, 0);
-        this.leftwingflap2.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.leftwingflap2, 0F, 0F, 40F / this.radianF);
-        this.leftfing2a.addChild(this.leftwingflap2);
-
-        this.leftwingflap3 = new ModelRenderer(this, 0, 153);
-        this.leftwingflap3.addBox(-17.5F, 1F, 1.1F, 18, 24, 0);
-        this.leftwingflap3.setRotationPoint(0F, 0F, 0F);
-        this.leftfing3a.addChild(this.leftwingflap3);
-
-        //right wing
-        this.RightWing = new ModelRenderer(this);
-        this.RightWing.setRotationPoint(-4F, 1F, -11F);
-
-        this.rightuparm = new ModelRenderer(this, 44, 22);
-        this.rightuparm.addBox(-10F, -2F, -2F, 10, 4, 4);
-        this.rightuparm.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.rightuparm, 0F, 10F / this.radianF, 0F);
-        this.RightWing.addChild(this.rightuparm);
-
-        this.rightlowarm = new ModelRenderer(this, 72, 22);
-        this.rightlowarm.addBox(-10F, -2F, -2F, 10, 4, 4);
-        this.rightlowarm.setRotationPoint(-9F, 0F, 0F);
-        setRotation(this.rightlowarm, 0F, -10F / this.radianF, 0F);
-        this.rightuparm.addChild(this.rightlowarm);
-
-        this.rightfing1a = new ModelRenderer(this, 36, 30);
-        this.rightfing1a.addBox(-1F, 0F, -1F, 2, 15, 2);
-        this.rightfing1a.setRotationPoint(-9F, 1F, -1F);
-        setRotation(this.rightfing1a, 90F / this.radianF, -70F / this.radianF, 0F);
-        this.rightlowarm.addChild(this.rightfing1a);
-
-        this.rightfing1b = new ModelRenderer(this, 36, 47);
-        this.rightfing1b.addBox(-1F, 0F, -1F, 2, 10, 2);
-        this.rightfing1b.setRotationPoint(0F, 14F, 0F);
-        setRotation(this.rightfing1b, 0F, 0F, -35F / this.radianF);
-        this.rightfing1a.addChild(this.rightfing1b);
-
-        this.rightwingflap1 = new ModelRenderer(this, 74, 177);
-        this.rightwingflap1.addBox(-17.5F, -3F, 0.95F, 14, 24, 0);
-        this.rightwingflap1.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.rightwingflap1, 0F, 0F, -70F / this.radianF);
-        this.rightfing1a.addChild(this.rightwingflap1);
-
-        this.rightfing2a = new ModelRenderer(this, 44, 30);
-        this.rightfing2a.addBox(-1F, 0F, 0F, 2, 15, 2);
-        this.rightfing2a.setRotationPoint(-9F, 1F, 0F);
-        setRotation(this.rightfing2a, 90F / this.radianF, -35F / this.radianF, 0F);
-        this.rightlowarm.addChild(this.rightfing2a);
-
-        this.rightfing2b = new ModelRenderer(this, 44, 47);
-        this.rightfing2b.addBox(-1F, 0F, 0F, 2, 10, 2);
-        this.rightfing2b.setRotationPoint(0F, 14F, 0F);
-        setRotation(this.rightfing2b, 0F, 0F, -30F / this.radianF);
-        this.rightfing2a.addChild(this.rightfing2b);
-
-        this.rightwingflap2 = new ModelRenderer(this, 36, 177);
-        this.rightwingflap2.addBox(-19F, 1.05F, 1.05F, 19, 24, 0);
-        this.rightwingflap2.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.rightwingflap2, 0F, 0F, -40F / this.radianF);
-        this.rightfing2a.addChild(this.rightwingflap2);
-
-        this.rightfing3a = new ModelRenderer(this, 52, 30);
-        this.rightfing3a.addBox(-1F, 0F, 1F, 2, 15, 2);
-        this.rightfing3a.setRotationPoint(-9F, 1F, 0F);
-        setRotation(this.rightfing3a, 90F / this.radianF, 5F / this.radianF, 0F);
-        this.rightlowarm.addChild(this.rightfing3a);
-
-        this.rightfing3b = new ModelRenderer(this, 52, 47);
-        this.rightfing3b.addBox(-1F, 0F, 1F, 2, 10, 2);
-        this.rightfing3b.setRotationPoint(0F, 14F, 0F);
-        setRotation(this.rightfing3b, 0F, 0F, -30F / this.radianF);
-        this.rightfing3a.addChild(this.rightfing3b);
-
-        this.rightwingflap3 = new ModelRenderer(this, 0, 177);
-        this.rightwingflap3.addBox(-0.5F, 1F, 1.1F, 18, 24, 0);
-        this.rightwingflap3.setRotationPoint(0F, 0F, 0F);
-        this.rightfing3a.addChild(this.rightwingflap3);
-
-        //legs
-        this.leftupleg = new ModelRenderer(this, 0, 111);
-        this.leftupleg.addBox(-2F, -3F, -3F, 4, 10, 7);
-        this.leftupleg.setRotationPoint(5F, 6F, -5F);
-        setRotation(this.leftupleg, -25F / this.radianF, 0F, 0F);
-
-        this.leftmidleg = new ModelRenderer(this, 0, 102);
-        this.leftmidleg.addBox(-1.5F, -2F, 0F, 3, 4, 5);
-        this.leftmidleg.setRotationPoint(0F, 5F, 4F);
-        this.leftupleg.addChild(this.leftmidleg);
-
-        this.leftlowleg = new ModelRenderer(this, 0, 91);
-        this.leftlowleg.addBox(-1.5F, 0F, -1.5F, 3, 8, 3);
-        this.leftlowleg.setRotationPoint(0F, 2F, 3.5F);
-        this.leftmidleg.addChild(this.leftlowleg);
-
-        this.leftfoot = new ModelRenderer(this, 44, 121);
-        this.leftfoot.addBox(-2F, -1F, -3F, 4, 3, 4);
-        this.leftfoot.setRotationPoint(0F, 7F, 0.5F);
-        setRotation(this.leftfoot, 25F / this.radianF, 0F, 0F);
-        this.leftlowleg.addChild(this.leftfoot);
-
-        this.lefttoe1 = new ModelRenderer(this, 96, 35);
-        this.lefttoe1.addBox(-0.5F, -1F, -3F, 1, 2, 3);
-        this.lefttoe1.setRotationPoint(-1.5F, 1F, -3F);
-        this.leftfoot.addChild(this.lefttoe1);
-
-        this.lefttoe3 = new ModelRenderer(this, 96, 30);
-        this.lefttoe3.addBox(-0.5F, -1F, -3F, 1, 2, 3);
-        this.lefttoe3.setRotationPoint(1.5F, 1F, -3F);
-        this.leftfoot.addChild(this.lefttoe3);
-
-        this.lefttoe2 = new ModelRenderer(this, 84, 30);
-        this.lefttoe2.addBox(-1F, -1.5F, -4F, 2, 3, 4);
-        this.lefttoe2.setRotationPoint(0F, 0.5F, -3F);
-        this.leftfoot.addChild(this.lefttoe2);
-
-        this.leftclaw1 = new ModelRenderer(this, 100, 26);
-        this.leftclaw1.addBox(-0.5F, 0F, -0.5F, 1, 2, 1);
-        this.leftclaw1.setRotationPoint(0.5F, -0.5F, -2.5F);
-        setRotation(this.leftclaw1, -25F / this.radianF, 0F, 0F);
-        this.lefttoe1.addChild(this.leftclaw1);
-
-        this.leftclaw2 = new ModelRenderer(this, 100, 26);
-        this.leftclaw2.addBox(-0.5F, 0F, -0.5F, 1, 3, 1);
-        this.leftclaw2.setRotationPoint(0F, -1F, -3.5F);
-        setRotation(this.leftclaw2, -25F / this.radianF, 0F, 0F);
-        this.lefttoe2.addChild(this.leftclaw2);
-
-        this.leftclaw3 = new ModelRenderer(this, 100, 26);
-        this.leftclaw3.addBox(-0.5F, 0F, -0.5F, 1, 2, 1);
-        this.leftclaw3.setRotationPoint(-0.5F, -0.5F, -2.5F);
-        setRotation(this.leftclaw3, -25F / this.radianF, 0F, 0F);
-        this.lefttoe3.addChild(this.leftclaw3);
-
-        this.ironleftlegarmor = new ModelRenderer(this, 39, 97);
-        this.ironleftlegarmor.addBox(-2F, -2.5F, -2F, 4, 5, 4);
-        this.ironleftlegarmor.setRotationPoint(0F, 2.5F, 0F);
-        this.leftlowleg.addChild(this.ironleftlegarmor);
-
-        this.goldleftlegarmor = new ModelRenderer(this, 112, 181);
-        this.goldleftlegarmor.addBox(-2F, -2.5F, -2F, 4, 5, 4);
-        this.goldleftlegarmor.setRotationPoint(0F, 2.5F, 0F);
-        this.leftlowleg.addChild(this.goldleftlegarmor);
-
-        this.diamondleftlegarmor = new ModelRenderer(this, 43, 215);
-        this.diamondleftlegarmor.addBox(-2F, -2.5F, -2F, 4, 5, 4);
-        this.diamondleftlegarmor.setRotationPoint(0F, 2.5F, 0F);
-        this.leftlowleg.addChild(this.diamondleftlegarmor);
-
-        //right leg
-        this.rightupleg = new ModelRenderer(this, 0, 111);
-        this.rightupleg.addBox(-2F, -3F, -3F, 4, 10, 7);
-        this.rightupleg.setRotationPoint(-5F, 6F, -5F);
-        setRotation(this.rightupleg, -25F / this.radianF, 0F, 0F);
-
-        this.rightmidleg = new ModelRenderer(this, 0, 102);
-        this.rightmidleg.addBox(-1.5F, -2F, 0F, 3, 4, 5);
-        this.rightmidleg.setRotationPoint(0F, 5F, 4F);
-        this.rightupleg.addChild(this.rightmidleg);
-
-        this.rightlowleg = new ModelRenderer(this, 0, 91);
-        this.rightlowleg.addBox(-1.5F, 0F, -1.5F, 3, 8, 3);
-        this.rightlowleg.setRotationPoint(0F, 2F, 3.5F);
-        this.rightmidleg.addChild(this.rightlowleg);
-
-        this.rightfoot = new ModelRenderer(this, 44, 121);
-        this.rightfoot.addBox(-2F, -1F, -3F, 4, 3, 4);
-        this.rightfoot.setRotationPoint(0F, 7F, 0.5F);
-        setRotation(this.rightfoot, 25F / this.radianF, 0F, 0F);
-        this.rightlowleg.addChild(this.rightfoot);
-
-        this.righttoe1 = new ModelRenderer(this, 96, 35);
-        this.righttoe1.addBox(-0.5F, -1F, -3F, 1, 2, 3);
-        this.righttoe1.setRotationPoint(-1.5F, 1F, -3F);
-        this.rightfoot.addChild(this.righttoe1);
-
-        this.righttoe3 = new ModelRenderer(this, 96, 30);
-        this.righttoe3.addBox(-0.5F, -1F, -3F, 1, 2, 3);
-        this.righttoe3.setRotationPoint(1.5F, 1F, -3F);
-        this.rightfoot.addChild(this.righttoe3);
-
-        this.righttoe2 = new ModelRenderer(this, 84, 30);
-        this.righttoe2.addBox(-1F, -1.5F, -4F, 2, 3, 4);
-        this.righttoe2.setRotationPoint(0F, 0.5F, -3F);
-        this.rightfoot.addChild(this.righttoe2);
-
-        this.rightclaw1 = new ModelRenderer(this, 100, 26);
-        this.rightclaw1.addBox(-0.5F, 0F, -0.5F, 1, 2, 1);
-        this.rightclaw1.setRotationPoint(0.5F, -0.5F, -2.5F);
-        setRotation(this.rightclaw1, -25F / this.radianF, 0F, 0F);
-        this.righttoe1.addChild(this.rightclaw1);
-
-        this.rightclaw2 = new ModelRenderer(this, 100, 26);
-        this.rightclaw2.addBox(-0.5F, 0F, -0.5F, 1, 3, 1);
-        this.rightclaw2.setRotationPoint(0F, -1F, -3.5F);
-        setRotation(this.rightclaw2, -25F / this.radianF, 0F, 0F);
-        this.righttoe2.addChild(this.rightclaw2);
-
-        this.rightclaw3 = new ModelRenderer(this, 100, 26);
-        this.rightclaw3.addBox(-0.5F, 0F, -0.5F, 1, 2, 1);
-        this.rightclaw3.setRotationPoint(-0.5F, -0.5F, -2.5F);
-        setRotation(this.rightclaw3, -25F / this.radianF, 0F, 0F);
-        this.righttoe3.addChild(this.rightclaw3);
-
-        this.ironrightlegarmor = new ModelRenderer(this, 39, 97);
-        this.ironrightlegarmor.addBox(-2F, -2.5F, -2F, 4, 5, 4);
-        this.ironrightlegarmor.setRotationPoint(0F, 2.5F, 0F);
-        this.rightlowleg.addChild(this.ironrightlegarmor);
-
-        this.goldrightlegarmor = new ModelRenderer(this, 112, 181);
-        this.goldrightlegarmor.addBox(-2F, -2.5F, -2F, 4, 5, 4);
-        this.goldrightlegarmor.setRotationPoint(0F, 2.5F, 0F);
-        this.rightlowleg.addChild(this.goldrightlegarmor);
-
-        this.diamondrightlegarmor = new ModelRenderer(this, 43, 215);
-        this.diamondrightlegarmor.addBox(-2F, -2.5F, -2F, 4, 5, 4);
-        this.diamondrightlegarmor.setRotationPoint(0F, 2.5F, 0F);
-        this.rightlowleg.addChild(this.diamondrightlegarmor);
-
-        this.storage = new ModelRenderer(this, 28, 59);
-        this.storage.addBox(-5F, -4.5F, 1.5F, 10, 5, 6);
-        this.storage.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.storage, -0.2268928F, 0F, 0F);
-
-        this.chestbelt = new ModelRenderer(this, 0, 201);
-        this.chestbelt.addBox(-5.5F, -0.5F, -9F, 11, 11, 2);
-        this.chestbelt.setRotationPoint(0F, 0F, 0F);
-
-        this.stomachbelt = new ModelRenderer(this, 0, 201);
-        this.stomachbelt.addBox(-5.5F, -0.5F, -3F, 11, 11, 2);
-        this.stomachbelt.setRotationPoint(0F, 0F, 0F);
-
-        this.ironchestarmor = new ModelRenderer(this, 0, 128);
-        this.ironchestarmor.addBox(-5.5F, 2.2F, -13.5F, 11, 11, 5);
-        this.ironchestarmor.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.ironchestarmor, -0.2602503F, 0F, 0F);
-
-        this.ironrightshoulderpad = new ModelRenderer(this, 74, 201);
-        this.ironrightshoulderpad.addBox(-6.5F, 0.5F, -13F, 5, 6, 6);
-        this.ironrightshoulderpad.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.ironrightshoulderpad, -0.2617994F, 0F, 0F);
-
-        this.ironleftshoulderpad = new ModelRenderer(this, 26, 201);
-        this.ironleftshoulderpad.addBox(1.5F, 0.5F, -13F, 5, 6, 6);
-        this.ironleftshoulderpad.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.ironleftshoulderpad, -0.2617994F, 0F, 0F);
-
-        this.goldleftshoulder = new ModelRenderer(this, 71, 244);
-        this.goldleftshoulder.addBox(1.5F, 0.5F, -13F, 5, 6, 6);
-        this.goldleftshoulder.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.goldleftshoulder, -0.2617994F, 0F, 0F);
-
-        this.goldchestarmor = new ModelRenderer(this, 71, 219);
-        this.goldchestarmor.addBox(-5.5F, 2.2F, -13.5F, 11, 11, 5);
-        this.goldchestarmor.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.goldchestarmor, -0.2602503F, 0F, 0F);
-
-        this.goldrightshoulder = new ModelRenderer(this, 93, 244);
-        this.goldrightshoulder.addBox(-6.5F, 0.5F, -13F, 5, 6, 6);
-        this.goldrightshoulder.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.goldrightshoulder, -0.2617994F, 0F, 0F);
-
-        this.diamondleftshoulder = new ModelRenderer(this, 0, 244);
-        this.diamondleftshoulder.addBox(1.5F, 0.5F, -13F, 5, 6, 6);
-        this.diamondleftshoulder.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.diamondleftshoulder, -0.2617994F, 0F, 0F);
-
-        this.diamondrightshoulder = new ModelRenderer(this, 22, 244);
-        this.diamondrightshoulder.addBox(-6.5F, 0.5F, -13F, 5, 6, 6);
-        this.diamondrightshoulder.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.diamondrightshoulder, -0.2617994F, 0F, 0F);
-
-        this.diamondchestarmor = new ModelRenderer(this, 0, 219);
-        this.diamondchestarmor.addBox(-5.5F, 2.2F, -13.5F, 11, 11, 5);
-        this.diamondchestarmor.setRotationPoint(0F, 0F, 0F);
-        setRotation(this.diamondchestarmor, -0.2602503F, 0F, 0F);
+    public MoCModelWyvern(ModelPart root) {
+        this.Tail                   = root.getChild("Tail");
+        this.back1                  = Tail.getChild("back1");
+        this.tail1                  = Tail.getChild("tail1");
+        this.back2                  = tail1.getChild("back2");
+        this.tail2                  = tail1.getChild("tail2");
+        this.back3                  = tail2.getChild("back3");
+        this.tail3                  = tail2.getChild("tail3");
+        this.back4                  = tail3.getChild("back4");
+        this.tail4                  = tail3.getChild("tail4");
+        this.tail5                  = tail4.getChild("tail5");
+
+        this.chest                  = root.getChild("chest");
+        this.neckplate3             = root.getChild("neckplate3");
+        this.neck3                  = root.getChild("neck3");
+
+        this.MainHead               = root.getChild("MainHead");
+        this.neck2                  = MainHead.getChild("neck2");
+        this.neckplate2             = neck2.getChild("neckplate2");
+        this.neck1                  = neck2.getChild("neck1");
+        this.neckplate1             = neck1.getChild("neckplate1");
+        this.head                   = neck1.getChild("head");
+        this.snout                  = head.getChild("snout");
+        this.headplate              = head.getChild("headplate");
+        this.beak                   = snout.getChild("beak");
+        this.righteyesock           = head.getChild("righteyesock");
+        this.lefteyesock            = head.getChild("lefteyesock");
+        this.Jaw                    = head.getChild("Jaw");
+        this.leftupjaw              = head.getChild("leftupjaw");
+        this.rightupjaw             = head.getChild("rightupjaw");
+        this.mouthrod               = head.getChild("mouthrod");
+        this.helmetstrap1           = head.getChild("helmetstrap1");
+        this.helmetstrap2           = head.getChild("helmetstrap2");
+        this.controlrope1           = head.getChild("mouthrod").getChild("controlrope1");
+        this.controlrope2           = head.getChild("mouthrod").getChild("controlrope2");
+        this.rightearskin           = head.getChild("rightearskin");
+        this.leftearskin            = head.getChild("leftearskin");
+        this.rightspine1            = rightearskin.getChild("rightspine1");
+        this.rightspine2            = rightearskin.getChild("rightspine2");
+        this.rightspine3            = rightearskin.getChild("rightspine3");
+        this.leftspine1             = leftearskin.getChild("leftspine1");
+        this.leftspine2             = leftearskin.getChild("leftspine2");
+        this.leftspine3             = leftearskin.getChild("leftspine3");
+        this.ironhelmethorn1        = leftspine1.getChild("ironhelmethorn1");
+        this.ironhelmethorn2        = rightspine1.getChild("ironhelmethorn2");
+        this.ironhelmet             = head.getChild("ironhelmet");
+        this.ironhelmetsnout        = snout.getChild("ironhelmetsnout");
+        this.goldhelmethorn1        = leftspine1.getChild("goldhelmethorn1");
+        this.goldhelmethorn2        = rightspine1.getChild("goldhelmethorn2");
+        this.goldhelmet             = head.getChild("goldhelmet");
+        this.goldhelmetsnout        = snout.getChild("goldhelmetsnout");
+        this.diamondhelmet          = head.getChild("diamondhelmet");
+        this.diamondhelmethorn2     = rightspine1.getChild("diamondhelmethorn2");
+        this.diamondhelmethorn1     = leftspine1.getChild("diamondhelmethorn1");
+        this.diamondhelmetsnout     = snout.getChild("diamondhelmetsnout");
+
+        this.torso                  = root.getChild("torso");
+        this.saddle                 = root.getChild("saddle");
+        this.rightshoulder          = root.getChild("rightshoulder");
+        this.leftshoulder           = root.getChild("leftshoulder");
+
+        this.LeftWing               = root.getChild("LeftWing");
+        this.leftuparm              = LeftWing.getChild("leftuparm");
+        this.leftlowarm             = leftuparm.getChild("leftlowarm");
+        this.leftfing1a             = leftlowarm.getChild("leftfing1a");
+        this.leftfing1b             = leftfing1a.getChild("leftfing1b");
+        this.leftfing2a             = leftlowarm.getChild("leftfing2a");
+        this.leftfing2b             = leftfing2a.getChild("leftfing2b");
+        this.leftfing3a             = leftlowarm.getChild("leftfing3a");
+        this.leftfing3b             = leftfing3a.getChild("leftfing3b");
+        this.leftwingflap1          = leftfing1a.getChild("leftwingflap1");
+        this.leftwingflap2          = leftfing2a.getChild("leftwingflap2");
+        this.leftwingflap3          = leftfing3a.getChild("leftwingflap3");
+
+        this.RightWing              = root.getChild("RightWing");
+        this.rightuparm             = RightWing.getChild("rightuparm");
+        this.rightlowarm            = rightuparm.getChild("rightlowarm");
+        this.rightfing1a            = rightlowarm.getChild("rightfing1a");
+        this.rightfing1b            = rightfing1a.getChild("rightfing1b");
+        this.rightwingflap1         = rightfing1a.getChild("rightwingflap1");
+        this.rightfing2a            = rightlowarm.getChild("rightfing2a");
+        this.rightfing2b            = rightfing2a.getChild("rightfing2b");
+        this.rightwingflap2         = rightfing2a.getChild("rightwingflap2");
+        this.rightfing3a            = rightlowarm.getChild("rightfing3a");
+        this.rightfing3b            = rightfing3a.getChild("rightfing3b");
+        this.rightwingflap3         = rightfing3a.getChild("rightwingflap3");
+
+        this.leftupleg              = root.getChild("leftupleg");
+        this.leftmidleg             = leftupleg.getChild("leftmidleg");
+        this.leftlowleg             = leftmidleg.getChild("leftlowleg");
+        this.leftfoot               = leftlowleg.getChild("leftfoot");
+        this.lefttoe1               = leftfoot.getChild("lefttoe1");
+        this.lefttoe3               = leftfoot.getChild("lefttoe3");
+        this.lefttoe2               = leftfoot.getChild("lefttoe2");
+        this.leftclaw1              = lefttoe1.getChild("leftclaw1");
+        this.leftclaw2              = lefttoe2.getChild("leftclaw2");
+        this.leftclaw3              = lefttoe3.getChild("leftclaw3");
+        this.ironleftlegarmor       = leftlowleg.getChild("ironleftlegarmor");
+        this.goldleftlegarmor       = leftlowleg.getChild("goldleftlegarmor");
+        this.diamondleftlegarmor    = leftlowleg.getChild("diamondleftlegarmor");
+
+        this.rightupleg             = root.getChild("rightupleg");
+        this.rightmidleg            = rightupleg.getChild("rightmidleg");
+        this.rightlowleg            = rightmidleg.getChild("rightlowleg");
+        this.rightfoot              = rightlowleg.getChild("rightfoot");
+        this.righttoe1              = rightfoot.getChild("righttoe1");
+        this.righttoe3              = rightfoot.getChild("righttoe3");
+        this.righttoe2              = rightfoot.getChild("righttoe2");
+        this.rightclaw1             = righttoe1.getChild("rightclaw1");
+        this.rightclaw2             = righttoe2.getChild("rightclaw2");
+        this.rightclaw3             = righttoe3.getChild("rightclaw3");
+        this.ironrightlegarmor      = rightlowleg.getChild("ironrightlegarmor");
+        this.goldrightlegarmor      = rightlowleg.getChild("goldrightlegarmor");
+        this.diamondrightlegarmor   = rightlowleg.getChild("diamondrightlegarmor");
+
+        this.storage                = root.getChild("storage");
+        this.chestbelt              = root.getChild("chestbelt");
+        this.stomachbelt            = root.getChild("stomachbelt");
+        this.ironchestarmor         = root.getChild("ironchestarmor");
+        this.ironrightshoulderpad   = root.getChild("ironrightshoulderpad");
+        this.ironleftshoulderpad    = root.getChild("ironleftshoulderpad");
+        this.goldleftshoulder       = root.getChild("goldleftshoulder");
+        this.goldchestarmor         = root.getChild("goldchestarmor");
+        this.goldrightshoulder      = root.getChild("goldrightshoulder");
+        this.diamondleftshoulder    = root.getChild("diamondleftshoulder");
+        this.diamondrightshoulder   = root.getChild("diamondrightshoulder");
+        this.diamondchestarmor      = root.getChild("diamondchestarmor");
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.armor = entityIn.getArmorType();
-        this.isRidden = (entityIn.isBeingRidden());
-        this.isChested = entityIn.getIsChested();
-        this.isSaddled = entityIn.getIsRideable();
-        this.flapwings = (entityIn.wingFlapCounter != 0);
-        this.onAir = entityIn.isOnAir() || entityIn.getIsFlying();
-        this.diving = (entityIn.diveCounter != 0);
-        this.isSitting = entityIn.getIsSitting();
-        this.isGhost = entityIn.getIsGhost();
-        this.openMouth = entityIn.mouthCounter;
-        this.yOffset = entityIn.getAdjustedYOffset();
-        this.transparency = entityIn.tFloat();
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        //
+        // ─── TAIL HIERARCHY ───────────────────────────────────────────────────────────
+        //
+        PartDefinition Tail = root.addOrReplaceChild("Tail",
+                CubeListBuilder.create(),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // back1
+        Tail.addOrReplaceChild("back1",
+                CubeListBuilder.create()
+                        .texOffs(92, 0)
+                        .addBox(-3F, -2F, -12F, 6, 2, 12),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // tail1
+        PartDefinition tail1 = Tail.addOrReplaceChild("tail1",
+                CubeListBuilder.create()
+                        .texOffs(0, 22)
+                        .addBox(-4F, 0F, 0F, 8, 8, 10),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // back2
+        tail1.addOrReplaceChild("back2",
+                CubeListBuilder.create()
+                        .texOffs(100, 14)
+                        .addBox(-2F, -2F, 0F, 4, 2, 10),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // tail2
+        PartDefinition tail2 = tail1.addOrReplaceChild("tail2",
+                CubeListBuilder.create()
+                        .texOffs(0, 40)
+                        .addBox(-3F, 0F, 0F, 6, 6, 9),
+                PartPose.offset(0F, 0F, 10F)
+        );
+        // back3
+        tail2.addOrReplaceChild("back3",
+                CubeListBuilder.create()
+                        .texOffs(104, 26)
+                        .addBox(-1.5F, -2F, 0F, 3, 2, 9),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // tail3
+        PartDefinition tail3 = tail2.addOrReplaceChild("tail3",
+                CubeListBuilder.create()
+                        .texOffs(0, 55)
+                        .addBox(-2F, 0F, 0F, 4, 5, 8),
+                PartPose.offset(0F, 0F, 8F)
+        );
+        // back4
+        tail3.addOrReplaceChild("back4",
+                CubeListBuilder.create()
+                        .texOffs(108, 37)
+                        .addBox(-1F, -2F, 0F, 2, 2, 8),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // tail4
+        PartDefinition tail4 = tail3.addOrReplaceChild("tail4",
+                CubeListBuilder.create()
+                        .texOffs(0, 68)
+                        .addBox(-1F, 0F, 0F, 2, 5, 7),
+                PartPose.offset(0F, -1F, 7F)
+        );
+        // tail5
+        tail4.addOrReplaceChild("tail5",
+                CubeListBuilder.create()
+                        .texOffs(0, 80)
+                        .addBox(-0.5F, 0F, 0F, 1, 3, 7),
+                PartPose.offset(0F, 1F, 6F)
+        );
+
+        //
+        // ─── CHEST & NECK & HEAD ────────────────────────────────────────────────────────
+        //
+        // chest
+        root.addOrReplaceChild("chest",
+                CubeListBuilder.create()
+                        .texOffs(44, 0)
+                        .addBox(-4.5F, 2.7F, -13F, 9, 10, 4),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2602503F, 0F, 0F)
+        );
+
+        // neckplate3
+        PartDefinition neckplate3 = root.addOrReplaceChild("neckplate3",
+                CubeListBuilder.create()
+                        .texOffs(112, 64)
+                        .addBox(-2F, -2F, -2F, 4, 2, 4),
+                PartPose.offsetAndRotation(0F, 0F, -12F, -0.669215F, 0F, 0F)
+        );
+        // neck3
+        PartDefinition neck3 = root.addOrReplaceChild("neck3",
+                CubeListBuilder.create()
+                        .texOffs(100, 113)
+                        .addBox(-3F, 0F, -2F, 6, 7, 8),
+                PartPose.offsetAndRotation(0F, 0F, -12F, -0.669215F, 0F, 0F)
+        );
+
+        // MainHead (root for all head pieces)
+        PartDefinition MainHead = root.addOrReplaceChild("MainHead",
+                CubeListBuilder.create(),
+                PartPose.offset(0F, 3F, -15F)
+        );
+
+        // neck2 (child of MainHead)
+        PartDefinition neck2 = MainHead.addOrReplaceChild("neck2",
+                CubeListBuilder.create()
+                        .texOffs(102, 99)
+                        .addBox(-2.5F, -3F, -8F, 5, 6, 8),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // neckplate2 (child of neck2)
+        neck2.addOrReplaceChild("neckplate2",
+                CubeListBuilder.create()
+                        .texOffs(106, 54)
+                        .addBox(-1.5F, -2F, -8F, 3, 2, 8),
+                PartPose.offset(0F, -3F, 0F)
+        );
+        // neck1 (child of neck2)
+        PartDefinition neck1 = neck2.addOrReplaceChild("neck1",
+                CubeListBuilder.create()
+                        .texOffs(104, 85)
+                        .addBox(-2F, -3F, -8F, 4, 6, 8),
+                PartPose.offset(0F, -0.5F, -5.5F)
+        );
+        // neckplate1 (child of neck1)
+        neck1.addOrReplaceChild("neckplate1",
+                CubeListBuilder.create()
+                        .texOffs(80, 108)
+                        .addBox(-1F, -2F, -8F, 2, 2, 8),
+                PartPose.offset(0F, -3F, 0F)
+        );
+
+        // head (child of neck1)
+        PartDefinition head = neck1.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(98, 70)
+                        .addBox(-3.5F, -3.5F, -8F, 7, 7, 8),
+                PartPose.offset(0F, 0F, -7F)
+        );
+        // snout (child of head)
+        head.addOrReplaceChild("snout",
+                CubeListBuilder.create()
+                        .texOffs(72, 70)
+                        .addBox(-2F, -1.5F, -9F, 4, 3, 9),
+                PartPose.offsetAndRotation(0F, -1.5F, -8F, 2F / 57.29578F, 0F, 0F)
+        );
+        // headplate (child of head)
+        head.addOrReplaceChild("headplate",
+                CubeListBuilder.create()
+                        .texOffs(80, 118)
+                        .addBox(-1F, -1F, -4F, 2, 2, 8),
+                PartPose.offsetAndRotation(0F, -3F, -1F, 10F / 57.29578F, 0F, 0F)
+        );
+        // beak (child of snout)
+        head.getChild("snout").addOrReplaceChild("beak",
+                CubeListBuilder.create()
+                        .texOffs(60, 85)
+                        .addBox(-1.5F, -2.5F, -1.5F, 3, 5, 3),
+                PartPose.offsetAndRotation(0F, 0.8F, -8.0F, -6F / 57.29578F, 45F / 57.29578F, -6F / 57.29578F)
+        );
+        // righteyesock (child of head)
+        head.addOrReplaceChild("righteyesock",
+                CubeListBuilder.create()
+                        .texOffs(70, 108)
+                        .addBox(0F, 0F, 0F, 1, 2, 4),
+                PartPose.offset(-3.5F, -2.5F, -8F)
+        );
+        // lefteyesock (child of head)
+        head.addOrReplaceChild("lefteyesock",
+                CubeListBuilder.create()
+                        .texOffs(70, 114)
+                        .addBox(0F, 0F, 0F, 1, 2, 4),
+                PartPose.offset(2.5F, -2.5F, -8F)
+        );
+        // Jaw (child of head)
+        head.addOrReplaceChild("Jaw",
+                CubeListBuilder.create()
+                        .texOffs(72, 82)
+                        .addBox(-2F, -1F, -9F, 4, 2, 9),
+                PartPose.offsetAndRotation(0F, 2.5F, -7.5F, -10F / 57.29578F, 0F, 0F)
+        );
+        // leftupjaw (child of head)
+        head.addOrReplaceChild("leftupjaw",
+                CubeListBuilder.create()
+                        .texOffs(42, 93)
+                        .addBox(-1F, -1F, -6.5F, 2, 2, 13),
+                PartPose.offsetAndRotation(2F, 0F, -10.5F, -10F / 57.29578F, 10F / 57.29578F, 0F)
+        );
+        // rightupjaw (child of head)
+        head.addOrReplaceChild("rightupjaw",
+                CubeListBuilder.create()
+                        .texOffs(72, 93)
+                        .addBox(-1F, -1F, -6.5F, 2, 2, 13),
+                PartPose.offsetAndRotation(-2F, 0F, -10.5F, -10F / 57.29578F, -10F / 57.29578F, 0F)
+        );
+        // mouthrod (child of head)
+        head.addOrReplaceChild("mouthrod",
+                CubeListBuilder.create()
+                        .texOffs(104, 50)
+                        .addBox(-5F, -1F, -1F, 10, 2, 2),
+                PartPose.offset(0F, 1F, -8F)
+        );
+        // helmetstrap1 (child of head)
+        head.addOrReplaceChild("helmetstrap1",
+                CubeListBuilder.create()
+                        .texOffs(32, 146)
+                        .addBox(-4F, -2F, 0F, 8, 4, 1),
+                PartPose.offset(0F, 2F, -7.5F)
+        );
+        // helmetstrap2 (child of head)
+        head.addOrReplaceChild("helmetstrap2",
+                CubeListBuilder.create()
+                        .texOffs(32, 141)
+                        .addBox(-4F, -2F, 0F, 8, 4, 1),
+                PartPose.offset(0F, 2F, -3.5F)
+        );
+
+        // controlrope1 (child of mouthrod)
+        head.getChild("mouthrod").addOrReplaceChild("controlrope1",
+                CubeListBuilder.create()
+                        .texOffs(66, 43)
+                        .addBox(0F, -2F, 0F, 0, 4, 23),
+                PartPose.offset(4.5F, 1F, 0F)
+        );
+        // controlrope2
+        head.getChild("mouthrod").addOrReplaceChild("controlrope2",
+                CubeListBuilder.create()
+                        .texOffs(66, 43)
+                        .addBox(0F, -2F, 0F, 0, 4, 23),
+                PartPose.offset(-4.5F, 1F, 0F)
+        );
+
+        // rightearskin (child of head)
+        PartDefinition rightearskin = head.addOrReplaceChild("rightearskin",
+                CubeListBuilder.create()
+                        .texOffs(112, 201)
+                        .addBox(0F, -4F, 0F, 0, 8, 8),
+                PartPose.offset(-3F, -0.5F, 0F)
+        );
+        // leftearskin
+        PartDefinition leftearskin = head.addOrReplaceChild("leftearskin",
+                CubeListBuilder.create()
+                        .texOffs(96, 201)
+                        .addBox(0F, -4F, 0F, 0, 8, 8),
+                PartPose.offset(3F, -0.5F, 0F)
+        );
+        // rightspine1 (child of rightearskin)
+        rightearskin.addOrReplaceChild("rightspine1",
+                CubeListBuilder.create()
+                        .texOffs(50, 141)
+                        .addBox(-0.5F, -1F, 0F, 1, 2, 8),
+                PartPose.offsetAndRotation(0F, -2F, 0F, 15F / 57.29578F, 0F, 0F)
+        );
+        // rightspine2 (child of rightearskin)
+        rightearskin.addOrReplaceChild("rightspine2",
+                CubeListBuilder.create()
+                        .texOffs(50, 141)
+                        .addBox(-0.5F, -1F, 0F, 1, 2, 8),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // rightspine3 (child of rightearskin)
+        rightearskin.addOrReplaceChild("rightspine3",
+                CubeListBuilder.create()
+                        .texOffs(50, 141)
+                        .addBox(-0.5F, -1F, 0F, 1, 2, 8),
+                PartPose.offsetAndRotation(0F, 2F, 0F, -15F / 57.29578F, 0F, 0F)
+        );
+        // leftspine1 (child of leftearskin)
+        leftearskin.addOrReplaceChild("leftspine1",
+                CubeListBuilder.create()
+                        .texOffs(68, 141)
+                        .addBox(-0.5F, -1F, 0F, 1, 2, 8),
+                PartPose.offsetAndRotation(0F, -2F, 0F, 15F / 57.29578F, 0F, 0F)
+        );
+        // leftspine2 (child of leftearskin)
+        leftearskin.addOrReplaceChild("leftspine2",
+                CubeListBuilder.create()
+                        .texOffs(68, 141)
+                        .addBox(-0.5F, -1F, 0F, 1, 2, 8),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // leftspine3 (child of leftearskin)
+        leftearskin.addOrReplaceChild("leftspine3",
+                CubeListBuilder.create()
+                        .texOffs(68, 141)
+                        .addBox(-0.5F, -1F, 0F, 1, 2, 8),
+                PartPose.offsetAndRotation(0F, 2F, 0F, -15F / 57.29578F, 0F, 0F)
+        );
+
+        // ironhelmethorn1 (child of leftspine1)
+        leftearskin.getChild("leftspine1").addOrReplaceChild("ironhelmethorn1",
+                CubeListBuilder.create()
+                        .texOffs(106, 139)
+                        .addBox(-1.5F, -1.5F, 0F, 3, 3, 8),
+                PartPose.offset(-0.5F, 0F, 0.1F)
+        );
+        // ironhelmethorn2 (child of rightspine1)
+        rightearskin.getChild("rightspine1").addOrReplaceChild("ironhelmethorn2",
+                CubeListBuilder.create()
+                        .texOffs(106, 128)
+                        .addBox(-1.5F, -1.5F, 0F, 3, 3, 8),
+                PartPose.offset(0.5F, 0F, 0.1F)
+        );
+        // ironhelmet (child of head)
+        head.addOrReplaceChild("ironhelmet",
+                CubeListBuilder.create()
+                        .texOffs(32, 128)
+                        .addBox(-4F, -4F, -9F, 8, 4, 9),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // ironhelmetsnout (child of snout)
+        head.getChild("snout").addOrReplaceChild("ironhelmetsnout",
+                CubeListBuilder.create()
+                        .texOffs(0, 144)
+                        .addBox(-2.5F, -2F, -7F, 5, 2, 7),
+                PartPose.offset(0F, 0F, -1F)
+        );
+        // goldhelmethorn1 (child of leftspine1)
+        leftearskin.getChild("leftspine1").addOrReplaceChild("goldhelmethorn1",
+                CubeListBuilder.create()
+                        .texOffs(106, 161)
+                        .addBox(-1.5F, -1.5F, 0F, 3, 3, 8),
+                PartPose.offset(-0.5F, 0F, 0.1F)
+        );
+        // goldhelmethorn2 (child of rightspine1)
+        rightearskin.getChild("rightspine1").addOrReplaceChild("goldhelmethorn2",
+                CubeListBuilder.create()
+                        .texOffs(106, 150)
+                        .addBox(-1.5F, -1.5F, 0F, 3, 3, 8),
+                PartPose.offset(0.5F, 0F, 0.1F)
+        );
+        // goldhelmet (child of head)
+        head.addOrReplaceChild("goldhelmet",
+                CubeListBuilder.create()
+                        .texOffs(94, 226)
+                        .addBox(-4F, -4F, -9F, 8, 4, 9),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // goldhelmetsnout (child of snout)
+        head.getChild("snout").addOrReplaceChild("goldhelmetsnout",
+                CubeListBuilder.create()
+                        .texOffs(71, 235)
+                        .addBox(-2.5F, -2F, -7F, 5, 2, 7),
+                PartPose.offset(0F, 0F, -1F)
+        );
+        // diamondhelmet (child of head)
+        head.addOrReplaceChild("diamondhelmet",
+                CubeListBuilder.create()
+                        .texOffs(23, 226)
+                        .addBox(-4F, -4F, -9F, 8, 4, 9),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // diamondhelmethorn2 (child of rightspine1)
+        rightearskin.getChild("rightspine1").addOrReplaceChild("diamondhelmethorn2",
+                CubeListBuilder.create()
+                        .texOffs(49, 234)
+                        .addBox(-1.5F, -1.5F, 0F, 3, 3, 8),
+                PartPose.offset(0.5F, 0F, 0.1F)
+        );
+        // diamondhelmethorn1 (child of leftspine1)
+        leftearskin.getChild("leftspine1").addOrReplaceChild("diamondhelmethorn1",
+                CubeListBuilder.create()
+                        .texOffs(49, 245)
+                        .addBox(-1.5F, -1.5F, 0F, 3, 3, 8),
+                PartPose.offset(-0.5F, 0F, 0.1F)
+        );
+        // diamondhelmetsnout (child of snout)
+        head.getChild("snout").addOrReplaceChild("diamondhelmetsnout",
+                CubeListBuilder.create()
+                        .texOffs(0, 235)
+                        .addBox(-2.5F, -2F, -7F, 5, 2, 7),
+                PartPose.offset(0F, 0F, -1F)
+        );
+
+        // torso
+        root.addOrReplaceChild("torso",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-5F, 0F, -12F, 10, 10, 12),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // saddle
+        root.addOrReplaceChild("saddle",
+                CubeListBuilder.create()
+                        .texOffs(38, 70)
+                        .addBox(-3.5F, -2.5F, -8F, 7, 3, 10),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // rightshoulder
+        root.addOrReplaceChild("rightshoulder",
+                CubeListBuilder.create()
+                        .texOffs(42, 83)
+                        .addBox(-6F, 1F, -12.5F, 4, 5, 5),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+        // leftshoulder
+        root.addOrReplaceChild("leftshoulder",
+                CubeListBuilder.create()
+                        .texOffs(24, 83)
+                        .addBox(2F, 1F, -12.5F, 4, 5, 5),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+
+        //
+        // ─── LEFT WING ─────────────────────────────────────────────────────────────────
+        //
+        PartDefinition LeftWing = root.addOrReplaceChild("LeftWing",
+                CubeListBuilder.create(),
+                PartPose.offset(4F, 1F, -11F)
+        );
+        // leftuparm
+        PartDefinition leftuparm = LeftWing.addOrReplaceChild("leftuparm",
+                CubeListBuilder.create()
+                        .texOffs(44, 14)
+                        .addBox(0F, -2F, -2F, 10, 4, 4),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, -10F / 57.29578F, 0F)
+        );
+        // leftlowarm (child of leftuparm)
+        PartDefinition leftlowarm = leftuparm.addOrReplaceChild("leftlowarm",
+                CubeListBuilder.create()
+                        .texOffs(72, 14)
+                        .addBox(0F, -2F, -2F, 10, 4, 4),
+                PartPose.offsetAndRotation(9F, 0F, 0F, 0F, 10F / 57.29578F, 0F)
+        );
+        // leftfing1a (child of leftlowarm)
+        PartDefinition leftfing1a = leftlowarm.addOrReplaceChild("leftfing1a",
+                CubeListBuilder.create()
+                        .texOffs(52, 30)
+                        .addBox(0F, 0F, -1F, 2, 15, 2),
+                PartPose.offsetAndRotation(9F, 1F, 0F, 90F / 57.29578F, 70F / 57.29578F, 0F)
+        );
+        // leftfing1b (child of leftfing1a)
+        leftfing1a.addOrReplaceChild("leftfing1b",
+                CubeListBuilder.create()
+                        .texOffs(52, 47)
+                        .addBox(0F, 0F, -1F, 2, 10, 2),
+                PartPose.offsetAndRotation(0F, 14F, 0F, 0F, 0F, 35F / 57.29578F)
+        );
+        // leftfing2a (child of leftlowarm)
+        PartDefinition leftfing2a = leftlowarm.addOrReplaceChild("leftfing2a",
+                CubeListBuilder.create()
+                        .texOffs(44, 30)
+                        .addBox(-1F, 0F, 0F, 2, 15, 2),
+                PartPose.offsetAndRotation(9F, 1F, 0F, 90F / 57.29578F, 35F / 57.29578F, 0F)
+        );
+        // leftfing2b
+        leftfing2a.addOrReplaceChild("leftfing2b",
+                CubeListBuilder.create()
+                        .texOffs(44, 47)
+                        .addBox(-1F, 0F, 0F, 2, 10, 2),
+                PartPose.offsetAndRotation(0F, 14F, 0F, 0F, 0F, 30F / 57.29578F)
+        );
+        // leftfing3a (child of leftlowarm)
+        PartDefinition leftfing3a = leftlowarm.addOrReplaceChild("leftfing3a",
+                CubeListBuilder.create()
+                        .texOffs(36, 30)
+                        .addBox(-1F, 0F, 1F, 2, 15, 2),
+                PartPose.offsetAndRotation(9F, 1F, 0F, 90F / 57.29578F, -5F / 57.29578F, 0F)
+        );
+        // leftfing3b
+        leftfing3a.addOrReplaceChild("leftfing3b",
+                CubeListBuilder.create()
+                        .texOffs(36, 47)
+                        .addBox(-1F, 0F, 1F, 2, 10, 2),
+                PartPose.offsetAndRotation(0F, 14F, 0F, 0F, 0F, 30F / 57.29578F)
+        );
+        // leftwingflap1 (child of leftfing1a)
+        leftfing1a.addOrReplaceChild("leftwingflap1",
+                CubeListBuilder.create()
+                        .texOffs(74, 153)
+                        .addBox(3.5F, -3F, 0.95F, 14, 24, 0),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 70F / 57.29578F)
+        );
+        // leftwingflap2 (child of leftfing2a)
+        leftfing2a.addOrReplaceChild("leftwingflap2",
+                CubeListBuilder.create()
+                        .texOffs(36, 153)
+                        .addBox(-7F, 1.05F, 1.05F, 19, 24, 0),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, 40F / 57.29578F)
+        );
+        // leftwingflap3 (child of leftfing3a)
+        leftfing3a.addOrReplaceChild("leftwingflap3",
+                CubeListBuilder.create()
+                        .texOffs(0, 153)
+                        .addBox(-17.5F, 1F, 1.1F, 18, 24, 0),
+                PartPose.offset(0F, 0F, 0F)
+        );
+
+        //
+        // ─── RIGHT WING ────────────────────────────────────────────────────────────────
+        //
+        PartDefinition RightWing = root.addOrReplaceChild("RightWing",
+                CubeListBuilder.create(),
+                PartPose.offset(-4F, 1F, -11F)
+        );
+        // rightuparm
+        PartDefinition rightuparm = RightWing.addOrReplaceChild("rightuparm",
+                CubeListBuilder.create()
+                        .texOffs(44, 22)
+                        .addBox(-10F, -2F, -2F, 10, 4, 4),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 10F / 57.29578F, 0F)
+        );
+        // rightlowarm
+        PartDefinition rightlowarm = rightuparm.addOrReplaceChild("rightlowarm",
+                CubeListBuilder.create()
+                        .texOffs(72, 22)
+                        .addBox(-10F, -2F, -2F, 10, 4, 4),
+                PartPose.offsetAndRotation(-9F, 0F, 0F, 0F, -10F / 57.29578F, 0F)
+        );
+        // rightfing1a
+        PartDefinition rightfing1a = rightlowarm.addOrReplaceChild("rightfing1a",
+                CubeListBuilder.create()
+                        .texOffs(36, 30)
+                        .addBox(-1F, 0F, -1F, 2, 15, 2),
+                PartPose.offsetAndRotation(-9F, 1F, -1F, 90F / 57.29578F, -70F / 57.29578F, 0F)
+        );
+        // rightfing1b
+        rightfing1a.addOrReplaceChild("rightfing1b",
+                CubeListBuilder.create()
+                        .texOffs(36, 47)
+                        .addBox(-1F, 0F, -1F, 2, 10, 2),
+                PartPose.offsetAndRotation(0F, 14F, 0F, 0F, 0F, -35F / 57.29578F)
+        );
+        // rightwingflap1
+        rightfing1a.addOrReplaceChild("rightwingflap1",
+                CubeListBuilder.create()
+                        .texOffs(74, 177)
+                        .addBox(-17.5F, -3F, 0.95F, 14, 24, 0),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, -70F / 57.29578F)
+        );
+        // rightfing2a
+        PartDefinition rightfing2a = rightlowarm.addOrReplaceChild("rightfing2a",
+                CubeListBuilder.create()
+                        .texOffs(44, 30)
+                        .addBox(-1F, 0F, 0F, 2, 15, 2),
+                PartPose.offsetAndRotation(-9F, 1F, 0F, 90F / 57.29578F, -35F / 57.29578F, 0F)
+        );
+        // rightfing2b
+        rightfing2a.addOrReplaceChild("rightfing2b",
+                CubeListBuilder.create()
+                        .texOffs(44, 47)
+                        .addBox(-1F, 0F, 0F, 2, 10, 2),
+                PartPose.offsetAndRotation(0F, 14F, 0F, 0F, 0F, -30F / 57.29578F)
+        );
+        // rightwingflap2
+        rightfing2a.addOrReplaceChild("rightwingflap2",
+                CubeListBuilder.create()
+                        .texOffs(36, 177)
+                        .addBox(-19F, 1.05F, 1.05F, 19, 24, 0),
+                PartPose.offsetAndRotation(0F, 0F, 0F, 0F, 0F, -40F / 57.29578F)
+        );
+        // rightfing3a
+        PartDefinition rightfing3a = rightlowarm.addOrReplaceChild("rightfing3a",
+                CubeListBuilder.create()
+                        .texOffs(52, 30)
+                        .addBox(-1F, 0F, 1F, 2, 15, 2),
+                PartPose.offsetAndRotation(-9F, 1F, 0F, 90F / 57.29578F, 5F / 57.29578F, 0F)
+        );
+        // rightfing3b
+        rightfing3a.addOrReplaceChild("rightfing3b",
+                CubeListBuilder.create()
+                        .texOffs(52, 47)
+                        .addBox(-1F, 0F, 1F, 2, 10, 2),
+                PartPose.offsetAndRotation(0F, 14F, 0F, 0F, 0F, -30F / 57.29578F)
+        );
+        // rightwingflap3
+        rightfing3a.addOrReplaceChild("rightwingflap3",
+                CubeListBuilder.create()
+                        .texOffs(0, 177)
+                        .addBox(-0.5F, 1F, 1.1F, 18, 24, 0),
+                PartPose.offset(0F, 0F, 0F)
+        );
+
+        //
+        // ─── LEFT LEG ──────────────────────────────────────────────────────────────────
+        //
+        PartDefinition leftupleg = root.addOrReplaceChild("leftupleg",
+                CubeListBuilder.create()
+                        .texOffs(0, 111)
+                        .addBox(-2F, -3F, -3F, 4, 10, 7),
+                PartPose.offsetAndRotation(5F, 6F, -5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // leftmidleg
+        PartDefinition leftmidleg = leftupleg.addOrReplaceChild("leftmidleg",
+                CubeListBuilder.create()
+                        .texOffs(0, 102)
+                        .addBox(-1.5F, -2F, 0F, 3, 4, 5),
+                PartPose.offset(0F, 5F, 4F)
+        );
+        // leftlowleg
+        PartDefinition leftlowleg = leftmidleg.addOrReplaceChild("leftlowleg",
+                CubeListBuilder.create()
+                        .texOffs(0, 91)
+                        .addBox(-1.5F, 0F, -1.5F, 3, 8, 3),
+                PartPose.offset(0F, 2F, 3.5F)
+        );
+        // leftfoot
+        PartDefinition leftfoot = leftlowleg.addOrReplaceChild("leftfoot",
+                CubeListBuilder.create()
+                        .texOffs(44, 121)
+                        .addBox(-2F, -1F, -3F, 4, 3, 4),
+                PartPose.offsetAndRotation(0F, 7F, 0.5F, 25F / 57.29578F, 0F, 0F)
+        );
+        // lefttoe1
+        leftfoot.addOrReplaceChild("lefttoe1",
+                CubeListBuilder.create()
+                        .texOffs(96, 35)
+                        .addBox(-0.5F, -1F, -3F, 1, 2, 3),
+                PartPose.offset(-1.5F, 1F, -3F)
+        );
+        // lefttoe3
+        leftfoot.addOrReplaceChild("lefttoe3",
+                CubeListBuilder.create()
+                        .texOffs(96, 30)
+                        .addBox(-0.5F, -1F, -3F, 1, 2, 3),
+                PartPose.offset(1.5F, 1F, -3F)
+        );
+        // lefttoe2
+        leftfoot.addOrReplaceChild("lefttoe2",
+                CubeListBuilder.create()
+                        .texOffs(84, 30)
+                        .addBox(-1F, -1.5F, -4F, 2, 3, 4),
+                PartPose.offset(0F, 0.5F, -3F)
+        );
+        // leftclaw1 (child of lefttoe1)
+        leftfoot.getChild("lefttoe1").addOrReplaceChild("leftclaw1",
+                CubeListBuilder.create()
+                        .texOffs(100, 26)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 2, 1),
+                PartPose.offsetAndRotation(0.5F, -0.5F, -2.5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // leftclaw2 (child of lefttoe2)
+        leftfoot.getChild("lefttoe2").addOrReplaceChild("leftclaw2",
+                CubeListBuilder.create()
+                        .texOffs(100, 26)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 3, 1),
+                PartPose.offsetAndRotation(0F, -1F, -3.5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // leftclaw3 (child of lefttoe3)
+        leftfoot.getChild("lefttoe3").addOrReplaceChild("leftclaw3",
+                CubeListBuilder.create()
+                        .texOffs(100, 26)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 2, 1),
+                PartPose.offsetAndRotation(-0.5F, -0.5F, -2.5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // ironleftlegarmor (child of leftlowleg)
+        leftlowleg.addOrReplaceChild("ironleftlegarmor",
+                CubeListBuilder.create()
+                        .texOffs(39, 97)
+                        .addBox(-2F, -2.5F, -2F, 4, 5, 4),
+                PartPose.offset(0F, 2.5F, 0F)
+        );
+        // goldleftlegarmor
+        leftlowleg.addOrReplaceChild("goldleftlegarmor",
+                CubeListBuilder.create()
+                        .texOffs(112, 181)
+                        .addBox(-2F, -2.5F, -2F, 4, 5, 4),
+                PartPose.offset(0F, 2.5F, 0F)
+        );
+        // diamondleftlegarmor
+        leftlowleg.addOrReplaceChild("diamondleftlegarmor",
+                CubeListBuilder.create()
+                        .texOffs(43, 215)
+                        .addBox(-2F, -2.5F, -2F, 4, 5, 4),
+                PartPose.offset(0F, 2.5F, 0F)
+        );
+
+        //
+        // ─── RIGHT LEG ─────────────────────────────────────────────────────────────────
+        //
+        PartDefinition rightupleg = root.addOrReplaceChild("rightupleg",
+                CubeListBuilder.create()
+                        .texOffs(0, 111)
+                        .addBox(-2F, -3F, -3F, 4, 10, 7),
+                PartPose.offsetAndRotation(-5F, 6F, -5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // rightmidleg
+        PartDefinition rightmidleg = rightupleg.addOrReplaceChild("rightmidleg",
+                CubeListBuilder.create()
+                        .texOffs(0, 102)
+                        .addBox(-1.5F, -2F, 0F, 3, 4, 5),
+                PartPose.offset(0F, 5F, 4F)
+        );
+        // rightlowleg
+        PartDefinition rightlowleg = rightmidleg.addOrReplaceChild("rightlowleg",
+                CubeListBuilder.create()
+                        .texOffs(0, 91)
+                        .addBox(-1.5F, 0F, -1.5F, 3, 8, 3),
+                PartPose.offset(0F, 2F, 3.5F)
+        );
+        // rightfoot
+        PartDefinition rightfoot = rightlowleg.addOrReplaceChild("rightfoot",
+                CubeListBuilder.create()
+                        .texOffs(44, 121)
+                        .addBox(-2F, -1F, -3F, 4, 3, 4),
+                PartPose.offsetAndRotation(0F, 7F, 0.5F, 25F / 57.29578F, 0F, 0F)
+        );
+        // righttoe1
+        rightfoot.addOrReplaceChild("righttoe1",
+                CubeListBuilder.create()
+                        .texOffs(96, 35)
+                        .addBox(-0.5F, -1F, -3F, 1, 2, 3),
+                PartPose.offset(-1.5F, 1F, -3F)
+        );
+        // righttoe3
+        rightfoot.addOrReplaceChild("righttoe3",
+                CubeListBuilder.create()
+                        .texOffs(96, 30)
+                        .addBox(-0.5F, -1F, -3F, 1, 2, 3),
+                PartPose.offset(1.5F, 1F, -3F)
+        );
+        // righttoe2
+        rightfoot.addOrReplaceChild("righttoe2",
+                CubeListBuilder.create()
+                        .texOffs(84, 30)
+                        .addBox(-1F, -1.5F, -4F, 2, 3, 4),
+                PartPose.offset(0F, 0.5F, -3F)
+        );
+        // rightclaw1
+        rightfoot.getChild("righttoe1").addOrReplaceChild("rightclaw1",
+                CubeListBuilder.create()
+                        .texOffs(100, 26)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 2, 1),
+                PartPose.offsetAndRotation(0.5F, -0.5F, -2.5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // rightclaw2
+        rightfoot.getChild("righttoe2").addOrReplaceChild("rightclaw2",
+                CubeListBuilder.create()
+                        .texOffs(100, 26)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 3, 1),
+                PartPose.offsetAndRotation(0F, -1F, -3.5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // rightclaw3
+        rightfoot.getChild("righttoe3").addOrReplaceChild("rightclaw3",
+                CubeListBuilder.create()
+                        .texOffs(100, 26)
+                        .addBox(-0.5F, 0F, -0.5F, 1, 2, 1),
+                PartPose.offsetAndRotation(-0.5F, -0.5F, -2.5F, -25F / 57.29578F, 0F, 0F)
+        );
+        // ironrightlegarmor
+        rightlowleg.addOrReplaceChild("ironrightlegarmor",
+                CubeListBuilder.create()
+                        .texOffs(39, 97)
+                        .addBox(-2F, -2.5F, -2F, 4, 5, 4),
+                PartPose.offset(0F, 2.5F, 0F)
+        );
+        // goldrightlegarmor
+        rightlowleg.addOrReplaceChild("goldrightlegarmor",
+                CubeListBuilder.create()
+                        .texOffs(112, 181)
+                        .addBox(-2F, -2.5F, -2F, 4, 5, 4),
+                PartPose.offset(0F, 2.5F, 0F)
+        );
+        // diamondrightlegarmor
+        rightlowleg.addOrReplaceChild("diamondrightlegarmor",
+                CubeListBuilder.create()
+                        .texOffs(43, 215)
+                        .addBox(-2F, -2.5F, -2F, 4, 5, 4),
+                PartPose.offset(0F, 2.5F, 0F)
+        );
+
+        //
+        // ─── STORAGE & BELTS & CHEST ARMOR & SHOULDERS ────────────────────────────────────
+        //
+        root.addOrReplaceChild("storage",
+                CubeListBuilder.create()
+                        .texOffs(28, 59)
+                        .addBox(-5F, -4.5F, 1.5F, 10, 5, 6),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2268928F, 0F, 0F)
+        );
+        // chestbelt
+        root.addOrReplaceChild("chestbelt",
+                CubeListBuilder.create()
+                        .texOffs(0, 201)
+                        .addBox(-5.5F, -0.5F, -9F, 11, 11, 2),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // stomachbelt
+        root.addOrReplaceChild("stomachbelt",
+                CubeListBuilder.create()
+                        .texOffs(0, 201)
+                        .addBox(-5.5F, -0.5F, -3F, 11, 11, 2),
+                PartPose.offset(0F, 0F, 0F)
+        );
+        // ironchestarmor
+        root.addOrReplaceChild("ironchestarmor",
+                CubeListBuilder.create()
+                        .texOffs(0, 128)
+                        .addBox(-5.5F, 2.2F, -13.5F, 11, 11, 5),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2602503F, 0F, 0F)
+        );
+        // ironrightshoulderpad
+        root.addOrReplaceChild("ironrightshoulderpad",
+                CubeListBuilder.create()
+                        .texOffs(74, 201)
+                        .addBox(-6.5F, 0.5F, -13F, 5, 6, 6),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+        // ironleftshoulderpad
+        root.addOrReplaceChild("ironleftshoulderpad",
+                CubeListBuilder.create()
+                        .texOffs(26, 201)
+                        .addBox(1.5F, 0.5F, -13F, 5, 6, 6),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+        // goldleftshoulder
+        root.addOrReplaceChild("goldleftshoulder",
+                CubeListBuilder.create()
+                        .texOffs(71, 244)
+                        .addBox(1.5F, 0.5F, -13F, 5, 6, 6),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+        // goldchestarmor
+        root.addOrReplaceChild("goldchestarmor",
+                CubeListBuilder.create()
+                        .texOffs(71, 219)
+                        .addBox(-5.5F, 2.2F, -13.5F, 11, 11, 5),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2602503F, 0F, 0F)
+        );
+        // goldrightshoulder
+        root.addOrReplaceChild("goldrightshoulder",
+                CubeListBuilder.create()
+                        .texOffs(93, 244)
+                        .addBox(-6.5F, 0.5F, -13F, 5, 6, 6),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+        // diamondleftshoulder
+        root.addOrReplaceChild("diamondleftshoulder",
+                CubeListBuilder.create()
+                        .texOffs(0, 244)
+                        .addBox(1.5F, 0.5F, -13F, 5, 6, 6),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+        // diamondrightshoulder
+        root.addOrReplaceChild("diamondrightshoulder",
+                CubeListBuilder.create()
+                        .texOffs(22, 244)
+                        .addBox(-6.5F, 0.5F, -13F, 5, 6, 6),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2617994F, 0F, 0F)
+        );
+        // diamondchestarmor
+        root.addOrReplaceChild("diamondchestarmor",
+                CubeListBuilder.create()
+                        .texOffs(0, 219)
+                        .addBox(-5.5F, 2.2F, -13.5F, 11, 11, 5),
+                PartPose.offsetAndRotation(0F, 0F, 0F, -0.2602503F, 0F, 0F)
+        );
+
+        // Finally return a  LayerDefinition telling Minecraft “my texture is 128×256”:
+        return LayerDefinition.create(mesh, 128, 256);
     }
+
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        matrixStackIn.push();
-        matrixStackIn.translate(0F, yOffset, 0F);
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount,
+                          float ageInTicks, float netHeadYaw, float headPitch) {
 
-        if (isGhost) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.color4f(0.8F, 0.8F, 0.8F, transparency);
-            //matrixStackIn.scale(1.3F, 1.0F, 1.3F);
-        }
-        this.back1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        this.armor = entity.getArmorType();
+        this.isRidden = (entity.isVehicle() && entity.getControllingPassenger() instanceof Player);
+        this.isChested = entity.getIsChested();
+        this.isSaddled = entity.getIsRideable();
+        this.flapwings = (entity.wingFlapCounter != 0);
+        this.onAir = entity.isOnAir() || entity.getIsFlying();
+        this.diving = (entity.diveCounter != 0);
+        this.isSitting = entity.getIsSitting();
+        this.isGhost = entity.getIsGhost();
+        this.openMouth = entity.mouthCounter;
+        this.yOffset = entity.getAdjustedYOffset();
+        this.transparency = entity.tFloat();
+        //
+        // Copy all the “setRotationAngles(...)” logic here, replacing
+        // ModelRenderer.rotateAngleX/Y/Z with ModelPart.xRot/yRot/zRot,
+        // and ModelRenderer.rotationPointX/Y/Z with ModelPart.setPos(x,y,z) if needed.
+        //
 
-        this.chest.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        // 1) Leg swings (exactly as before):
+        float RLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.8F * limbSwingAmount;
+        float LLegXRot = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
 
-        this.LeftWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightWing.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-        this.rightshoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.leftshoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-        this.neckplate3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.neck3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.torso.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-        if (isChested) {
-            this.storage.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        }
-
-        if (isSaddled) {
-            this.saddle.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.mouthrod.showModel = !false; //render(f5);
-            this.helmetstrap1.showModel = !false; //render(f5);
-            this.helmetstrap2.showModel = !false; //render(f5);
-            this.chestbelt.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-            this.stomachbelt.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-            if (isRidden) {
-                this.controlrope1.showModel = !false;
-                this.controlrope2.showModel = !false;
-            } else {
-                this.controlrope1.showModel = !true;
-                this.controlrope2.showModel = !true;
-            }
-        } else {
-            this.mouthrod.showModel = !true;
-            this.helmetstrap1.showModel = !true;
-            this.helmetstrap2.showModel = !true;
-        }
-
-        this.ironhelmethorn1.showModel = !true;
-        this.ironhelmethorn2.showModel = !true;
-        this.ironhelmet.showModel = !true;
-        this.ironhelmetsnout.showModel = !true;
-        this.ironrightlegarmor.showModel = !true;
-        this.ironleftlegarmor.showModel = !true;
-        this.ironchestarmor.showModel = !true;
-        this.ironrightshoulderpad.showModel = !true;
-        this.ironleftshoulderpad.showModel = !true;
-
-        this.goldleftshoulder.showModel = !true;
-        this.goldchestarmor.showModel = !true;
-        this.goldrightshoulder.showModel = !true;
-        this.goldleftlegarmor.showModel = !true;
-        this.goldrightlegarmor.showModel = !true;
-        this.goldhelmethorn1.showModel = !true;
-        this.goldhelmethorn2.showModel = !true;
-        this.goldhelmet.showModel = !true;
-        this.goldhelmetsnout.showModel = !true;
-
-        this.diamondleftshoulder.showModel = !true;
-        this.diamondrightshoulder.showModel = !true;
-        this.diamondchestarmor.showModel = !true;
-        this.diamondleftlegarmor.showModel = !true;
-        this.diamondrightlegarmor.showModel = !true;
-        this.diamondhelmet.showModel = !true;
-        this.diamondhelmethorn2.showModel = !true;
-        this.diamondhelmethorn1.showModel = !true;
-        this.diamondhelmetsnout.showModel = !true;
-
-        switch (armor) {
-            case 1:
-                this.ironhelmethorn1.showModel = !false;
-                this.ironhelmethorn2.showModel = !false;
-                this.ironhelmet.showModel = !false;
-                this.ironhelmetsnout.showModel = !false;
-                this.ironrightlegarmor.showModel = !false;
-                this.ironleftlegarmor.showModel = !false;
-                this.ironchestarmor.showModel = !false;
-                this.ironrightshoulderpad.showModel = !false;
-                this.ironleftshoulderpad.showModel = !false;
-                break;
-            case 2:
-                this.goldleftshoulder.showModel = !false;
-                this.goldchestarmor.showModel = !false;
-                this.goldrightshoulder.showModel = !false;
-                this.goldleftlegarmor.showModel = !false;
-                this.goldrightlegarmor.showModel = !false;
-                this.goldhelmethorn1.showModel = !false;
-                this.goldhelmethorn2.showModel = !false;
-                this.goldhelmet.showModel = !false;
-                this.goldhelmetsnout.showModel = !false;
-                break;
-            case 3:
-                this.diamondleftshoulder.showModel = !false;
-                this.diamondrightshoulder.showModel = !false;
-                this.diamondchestarmor.showModel = !false;
-                this.diamondleftlegarmor.showModel = !false;
-                this.diamondrightlegarmor.showModel = !false;
-                this.diamondhelmet.showModel = !false;
-                this.diamondhelmethorn2.showModel = !false;
-                this.diamondhelmethorn1.showModel = !false;
-                this.diamondhelmetsnout.showModel = !false;
-                break;
-
-        }
-
-        this.MainHead.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.leftupleg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.rightupleg.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-
-        this.ironchestarmor.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.ironrightshoulderpad.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.ironleftshoulderpad.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.goldleftshoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.goldchestarmor.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.goldrightshoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.diamondleftshoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.diamondrightshoulder.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.diamondchestarmor.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        if (isGhost) {
-            RenderSystem.disableBlend();
-        }
-        matrixStackIn.pop();
-    }
-
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    @SuppressWarnings("unused")
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float RLegXRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 0.8F * limbSwingAmount;
-        float LLegXRot = MathHelper.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
-
+        // 2) Constrain netHeadYaw to ±60°
         netHeadYaw = MoCTools.realAngle(netHeadYaw);
+        float maxYaw = 60F;
+        if (netHeadYaw > maxYaw)  netHeadYaw = maxYaw;
+        if (netHeadYaw < -maxYaw) netHeadYaw = -maxYaw;
 
-        float f10 = 60F;
-        if (netHeadYaw > f10) {
-            netHeadYaw = f10;
-        }
-        if (netHeadYaw < -f10) {
-            netHeadYaw = -f10;
-        }
-        this.neck2.rotateAngleX = -66F / this.radianF + (headPitch * 1 / 3F / this.radianF);
-        this.neck1.rotateAngleX = 30F / this.radianF + (headPitch * 2 / 3F / this.radianF);
+        // 3) Neck rotations from headPitch / netHeadYaw:
+        this.neck2.xRot = -66F / 57.29578F + (headPitch * (1F/3F) / 57.29578F);
+        this.neck1.xRot = 30F  / 57.29578F + (headPitch * (2F/3F) / 57.29578F);
+        this.head.xRot  = 45F  / 57.29578F;
 
-        this.head.rotateAngleX = 45F / this.radianF;
+        this.neck2.yRot = (netHeadYaw * (2F/3F)) / 57.29578F;
+        this.neck1.yRot = (netHeadYaw * (1F/3F)) / 57.29578F;
+        this.head.yRot  = 0F;
+        this.head.zRot  = 0F;
 
-        this.neck2.rotateAngleY = (netHeadYaw * 2 / 3F) / this.radianF;
-        this.neck1.rotateAngleY = (netHeadYaw * 1 / 3F) / this.radianF;
-
-        this.head.rotateAngleY = 0F;
-        this.head.rotateAngleZ = 0F;
-
+        // 4) If ridden, lock neck yaw, and if not onAir, let neck pitch follow leg:
         if (isRidden) {
-            //straight neck when mounted
-            this.neck1.rotateAngleY = 0F;
-            this.neck2.rotateAngleY = 0F;
-
+            this.neck1.yRot = 0F;
+            this.neck2.yRot = 0F;
             if (onAir) {
-                this.neck1.rotateAngleX = 0F;
-                this.neck2.rotateAngleX = 0F;
-
+                this.neck1.xRot = 0F;
+                this.neck2.xRot = 0F;
             } else {
-
-                this.neck2.rotateAngleX = -66F / this.radianF + (RLegXRot * 1 / 60F);
-                this.neck1.rotateAngleX = 30F / this.radianF + (RLegXRot * 2 / 60F);
+                this.neck2.xRot = -66F / 57.29578F + (RLegXRot * (1F/60F));
+                this.neck1.xRot = 30F  / 57.29578F + (RLegXRot * (2F/60F));
             }
         }
-        float TailXRot = MathHelper.cos(limbSwing * 0.4F) * 0.2F * limbSwingAmount;
-        this.tail1.rotateAngleX = (-19F / this.radianF);// - TailXRot;
-        this.tail2.rotateAngleX = (-16F / this.radianF);// + TailXRot;
-        this.tail3.rotateAngleX = (7F / this.radianF);// + TailXRot;
-        this.tail4.rotateAngleX = (11F / this.radianF);// + TailXRot;
-        this.tail5.rotateAngleX = (8F / this.radianF);
 
-        float t = limbSwing / 2;
+        // 5) Tail wagging (wave through tail1→tail5):
+        float TailXRot = Mth.cos(limbSwing * 0.4F) * 0.2F * limbSwingAmount;
+        this.tail1.xRot = (-19F / 57.29578F);
+        this.tail2.xRot = (-16F / 57.29578F);
+        this.tail3.xRot = (  7F / 57.29578F);
+        this.tail4.xRot = ( 11F / 57.29578F);
+        this.tail5.xRot = (  8F / 57.29578F);
 
-        /*
-         * if (movetail) { t = ageInTicks/4F; }
-         */
-        float A = 0.15F;//0.8F;
+        float t = limbSwing / 2F;
+        float A = 0.15F;
         float w = 0.9F;
         float k = 0.6F;
-
         int i = 0;
         float tailLat;
-        tailLat = A * MathHelper.sin(w * t - k * i++);
-        this.tail1.rotateAngleY = tailLat;
-        tailLat = A * MathHelper.sin(w * t - k * i++);
-        this.tail2.rotateAngleY = tailLat;
-        tailLat = A * MathHelper.sin(w * t - k * i++);
-        this.tail3.rotateAngleY = tailLat;
-        tailLat = A * MathHelper.sin(w * t - k * i++);
-        this.tail4.rotateAngleY = tailLat;
-        tailLat = A * MathHelper.sin(w * t - k * i++);
-        this.tail5.rotateAngleY = tailLat;
+        tailLat = A * Mth.sin(w * t - k * i++);
+        this.tail1.yRot = tailLat;
+        tailLat = A * Mth.sin(w * t - k * i++);
+        this.tail2.yRot = tailLat;
+        tailLat = A * Mth.sin(w * t - k * i++);
+        this.tail3.yRot = tailLat;
+        tailLat = A * Mth.sin(w * t - k * i++);
+        this.tail4.yRot = tailLat;
+        tailLat = A * Mth.sin(w * t - k * i++);
+        this.tail5.yRot = tailLat;
 
+        // 6) Wing flapping or cruising:
         float WingSpread;
-
-        /*
-         * flapping wings or cruising. IF flapping wings, move up and down. if
-         * cruising, movement depends on speed
-         */
-        //float WingRot = 0F;
         if (flapwings && !isGhost) {
-            WingSpread = MathHelper.cos((ageInTicks * 0.3F) + 3.141593F) * 1.2F;// * limbSwingAmount;
-        } else
-        //cruising
-        {
-            //WingRot = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.2F * limbSwingAmount;
-            WingSpread = MathHelper.cos((limbSwing * 0.5F)) * 0.1F;//* 1.2F * limbSwingAmount;
+            WingSpread = Mth.cos((ageInTicks * 0.3F) + (float)Math.PI) * 1.2F;
+        } else {
+            WingSpread = Mth.cos(limbSwing * 0.5F) * 0.1F;
         }
 
         if (onAir || isGhost) {
-            //rightfing1a.rotateAngleY = -70F/radianF+ WingSpread;
+            float speedMov = limbSwingAmount * 0.5F;
+            if (isGhost) speedMov = 0.5F;
 
-            float speedMov = (limbSwingAmount * 0.5F);
-            if (isGhost) {
-                speedMov = 0.5F;
-            }
+            // Left wing onAir:
+            this.leftuparm.zRot    = (WingSpread * 2F / 3F);
+            this.rightuparm.zRot   = (-WingSpread * 2F / 3F);
+            this.leftlowarm.zRot   = (WingSpread * 0.1F);
+            this.leftfing1a.zRot   = (WingSpread);
+            this.leftfing2a.zRot   = (WingSpread * 0.8F);
+            this.rightlowarm.zRot  = (-WingSpread * 0.1F);
+            this.rightfing1a.zRot  = (-WingSpread);
+            this.rightfing2a.zRot  = (-WingSpread * 0.8F);
 
-            this.leftuparm.rotateAngleZ = WingSpread * 2 / 3F;
-            this.rightuparm.rotateAngleZ = -WingSpread * 2 / 3F;
-            this.leftlowarm.rotateAngleZ = WingSpread * 0.1F;
-            this.leftfing1a.rotateAngleZ = WingSpread;
-            this.leftfing2a.rotateAngleZ = WingSpread * 0.8F;
+            this.leftuparm.yRot    = -10F / 57.29578F - (WingSpread / 2F);
+            this.leftlowarm.yRot   = 15F / 57.29578F + (WingSpread / 2F);
+            this.leftfing1a.yRot   = 70F / 57.29578F;
+            this.leftfing2a.yRot   = 35F / 57.29578F;
+            this.leftfing3a.yRot   = -5F / 57.29578F;
 
-            this.rightlowarm.rotateAngleZ = -WingSpread * 0.1F;
-            this.rightfing1a.rotateAngleZ = -WingSpread;
-            this.rightfing2a.rotateAngleZ = -WingSpread * 0.8F;
+            this.rightuparm.yRot   = 10F / 57.29578F + (WingSpread / 2F);
+            this.rightlowarm.yRot  = -15F / 57.29578F - (WingSpread / 2F);
+            this.rightfing1a.yRot  = -70F / 57.29578F;
+            this.rightfing2a.yRot  = -35F / 57.29578F;
+            this.rightfing3a.yRot  = 5F / 57.29578F;
 
-            //System.out.println("WingSpread = " + WingSpread);
-            this.leftuparm.rotateAngleY = -10F / this.radianF - (WingSpread / 2.5F);
-            this.leftlowarm.rotateAngleY = 15F / this.radianF + (WingSpread / 2.5F);
-            this.leftfing1a.rotateAngleY = 70F / this.radianF;
-            this.leftfing2a.rotateAngleY = 35F / this.radianF;
-            this.leftfing3a.rotateAngleY = -5F / this.radianF;
-            this.rightuparm.rotateAngleY = 10F / this.radianF + (WingSpread / 2.5F);
-            this.rightlowarm.rotateAngleY = -15F / this.radianF - (WingSpread / 2.5F);
-            this.rightfing1a.rotateAngleY = -70F / this.radianF;
-            this.rightfing2a.rotateAngleY = -35F / this.radianF;
-            this.rightfing3a.rotateAngleY = 5F / this.radianF;
-
-            this.leftupleg.rotateAngleX = speedMov;
-            this.leftmidleg.rotateAngleX = speedMov;
-            this.leftfoot.rotateAngleX = 25F / this.radianF;
-            this.lefttoe1.rotateAngleX = speedMov;
-            this.lefttoe2.rotateAngleX = speedMov;
-            this.lefttoe3.rotateAngleX = speedMov;
-            this.rightfoot.rotateAngleX = 25F / this.radianF;
-            this.rightupleg.rotateAngleX = speedMov;
-            this.rightmidleg.rotateAngleX = speedMov;
-            this.righttoe1.rotateAngleX = speedMov;
-            this.righttoe2.rotateAngleX = speedMov;
-            this.righttoe3.rotateAngleX = speedMov;
+            // Legs tucked when onAir:
+            this.leftupleg.xRot   = speedMov;
+            this.leftmidleg.xRot  = speedMov;
+            this.leftfoot.xRot    = 25F / 57.29578F;
+            this.lefttoe1.xRot    = speedMov;
+            this.lefttoe2.xRot    = speedMov;
+            this.lefttoe3.xRot    = speedMov;
+            this.rightfoot.xRot   = 25F / 57.29578F;
+            this.rightupleg.xRot  = speedMov;
+            this.rightmidleg.xRot = speedMov;
+            this.righttoe1.xRot   = speedMov;
+            this.righttoe2.xRot   = speedMov;
+            this.righttoe3.xRot   = speedMov;
 
         } else {
+            // Wings folded at rest:
+            this.leftlowarm.zRot    = 0F;
+            this.leftfing1a.zRot    = 0F;
+            this.leftfing2a.zRot    = 0F;
+            this.rightlowarm.zRot   = 0F;
+            this.rightfing1a.zRot   = 0F;
+            this.rightfing2a.zRot   = 0F;
 
-            this.leftlowarm.rotateAngleZ = 0F;
-            this.leftfing1a.rotateAngleZ = 0F;
-            this.leftfing2a.rotateAngleZ = 0F;
-            this.rightlowarm.rotateAngleZ = 0F;
-            this.rightfing1a.rotateAngleZ = 0F;
-            this.rightfing2a.rotateAngleZ = 0F;
-            //leftuparm.rotateAngleX = RLegXRot;
-            //rightuparm.rotateAngleX = LLegXRot;
+            this.leftuparm.zRot     = 30F / 57.29578F;
+            this.leftuparm.yRot     = -60F / 57.29578F + (LLegXRot / 5F);
+            this.leftlowarm.yRot    = 105F / 57.29578F;
+            this.leftfing1a.yRot    = -20F / 57.29578F;
+            this.leftfing2a.yRot    = -26F / 57.29578F;
+            this.leftfing3a.yRot    = -32F / 57.29578F;
 
-            this.leftuparm.rotateAngleZ = 30F / this.radianF;
-            this.leftuparm.rotateAngleY = -60F / this.radianF + (LLegXRot / 5F);
+            this.rightuparm.yRot    = 60F / 57.29578F - (RLegXRot / 5F);
+            this.rightuparm.zRot    = -30F / 57.29578F;
+            this.rightlowarm.yRot   = -105F / 57.29578F;
+            this.rightfing1a.yRot   = 16F / 57.29578F;
+            this.rightfing2a.yRot   = 26F / 57.29578F;
+            this.rightfing3a.yRot   = 32F / 57.29578F;
 
-            this.leftlowarm.rotateAngleY = 105F / this.radianF;
-            this.leftfing1a.rotateAngleY = -20F / this.radianF;
-            this.leftfing2a.rotateAngleY = -26F / this.radianF;
-            this.leftfing3a.rotateAngleY = -32F / this.radianF;
-
-            this.rightuparm.rotateAngleY = 60F / this.radianF - (RLegXRot / 5F);
-            this.rightuparm.rotateAngleZ = -30F / this.radianF;
-
-            this.rightlowarm.rotateAngleY = -105F / this.radianF;
-            this.rightfing1a.rotateAngleY = 16F / this.radianF;
-            this.rightfing2a.rotateAngleY = 26F / this.radianF;
-            this.rightfing3a.rotateAngleY = 32F / this.radianF;
-
-            //test mouth opening
-
-            this.leftupleg.rotateAngleX = -25F / this.radianF + LLegXRot;
-            this.rightupleg.rotateAngleX = -25F / this.radianF + RLegXRot;
-
-            this.leftmidleg.rotateAngleX = 0F;
-            this.leftlowleg.rotateAngleX = 0F;
-            this.leftfoot.rotateAngleX = 25F / this.radianF - (LLegXRot);
-            this.lefttoe1.rotateAngleX = LLegXRot;
-            this.lefttoe2.rotateAngleX = LLegXRot;
-            this.lefttoe3.rotateAngleX = LLegXRot;
-
-            this.rightmidleg.rotateAngleX = 0F;
-            this.rightlowleg.rotateAngleX = 0F;
-            this.rightfoot.rotateAngleX = 25F / this.radianF - (RLegXRot);
-            this.righttoe1.rotateAngleX = RLegXRot;
-            this.righttoe2.rotateAngleX = RLegXRot;
-            this.righttoe3.rotateAngleX = RLegXRot;
-
+            // Leg walking/rest animation:
+            this.leftupleg.xRot     = -25F / 57.29578F + LLegXRot;
+            this.rightupleg.xRot    = -25F / 57.29578F + RLegXRot;
+            this.leftmidleg.xRot    = 0F;
+            this.leftlowleg.xRot    = 0F;
+            this.leftfoot.xRot      = 25F / 57.29578F - LLegXRot;
+            this.lefttoe1.xRot      = LLegXRot;
+            this.lefttoe2.xRot      = LLegXRot;
+            this.lefttoe3.xRot      = LLegXRot;
+            this.rightmidleg.xRot   = 0F;
+            this.rightlowleg.xRot   = 0F;
+            this.rightfoot.xRot     = 25F / 57.29578F - RLegXRot;
+            this.righttoe1.xRot     = RLegXRot;
+            this.righttoe2.xRot     = RLegXRot;
+            this.righttoe3.xRot     = RLegXRot;
         }
 
+        // 7) Sitting pose overrides:
         if (isSitting) {
-            this.leftupleg.rotateAngleX = 45F / this.radianF + LLegXRot;
-            this.rightupleg.rotateAngleX = 45F / this.radianF + RLegXRot;
-            this.leftmidleg.rotateAngleX = 30F;
-            this.rightmidleg.rotateAngleX = 30F;
-            this.neck2.rotateAngleX = -36F / this.radianF + (headPitch * 1 / 3F / this.radianF);
-            this.neck1.rotateAngleX = 30F / this.radianF + (headPitch * 2 / 3F / this.radianF);
+            this.leftupleg.xRot  = 45F / 57.29578F + LLegXRot;
+            this.rightupleg.xRot = 45F / 57.29578F + RLegXRot;
+            this.leftmidleg.xRot = 30F / 57.29578F;
+            this.rightmidleg.xRot = 30F / 57.29578F;
+            this.neck2.xRot = -36F / 57.29578F + (headPitch * (1F/3F) / 57.29578F);
+            this.neck1.xRot = 30F  / 57.29578F + (headPitch * (2F/3F) / 57.29578F);
         }
+
+        // 8) Diving pose overrides:
         if (diving) {
-            this.leftuparm.rotateAngleZ = -40F / this.radianF;
-            this.rightuparm.rotateAngleZ = 40F / this.radianF;
-            this.leftlowarm.rotateAngleZ = 0F;
-            this.leftfing1a.rotateAngleZ = 0F;
-            this.leftfing2a.rotateAngleZ = 0F;
+            this.leftuparm.zRot    = -40F / 57.29578F;
+            this.rightuparm.zRot   = 40F / 57.29578F;
+            this.leftlowarm.zRot   = 0F;
+            this.leftfing1a.zRot   = 0F;
+            this.leftfing2a.zRot   = 0F;
+            this.rightlowarm.zRot  = 0F;
+            this.rightfing1a.zRot  = 0F;
+            this.rightfing2a.zRot  = 0F;
 
-            this.rightlowarm.rotateAngleZ = 0F;
-            this.rightfing1a.rotateAngleZ = 0F;
-            this.rightfing2a.rotateAngleZ = 0F;
+            this.leftuparm.yRot    = -50F / 57.29578F;
+            this.leftlowarm.yRot   = 30F / 57.29578F;
+            this.leftfing1a.yRot   = 50F / 57.29578F;
+            this.leftfing2a.yRot   = 30F / 57.29578F;
+            this.leftfing3a.yRot   = 10F / 57.29578F;
 
-            //leftuparm.rotateAngleZ = 30F/radianF ;
-            this.leftuparm.rotateAngleY = -50F / this.radianF;// + (LLegXRot /5F);
-            this.leftlowarm.rotateAngleY = 30F / this.radianF;
-            this.leftfing1a.rotateAngleY = 50F / this.radianF;
-            this.leftfing2a.rotateAngleY = 30F / this.radianF;
-            this.leftfing3a.rotateAngleY = 10F / this.radianF;
-
-            this.rightuparm.rotateAngleY = 50F / this.radianF;// - (RLegXRot /5F);
-            //rightuparm.rotateAngleZ = -30F/radianF;
-
-            this.rightlowarm.rotateAngleY = -30F / this.radianF;
-            this.rightfing1a.rotateAngleY = -50F / this.radianF;
-            this.rightfing2a.rotateAngleY = -30F / this.radianF;
-            this.rightfing3a.rotateAngleY = -10F / this.radianF;
+            this.rightuparm.yRot   = 50F / 57.29578F;
+            this.rightlowarm.yRot  = -30F / 57.29578F;
+            this.rightfing1a.yRot  = -50F / 57.29578F;
+            this.rightfing2a.yRot  = -30F / 57.29578F;
+            this.rightfing3a.yRot  = -10F / 57.29578F;
         }
 
+        // 9) Mouth opening:
         if (openMouth != 0) {
-            float mouthMov = (MathHelper.cos((openMouth - 15) * 0.11F) * 0.8F);
-            this.Jaw.rotateAngleX = (-10F / this.radianF) + mouthMov;
-            this.leftearskin.rotateAngleY = mouthMov;
-            this.rightearskin.rotateAngleY = -mouthMov;
-
+            float mouthMov = Mth.cos((openMouth - 15) * 0.11F) * 0.8F;
+            this.Jaw.xRot          = (-10F / 57.29578F) + mouthMov;
+            this.leftearskin.yRot  = mouthMov;
+            this.rightearskin.yRot = -mouthMov;
         } else {
-            this.Jaw.rotateAngleX = -10F / this.radianF;
-            this.leftearskin.rotateAngleY = 0F;
-            this.rightearskin.rotateAngleY = 0F;
+            this.Jaw.xRot          = -10F / 57.29578F;
+            this.leftearskin.yRot  = 0F;
+            this.rightearskin.yRot = 0F;
         }
+    }
+
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer,
+                               int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        poseStack.pushPose();
+        // Apply the entity’s vertical offset:
+        poseStack.translate(0F, yOffset, 0F);
+
+        // If ghost, enable translucent blending:
+        if (isGhost) {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.clearColor(0.8F, 0.8F, 0.8F, transparency);
+        }
+
+        // Render spine+tail+chest in order:
+        this.back1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.chest.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Wings:
+        this.LeftWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.RightWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Shoulders:
+        this.rightshoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftshoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Neck “plates”:
+        this.neckplate3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.neck3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Torso:
+        this.torso.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Chested storage (if chest flag set):
+        if (isChested) {
+            this.storage.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+
+        // Saddle + straps + belts (if isSaddled):
+        if (isSaddled) {
+            this.saddle.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.mouthrod.visible      = true;
+            this.helmetstrap1.visible  = true;
+            this.helmetstrap2.visible  = true;
+            this.chestbelt.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.stomachbelt.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+            if (isRidden) {
+                this.controlrope1.visible = true;
+                this.controlrope2.visible = true;
+            } else {
+                this.controlrope1.visible = false;
+                this.controlrope2.visible = false;
+            }
+        } else {
+            this.mouthrod.visible      = false;
+            this.helmetstrap1.visible  = false;
+            this.helmetstrap2.visible  = false;
+        }
+
+        // Hide all armor by default:
+        this.ironhelmethorn1.visible       = false;
+        this.ironhelmethorn2.visible       = false;
+        this.ironhelmet.visible            = false;
+        this.ironhelmetsnout.visible       = false;
+        this.ironrightlegarmor.visible     = false;
+        this.ironleftlegarmor.visible      = false;
+        this.ironchestarmor.visible        = false;
+        this.ironrightshoulderpad.visible  = false;
+        this.ironleftshoulderpad.visible   = false;
+        this.goldleftshoulder.visible      = false;
+        this.goldchestarmor.visible        = false;
+        this.goldrightshoulder.visible     = false;
+        this.goldleftlegarmor.visible      = false;
+        this.goldrightlegarmor.visible     = false;
+        this.goldhelmethorn1.visible       = false;
+        this.goldhelmethorn2.visible       = false;
+        this.goldhelmet.visible            = false;
+        this.goldhelmetsnout.visible       = false;
+        this.diamondleftshoulder.visible   = false;
+        this.diamondrightshoulder.visible  = false;
+        this.diamondchestarmor.visible     = false;
+        this.diamondleftlegarmor.visible   = false;
+        this.diamondrightlegarmor.visible  = false;
+        this.diamondhelmet.visible         = false;
+        this.diamondhelmethorn2.visible    = false;
+        this.diamondhelmethorn1.visible    = false;
+        this.diamondhelmetsnout.visible    = false;
+
+        // Show whichever armor set is selected:
+        switch (armor) {
+            case 1:
+                this.ironhelmethorn1.visible       = true;
+                this.ironhelmethorn2.visible       = true;
+                this.ironhelmet.visible            = true;
+                this.ironhelmetsnout.visible       = true;
+                this.ironrightlegarmor.visible     = true;
+                this.ironleftlegarmor.visible      = true;
+                this.ironchestarmor.visible        = true;
+                this.ironrightshoulderpad.visible  = true;
+                this.ironleftshoulderpad.visible   = true;
+                break;
+            case 2:
+                this.goldleftshoulder.visible      = true;
+                this.goldchestarmor.visible        = true;
+                this.goldrightshoulder.visible     = true;
+                this.goldleftlegarmor.visible      = true;
+                this.goldrightlegarmor.visible     = true;
+                this.goldhelmethorn1.visible       = true;
+                this.goldhelmethorn2.visible       = true;
+                this.goldhelmet.visible            = true;
+                this.goldhelmetsnout.visible       = true;
+                break;
+            case 3:
+                this.diamondleftshoulder.visible   = true;
+                this.diamondrightshoulder.visible  = true;
+                this.diamondchestarmor.visible     = true;
+                this.diamondleftlegarmor.visible   = true;
+                this.diamondrightlegarmor.visible  = true;
+                this.diamondhelmet.visible         = true;
+                this.diamondhelmethorn2.visible    = true;
+                this.diamondhelmethorn1.visible    = true;
+                this.diamondhelmetsnout.visible    = true;
+                break;
+        }
+
+        // Render head & legs last so they appear on top:
+        this.MainHead.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leftupleg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightupleg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // Render chest armor & shoulder pads *after* legs/head so they overlay properly:
+        this.ironchestarmor.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.ironrightshoulderpad.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.ironleftshoulderpad.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.goldleftshoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.goldchestarmor.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.goldrightshoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.diamondleftshoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.diamondrightshoulder.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.diamondchestarmor.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        // If ghost, disable blending so future renders aren’t translucent:
+        if (isGhost) {
+            RenderSystem.disableBlend();
+        }
+        poseStack.popPose();
     }
 }

@@ -5,15 +5,13 @@ package drzhark.mocreatures.entity.aquatic;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityGoldFish extends MoCEntitySmallFish {
 
-    public MoCEntityGoldFish(EntityType<? extends MoCEntityGoldFish> type, World world) {
+    public MoCEntityGoldFish(EntityType<? extends MoCEntityGoldFish> type, Level world) {
         super(type, world);
         this.setTypeMoC(5);
     }
@@ -23,7 +21,8 @@ public class MoCEntityGoldFish extends MoCEntitySmallFish {
         return MoCreatures.proxy.getModelTexture("smallfish_goldfish.png");
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.GOLDFISH;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.GOLDFISH;
     }
 }

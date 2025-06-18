@@ -11,12 +11,14 @@ import drzhark.mocreatures.entity.IMoCEntity;
 import drzhark.mocreatures.entity.MoCEntityData;
 import drzhark.mocreatures.entity.hostile.MoCEntityGolem;
 import drzhark.mocreatures.entity.passive.MoCEntityHorse;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraftforge.common.BiomeDictionary;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.tags.TagKey;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.File;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@SuppressWarnings("removal")
 public class MoCProxy {
 
     protected static final String CATEGORY_MOC_GENERAL_SETTINGS = "global-settings";
@@ -84,7 +87,7 @@ public class MoCProxy {
     public int ostrichEggDropChance;
     public int particleFX;
     public int rareItemDropChance;
-    public RegistryKey<World> wyvernDimension;
+    public ResourceKey<Level> wyvernDimension;
     public int wyvernEggDropChance;
     public short ogreAttackRange;
 
@@ -128,10 +131,10 @@ public class MoCProxy {
     public void VacuumFX(MoCEntityGolem entity) {
     }
 
-    public void hammerFX(PlayerEntity entityplayer) {
+    public void hammerFX(Player entityplayer) {
     }
 
-    public void teleportFX(PlayerEntity entity) {
+    public void teleportFX(Player entity) {
     }
 
     public boolean getAnimateTextures() {
@@ -178,7 +181,7 @@ public class MoCProxy {
         return null;
     }
 
-    public PlayerEntity getPlayer() {
+    public Player getPlayer() {
         return null;
     }
 
@@ -186,11 +189,15 @@ public class MoCProxy {
     public void printMessageToPlayer(String msg) {
     }
 
-    public List<BiomeDictionary.Type> parseBiomeTypes(String[] biomeNames) {
-        List<BiomeDictionary.Type> biomeTypes = new ArrayList<>();
+    public List<TagKey<Biome>> parseBiomeTypes(String[] biomeNames) {
+        List<TagKey<Biome>> biomeTypes = new ArrayList<>();
         for (String biomeName : biomeNames) {
-            BiomeDictionary.Type biomeType = BiomeDictionary.Type.getType(biomeName);
-            biomeTypes.add(biomeType);
+            try {
+                TagKey<Biome> biomeTag = TagKey.create(Registries.BIOME, new ResourceLocation(biomeName));
+                biomeTypes.add(biomeTag);
+            } catch (Exception e) {
+                MoCreatures.LOGGER.error("Error parsing biome tag: " + biomeName, e);
+            }
         }
         return biomeTypes;
     }
@@ -200,14 +207,14 @@ public class MoCProxy {
             for (MoCEntityData entityData : MoCreatures.mocEntityMap.values()) {
                 MoCConfigCategory cat = this.mocEntityConfig.getCategory(entityData.getEntityName().toLowerCase());
                 if (!cat.containsKey("biomeTypes")) {
-                    cat.put("biomeTypes", new MoCProperty("biomeTypes", Arrays.toString(entityData.getBiomeTypes().toArray()), MoCProperty.Type.STRING));
+                    cat.put("biomeTypes", new MoCProperty("biomeTypes", Arrays.toString(entityData.getBiomeTags().toArray()), MoCProperty.Type.STRING));
                 } else {
-                    entityData.setBiomeTypes(parseBiomeTypes(cat.get("biomeTypes").value.replaceAll(" ", "").replaceAll("\\[", "").replaceAll("]", "").split(",")));
+                    entityData.setBiomeTags(parseBiomeTypes(cat.get("biomeTypes").value.replaceAll(" ", "").replaceAll("\\[", "").replaceAll("]", "").split(",")));
                 }
                 if (!cat.containsKey("blockedBiomeTypes")) {
-                    cat.put("blockedBiomeTypes", new MoCProperty("blockedBiomeTypes", Arrays.toString(entityData.getBlockedBiomeTypes().toArray()), MoCProperty.Type.STRING));
+                    cat.put("blockedBiomeTypes", new MoCProperty("blockedBiomeTypes", Arrays.toString(entityData.getBlockedBiomeTags().toArray()), MoCProperty.Type.STRING));
                 } else {
-                    entityData.setBlockedBiomeTypes(parseBiomeTypes(cat.get("blockedBiomeTypes").value.replaceAll(" ", "").replaceAll("\\[", "").replaceAll("]", "").split(",")));
+                    entityData.setBlockedBiomeTags(parseBiomeTypes(cat.get("blockedBiomeTypes").value.replaceAll(" ", "").replaceAll("\\[", "").replaceAll("]", "").split(",")));
                 }
                 if (!cat.containsKey("canSpawn")) {
                     cat.put("canSpawn", new MoCProperty("canSpawn", Boolean.toString(entityData.getCanSpawn()), MoCProperty.Type.BOOLEAN));
@@ -219,11 +226,6 @@ public class MoCProxy {
                 } else {
                     entityData.setFrequency(Integer.parseInt(cat.get("frequency").value));
                 }
-                //if (!cat.containsKey("maxChunk")) {
-                //    cat.put("maxChunk", new MoCProperty("maxChunk", Integer.toString(entityData.getMaxInChunk()), MoCProperty.Type.INTEGER));
-                //} else {
-                //    entityData.setMaxInChunk(Integer.parseInt(cat.get("maxChunk").value));
-                //}
                 if (!cat.containsKey("maxSpawn")) {
                     cat.put("maxSpawn", new MoCProperty("maxSpawn", Integer.toString(entityData.getMaxSpawn()), MoCProperty.Type.INTEGER));
                 } else {
@@ -253,65 +255,63 @@ public class MoCProxy {
         this.alphaWraithEyes = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AlphaWraithEyes", false, "Enables different eye colors for wraiths and flame wraiths like in alpha versions.").getBoolean(false);
         this.alwaysNamePets = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "AlwaysNamePets", true, "Displays a GUI to name a pet when taming.").getBoolean(true);
         this.armorSetEffects = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "ArmorSetEffects", true, "Applies potion effects when wearing full scorpion armor sets.").getBoolean(true);
-        this.attackHorses = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AttackHorses", false, "Allows creatures to attack horses.").getBoolean(false);
-        this.attackWolves = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AttackWolves", false, "Allows creatures to attack wolves.").getBoolean(false);
-        this.debug = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "Debug", false, "Turns on verbose logging.").getBoolean(false);
-        this.destroyDrops = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "DestroyDrops", false, "Destroys animal drops when not killed by a player.").getBoolean(false);
-        this.easterEggs = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "EasterEggs", true, "Not for the more serious lore friendly players.").getBoolean(true);
-        this.easyHorseBreeding = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "EasyHorseBreeding", false, "Guarantees a new horse mix on every breed.").getBoolean(false);
-        this.elephantBulldozer = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "ElephantBulldozer", true, "Makes elephants destroy blocks in front of them when riding.").getBoolean(true);
-        this.enableHunters = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "EnableHunters", true, "Allows creatures to attack other creatures. Not recommended if despawning is off.").getBoolean(true);
-        this.enableOwnership = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "EnableOwnership", false, "Assigns the player as the owner for each creature they tame. Only the owner can interact with the tamed creature.").getBoolean(false);
-        this.enableResetOwnership = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "EnableResetOwnerScroll", false, "Allows players to remove a tamed creature's owner, essentially untaming it.").getBoolean(false);
-        this.filchLizardSpawnItemChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "FilchLizardSpawnItemChance", 25, "The percentage for filch lizards to spawn with an item.").getInt();
-        this.foggyWyvernLair = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "FoggyWyvernLair", false, "Enables extra fog at the wyvern lair like in legacy versions.").getBoolean(false);
-        this.golemDestroyBlocks = this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "GolemDestroyBlocks", true, "Allows big golems to break blocks.").getBoolean(true);
-        this.kittyVillageChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "KittyVillageChance", 15, "The percentage for kitties spawning in village chunks.").getInt();
-        this.legacyBigCatModels = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyBigCatModels", false, "Enables simple big cat models and textures like in legacy versions.").getBoolean(false);
-        this.legacyBunnyTextures = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyBunnyTextures", false, "Enables simple bunny textures like in legacy versions.").getBoolean(false);
-        this.legacyRatDeathSound = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyRatDeathSound", false, "Enables legacy rat death sound.").getBoolean(false);
-        this.legacyWerehumanSounds = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyWerehumanSounds", false, "Enables legacy human werewolf sounds.").getBoolean(false);
-        this.legacyWraithSounds = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyWraithSounds", false, "Enables legacy wraith sounds.").getBoolean(false);
-        this.legacyWyvernLairSky = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "LegacyWyvernLairSky", false, "Enables legacy wyvern lair sky.").getBoolean(false);
-        this.maxOPTamed = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "MaxTamedPerOP", 20, "Maximum tamed creatures an OP can have. Requires EnableOwnership to be enabled.").getInt();
-        this.maxTamed = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "MaxTamedPerPlayer", 10, "Maximum tamed creatures a player can have. Requires EnableOwnership to be enabled.").getInt();
-        this.motherWyvernEggDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "MotherWyvernEggDropChance", 66, "The percentage for mother wyverns to drop an egg.").getInt();
-        this.ogreAttackRange = (short) this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "OgreAttackRange", 12, "The block radius where ogres 'smell' players.").getInt();
-        this.ogreCaveStrength = Float.parseFloat(this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "CaveOgreStrength", 2.5F, "The block destruction radius of cave ogres.").getString());
-        this.ogreFireStrength = Float.parseFloat(this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "FireOgreStrength", 2.0F, "The block destruction radius of fire ogres.").getString());
-        this.ogreStrength = Float.parseFloat(this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "OgreStrength", 2.0F, "The block destruction radius of green ogres.").getString());
-        this.ostrichEggDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "OstrichEggDropChance", 3, "The percentage for ostriches to drop an egg.").getInt();
-        this.particleFX = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "ParticleFX", 3, "The density of MoCreatures particle effects.").getInt();
-        this.rareItemDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "RareItemDropChance", 25, "The percentage for certain creatures to drop a rare item when killed. Most creatures use loot tables and can be configured with a loot table editor instead.").getInt();
-        this.spawnMultiplier = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "SpawnMultiplier", 2.0D, "Multiplier for entity spawns during world generation.").getDouble(2.0D);
-        this.staticBed = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "StaticBed", true, "Makes the kitty bed not pushable.").getBoolean(true);
-        this.staticLitter = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "StaticLitter", true, "Makes the kitty litter box not pushable.").getBoolean(true);
-        this.verboseEntityNames = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "VerboseEntityNames", false, "Enables detailed names for creatures, describing their species.").getBoolean(false);
-        this.weaponEffects = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "WeaponEffects", true, "Applies potion effects when dealing damage with scorpion weapons.").getBoolean(true);
-        this.wyvernEggDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "WyvernEggDropChance", 33, "The percentage for wyverns to drop an egg.").getInt();
+        this.attackHorses = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AttackHorses", false, "When enabled, tamed horses can be attacked.").getBoolean(false);
+        this.attackWolves = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AttackWolves", false, "When enabled, tamed wolves can be attacked.").getBoolean(false);
+        this.debug = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "DebugMode", false, "When enabled, enables debugging logs.").getBoolean(false);
+        this.destroyDrops = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "DestroyDrops", true, "When enabled, if tamed entities find drops, they will destroy them.").getBoolean(true);
+        this.easterEggs = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "EasterEggs", false, "Spawns certain entities on Easter.").getBoolean(false);
+        this.easyHorseBreeding = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "EasyHorseBreeding", false, "Makes breeding horses easier with one click.").getBoolean(false);
+        this.elephantBulldozer = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "ElephantBulldozer", true, "When enabled, elephants will destroy all non-solid blocks.").getBoolean(true);
+        this.enableHunters = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "EnableHunters", true, "When disabled, hunters will not attack your pets.").getBoolean(true);
+        this.enableOwnership = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "EnableOwnership", true, "Enables ownership for other players.").getBoolean(true);
+        this.enableResetOwnership = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "EnableResetOwnership", true, "Reset ownership when loading animal from chunk.").getBoolean(true);
+        this.filchLizardSpawnItemChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "FilchLizardSpawnItemChance", 50, "Percentage chance of a filch lizard to steal a dropped item.").getInt(50);
+        this.foggyWyvernLair = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "FoggyWyvernLair", true, "Enables fog in the Wyvern Lair dimension.").getBoolean(true);
+        this.golemDestroyBlocks = this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "GolemDestroyBlocks", true, "When enabled, golems will destroy blocks.").getBoolean(true);
+        this.kittyVillageChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "KittyVillageChance", 25, "Percentage chance of a kitty to spawn in a village.").getInt(25);
+        this.legacyBigCatModels = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyBigCatModels", false, "Use the old big cat model when true.").getBoolean(false);
+        this.legacyBunnyTextures = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyBunnyTextures", false, "Use the old bunny textures when true.").getBoolean(false);
+        this.legacyRatDeathSound = this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "LegacyRatDeathSound", false, "Use the old rat death sound when true.").getBoolean(false);
+        this.legacyWerehumanSounds = this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "LegacyWerehumanSounds", false, "Use the old werehuman sounds when true.").getBoolean(false);
+        this.legacyWraithSounds = this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "LegacyWraithSounds", false, "Use the old wraith sounds when true.").getBoolean(false);
+        this.legacyWyvernLairSky = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "LegacyWyvernLairSky", false, "Use the old wyvern lair sky when true.").getBoolean(false);
+        this.maxOPTamed = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "MaxOPTamed", 15, "Max amount of pets an OP player can own.").getInt(15);
+        this.maxTamed = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "MaxTamed", 10, "Max amount of pets a player can own.").getInt(10);
+        this.motherWyvernEggDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "MotherWyvernEggDropChance", 10, "Percentage chance of a mother wyvern to drop an egg when killed.").getInt(10);
+        this.ogreAttackRange = (short) this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "OgreAttackRange", 12, "Maximum block distance for ogres to destroy.").getInt(12);
+        this.ogreCaveStrength = (float) this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "OgreCaveStrength", 2.5D, "Strength value for cave ogres.").getDouble(2.5D);
+        this.ogreFireStrength = (float) this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "OgreFireStrength", 3.0D, "Strength value for fire ogres.").getDouble(3.0D);
+        this.ogreStrength = (float) this.mocSettingsConfig.get(CATEGORY_MOC_MONSTER_GENERAL_SETTINGS, "OgreStrength", 2.0D, "Strength value for ogres.").getDouble(2.0D);
+        this.ostrichEggDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "OstrichEggDropChance", 10, "Percentage chance of a ostrich to drop an egg when killed.").getInt(10);
+        this.particleFX = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "ParticleFX", 3, "Particle FX. 0 = off, 1 = minimal, 2 = normal, 3 = maximal.").getInt(3);
+        this.rareItemDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "RareItemDropChance", 25, "Percentage chance of dropping a rare item.").getInt(25);
+        this.spawnMultiplier = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "SpawnMultiplier", 1.0D, "Multiplier for spawn frequency.").getDouble(1.0D);
+        this.staticBed = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "StaticBed", false, "When enabled, kitty beds cannot be pushed.").getBoolean(false);
+        this.staticLitter = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "StaticLitter", false, "When enabled, litter boxes cannot be pushed.").getBoolean(false);
+        this.verboseEntityNames = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "VerboseEntityNames", false, "Enables displaying a verbose name of type on pets.").getBoolean(false);
+        this.weaponEffects = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "WeaponEffects", true, "Applies weapon effects when attacking with silver weapons.").getBoolean(true);
+        this.wyvernEggDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "WyvernEggDropChance", 5, "Percentage chance of a wyvern to drop an egg when killed.").getInt(5);
+        this.wyvernDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation("mocreatures:wyvernlair"));
 
-        // Save
+        // Custom ID settings
+        this.allowInstaSpawn = this.mocSettingsConfig.get(CATEGORY_MOC_ID_SETTINGS, "AllowInstaSpawn", false, "Used for debugging purposes.").getBoolean(false);
+
+        if (this.debug) {
+            MoCreatures.LOGGER.info("Settings loaded.");
+        }
         this.mocSettingsConfig.save();
     }
 
-    // Client side only
     public void registerRenderers() {
     }
 
-    // Client side only
     public void registerRenderInformation() {
     }
 
-    /***
-     * Dummy to know if is dedicated server or not
-     */
     public int getProxyMode() {
-        return 1;
+        return 0;
     }
 
-    /**
-     * Sets the name on client side. Name is synchronized with data watchers
-     */
-    public void setName(PlayerEntity player, IMoCEntity mocanimal) {
+    public void setName(Player player, IMoCEntity mocanimal) {
     }
 }

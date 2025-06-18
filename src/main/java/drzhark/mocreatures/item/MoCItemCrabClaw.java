@@ -1,96 +1,83 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.item;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import drzhark.mocreatures.init.MoCItems;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.common.ForgeMod;
 
 import java.util.UUID;
 
-@SuppressWarnings("deprecation")
 public class MoCItemCrabClaw extends MoCItem {
 
     protected static final UUID REACH_DISTANCE_MODIFIER = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
     protected static final UUID TOUGHNESS_MODIFIER = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
+
     public final int armor;
     public final int enchantability;
     public final float reach;
     public final float toughness;
+
     private Multimap<Attribute, AttributeModifier> attributeModifiers;
 
-    public MoCItemCrabClaw(Item.Properties properties, String name, int enchantability, float toughness, int armor, float reach) {
-        super(properties, name);
+    public MoCItemCrabClaw(Item.Properties properties, int enchantability, float toughness, int armor, float reach) {
+        super(properties);
         this.armor = armor;
         this.enchantability = enchantability;
         this.reach = reach;
         this.toughness = toughness;
     }
 
-    // TODO: Damage claw while placing/destroying blocks or hitting mobs
     @Override
-    public boolean hitEntity(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-    	Item itemOffhand = attacker.getHeldItemOffhand().getItem();
-    	
-        if (itemOffhand instanceof MoCItemCrabClaw) {
-            stack.damageItem(1, attacker, (entity) -> {
-                entity.sendBreakAnimation(EquipmentSlotType.MAINHAND);
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        Item offhand = attacker.getOffhandItem().getItem();
+        if (offhand instanceof MoCItemCrabClaw) {
+            stack.hurtAndBreak(1, attacker, (entity) -> {
+                entity.broadcastBreakEvent(EquipmentSlot.MAINHAND);
             });
         }
-
         return true;
     }
 
     @Override
-    public boolean onBlockDestroyed(ItemStack stack, World worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving) {
-    	Item itemOffhand = entityLiving.getHeldItemOffhand().getItem();
-    	
-        if (!worldIn.isRemote && state.getBlockHardness(worldIn, pos) != 0.0D && itemOffhand instanceof MoCItemCrabClaw) {
-            stack.damageItem(1, entityLiving, (entity) -> {
-                entity.sendBreakAnimation(EquipmentSlotType.MAINHAND);
+    public boolean mineBlock(ItemStack stack, Level level, BlockState state, BlockPos pos, LivingEntity entity) {
+        if (!level.isClientSide && state.getDestroySpeed(level, pos) != 0.0F && entity.getOffhandItem().getItem() instanceof MoCItemCrabClaw) {
+            stack.hurtAndBreak(1, entity, (e) -> {
+                e.broadcastBreakEvent(EquipmentSlot.MAINHAND);
             });
         }
-
-        return true;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public boolean isFull3D() {
         return true;
     }
 
     @Override
-    public int getItemEnchantability() {
+    public int getEnchantmentValue() {
         return enchantability;
     }
 
     @Override
-    public boolean getIsRepairable(ItemStack toRepair, ItemStack repair) {
-        return repair.getItem() == MoCItems.animalHide ? true : super.getIsRepairable(toRepair, repair);
+    public boolean isValidRepairItem(ItemStack toRepair, ItemStack repair) {
+        return repair.getItem() == MoCItems.ANIMALHIDE.get() || super.isValidRepairItem(toRepair, repair);
     }
 
     @Override
-    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot) {
-        if (attributeModifiers == null){
+    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot slot) {
+        if (attributeModifiers == null) {
             ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
             builder.put(Attributes.ARMOR, new AttributeModifier(TOUGHNESS_MODIFIER, "Crab claw armor", armor, AttributeModifier.Operation.ADDITION));
-            builder.put(net.minecraftforge.common.ForgeMod.REACH_DISTANCE.get(), new AttributeModifier(REACH_DISTANCE_MODIFIER, "Crab claw reach", reach, AttributeModifier.Operation.ADDITION));
+            builder.put(ForgeMod.ENTITY_REACH.get(), new AttributeModifier(REACH_DISTANCE_MODIFIER, "Crab claw reach", reach, AttributeModifier.Operation.ADDITION));
             builder.put(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(TOUGHNESS_MODIFIER, "Crab claw toughness", toughness, AttributeModifier.Operation.ADDITION));
-            this.attributeModifiers = builder.build();
+            attributeModifiers = builder.build();
         }
-        return equipmentSlot == EquipmentSlotType.OFFHAND ? this.attributeModifiers : super.getAttributeModifiers(equipmentSlot);
+        return slot == EquipmentSlot.OFFHAND ? attributeModifiers : super.getDefaultAttributeModifiers(slot);
     }
 }
+

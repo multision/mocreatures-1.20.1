@@ -21,9 +21,9 @@ public class CompatHandler {
 
     static {
         try {
-            File file = new File(Minecraft.getInstance().gameDir, "config" + File.separator + "mia" + File.separator + "mocreatures.cfg");
+            File file = new File(Minecraft.getInstance().gameDirectory, "config" + File.separator + "mia" + File.separator + "mocreatures.cfg");
             if (Files.exists(file.toPath())) {
-                File tempFile = new File(Minecraft.getInstance().gameDir, "config" + File.separator + "mia" + File.separator + "mocreatures_temp.cfg");
+                File tempFile = new File(Minecraft.getInstance().gameDirectory, "config" + File.separator + "mia" + File.separator + "mocreatures_temp.cfg");
                 List<String> configEntries = new ArrayList<>();
                 configEntries.add("Enable Hatchery integration");
                 configEntries.add("Enable Ice and Fire additions");
@@ -46,9 +46,9 @@ public class CompatHandler {
                 file.delete();
                 tempFile.renameTo(file);
             }
-            file = new File(Minecraft.getInstance().gameDir, "config" + File.separator + "mia" + File.separator + "base.cfg");
+            file = new File(Minecraft.getInstance().gameDirectory, "config" + File.separator + "mia" + File.separator + "base.cfg");
             if (Files.exists(file.toPath())) {
-                File tempFile = new File(Minecraft.getInstance().gameDir, "config" + File.separator + "mia" + File.separator + "base_temp.cfg");
+                File tempFile = new File(Minecraft.getInstance().gameDirectory, "config" + File.separator + "mia" + File.separator + "base_temp.cfg");
                 String targetConfigEntry = "Replaces all raw meat drops with cooked ones";
                 try (BufferedReader br = new BufferedReader(new FileReader(file)); BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))) {
                     String line;

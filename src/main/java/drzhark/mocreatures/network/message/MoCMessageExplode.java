@@ -4,10 +4,10 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.hostile.MoCEntityOgre;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -22,21 +22,22 @@ public class MoCMessageExplode {
         this.entityId = entityId;
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeInt(this.entityId);
     }
 
-    public MoCMessageExplode(ByteBuf buffer) {
+    public MoCMessageExplode(FriendlyByteBuf buffer) {
         this.entityId = buffer.readInt();
     }
 
-    public static boolean onMessage(MoCMessageExplode message, Supplier<NetworkEvent.Context> ctx) {
+    public static void onMessage(MoCMessageExplode message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Entity ent = Minecraft.getInstance().player.level().getEntity(message.entityId);
+            if (ent instanceof MoCEntityOgre) {
+                ((MoCEntityOgre) ent).performDestroyBlastAttack();
+            }
+        });
         ctx.get().setPacketHandled(true);
-        Entity ent = Minecraft.getInstance().player.world.getEntityByID(message.entityId);
-        if (ent instanceof MoCEntityOgre) {
-            ((MoCEntityOgre) ent).performDestroyBlastAttack();
-        }
-        return true;
     }
 
     @Override

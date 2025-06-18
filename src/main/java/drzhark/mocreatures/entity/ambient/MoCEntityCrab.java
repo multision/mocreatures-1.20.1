@@ -10,21 +10,21 @@ import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.entity.tameable.MoCEntityTameableAnimal;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -32,10 +32,10 @@ import javax.annotation.Nullable;
 
 public class MoCEntityCrab extends MoCEntityTameableAnimal {
 
-    public MoCEntityCrab(EntityType<? extends MoCEntityCrab> type, World world) {
+    public MoCEntityCrab(EntityType<? extends MoCEntityCrab> type, Level world) {
         super(type, world);
         //setSize(0.45F, 0.3F);
-        setAge(50 + this.rand.nextInt(50));
+        setMoCAge(50 + this.random.nextInt(50));
     }
 
     @Override
@@ -43,21 +43,25 @@ public class MoCEntityCrab extends MoCEntityTameableAnimal {
         this.goalSelector.addGoal(1, new EntityAIFollowOwnerPlayer(this, 0.8D, 6F, 5F));
         this.goalSelector.addGoal(4, new EntityAIWanderMoC2(this, 1.0D));
         this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1.0D, true));
-        this.goalSelector.addGoal(6, new LookAtGoal(this, PlayerEntity.class, 8.0F));
-        this.goalSelector.addGoal(6, new LookRandomlyGoal(this));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityTameableAnimal.registerAttributes().createMutableAttribute(Attributes.FOLLOW_RANGE, 12.0D).createMutableAttribute(Attributes.MAX_HEALTH, 6.0D).createMutableAttribute(Attributes.ARMOR, 2.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.3D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 1.5D);
+    public static AttributeSupplier.Builder registerAttributes() {
+        return MoCEntityTameableAnimal.createAttributes()
+                .add(Attributes.FOLLOW_RANGE, 12.0D)
+                .add(Attributes.MAX_HEALTH, 6.0D)
+                .add(Attributes.ARMOR, 2.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.3D)
+                .add(Attributes.ATTACK_DAMAGE, 1.5D);
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(5) + 1);
+            setTypeMoC(this.random.nextInt(5) + 1);
         }
-
     }
 
     @Override
@@ -77,46 +81,48 @@ public class MoCEntityCrab extends MoCEntityTameableAnimal {
     }
 
     @Override
-    protected int getExperiencePoints(PlayerEntity player) {
-        return 1 + this.world.rand.nextInt(3);
+    public int getExperienceReward() {
+        return 1 + this.level().getRandom().nextInt(3);
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.CRAB;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.CRAB;
     }
 
     @Override
-    public boolean isOnLadder() {
-        return this.collidedHorizontally;
+    public boolean onClimbable() {
+        return this.horizontalCollision;
     }
 
     public boolean climbing() {
-        return !this.onGround && isOnLadder();
+        return !this.onGround() && onClimbable();
     }
 
     @Override
-    public void jump() {
+    public void jumpFromGround() {
     }
 
     @Override
-    protected void collideWithEntity(Entity entity) {
-        if (entity instanceof PlayerEntity && this.getAttackTarget() == null && !(entity.world.getDifficulty() == Difficulty.PEACEFUL)) {
-            entity.attackEntityFrom(DamageSource.causeMobDamage(this), 1.5F);
+    protected void doPush(Entity entity) {
+        if (entity instanceof Player && this.getTarget() == null && !(entity.level().getDifficulty() == Difficulty.PEACEFUL)) {
+            entity.hurt(this.damageSources().mobAttack(this), 1.5F);
         }
 
-        super.collideWithEntity(entity);
+        super.doPush(entity);
     }
 
     @Override
-    public boolean attackEntityAsMob(Entity entity) {
+    public boolean doHurtTarget(Entity entity) {
         this.playSound(MoCSoundEvents.ENTITY_GOAT_SMACK.get(), 1.0F, 2.0F);
-        return super.attackEntityAsMob(entity);
+        return super.doHurtTarget(entity);
     }
 
     @OnlyIn(Dist.CLIENT)
     @Override
     public float getSizeFactor() {
-        return 0.7F * getAge() * 0.01F;
+        return 0.7F * getMoCAge() * 0.01F;
     }
 
     @Override
@@ -130,8 +136,8 @@ public class MoCEntityCrab extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public CreatureAttribute getCreatureAttribute() {
-        return CreatureAttribute.ARTHROPOD;
+    public MobType getMobType() {
+        return MobType.ARTHROPOD;
     }
 
     @Override

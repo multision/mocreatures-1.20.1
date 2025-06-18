@@ -8,19 +8,19 @@ import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityInsect;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
@@ -28,30 +28,31 @@ public class MoCEntityDragonfly extends MoCEntityInsect {
 
     private int soundCount;
 
-    public MoCEntityDragonfly(EntityType<? extends MoCEntityDragonfly> type, World world) {
+    public MoCEntityDragonfly(EntityType<? extends MoCEntityDragonfly> type, Level world) {
         super(type, world);
         this.texture = "dragonflya.png";
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityInsect.registerAttributes().createMutableAttribute(Attributes.ARMOR, 1.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityInsect.registerAttributes()
+                .add(Attributes.ARMOR, 1.0D);
     }
 
     @Override
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
-        if (this.world.getDimensionKey() == MoCreatures.proxy.wyvernDimension) this.enablePersistence();
-        return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
+        if (this.level().dimension() == MoCreatures.proxy.wyvernDimension) this.setPersistenceRequired();
+        return super.finalizeSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
     }
 
     @Override
-    public boolean canDespawn(double distanceToClosestPlayer) {
-        return this.world.getDimensionKey() != MoCreatures.proxy.wyvernDimension;
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return this.level().dimension() != MoCreatures.proxy.wyvernDimension;
     }
 
     @Override
     public void selectType() {
         if (getTypeMoC() == 0) {
-            setTypeMoC(this.rand.nextInt(4) + 1);
+            setTypeMoC(this.random.nextInt(4) + 1);
         }
     }
 
@@ -70,12 +71,12 @@ public class MoCEntityDragonfly extends MoCEntityInsect {
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void tick() {
+        super.tick();
 
-        if (!this.world.isRemote) {
-            PlayerEntity ep = this.world.getClosestPlayer(this, 5D);
-            if (ep != null && getIsFlying() && --this.soundCount == -1) {
+        if (!this.level().isClientSide()) {
+            Player player = this.level().getNearestPlayer(this, 5D);
+            if (player != null && getIsFlying() && --this.soundCount == -1) {
                 MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_DRAGONFLY_AMBIENT.get());
                 this.soundCount = 20;
             }
@@ -93,7 +94,9 @@ public class MoCEntityDragonfly extends MoCEntityInsect {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.DRAGONFLY;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.DRAGONFLY;
     }
 
     @Override
@@ -102,7 +105,7 @@ public class MoCEntityDragonfly extends MoCEntityInsect {
     }
 
     @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         if (getIsFlying()) {
             return 0.25F;
         }

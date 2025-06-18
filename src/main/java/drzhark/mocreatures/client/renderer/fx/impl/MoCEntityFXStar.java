@@ -4,72 +4,72 @@
 package drzhark.mocreatures.client.renderer.fx.impl;
 
 import drzhark.mocreatures.client.renderer.fx.data.StarParticleData;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class MoCEntityFXStar extends SpriteTexturedParticle {
+public class MoCEntityFXStar extends TextureSheetParticle {
 
-    public MoCEntityFXStar(ClientWorld world, double posX, double posY, double posZ,
-                           float red, float green, float blue, IAnimatedSprite spriteSet) {
+    public MoCEntityFXStar(ClientLevel world, double posX, double posY, double posZ,
+                           float red, float green, float blue, SpriteSet spriteSet) {
         super(world, posX, posY, posZ, 0.0D, 0.0D, 0.0D);
 
-        this.motionX *= 0.8D;
-        this.motionY = this.rand.nextFloat() * 0.4F + 0.05F;
-        this.motionZ *= 0.8D;
+        this.xd *= 0.8D;
+        this.yd = this.random.nextFloat() * 0.4F + 0.05F;
+        this.zd *= 0.8D;
 
-        this.particleRed = red;
-        this.particleGreen = green;
-        this.particleBlue = blue;
-        this.particleAlpha = 1.0F;
+        this.rCol = red;
+        this.gCol = green;
+        this.bCol = blue;
+        this.alpha = 1.0F;
 
         this.setSize(0.01F, 0.01F);
-        this.particleGravity = 0.06F;
-        this.maxAge = (int)(64.0D / (Math.random() * 0.8D + 0.2D));
-        this.particleScale *= 0.6F;
+        this.gravity = 0.06F;
+        this.lifetime = (int)(64.0D / (Math.random() * 0.8D + 0.2D));
+        this.quadSize *= 0.6F;
 
-        this.selectSpriteWithAge(spriteSet);
+        this.setSpriteFromAge(spriteSet);
     }
 
     @Override
     public void tick() {
-        this.prevPosX = this.posX;
-        this.prevPosY = this.posY;
-        this.prevPosZ = this.posZ;
+        this.xo = this.x;
+        this.yo = this.y;
+        this.zo = this.z;
 
-        this.particleScale *= 0.995F;
-        this.motionY -= 0.03D;
-        this.move(this.motionX, this.motionY, this.motionZ);
-        this.motionX *= 0.9D;
-        this.motionY *= 0.2D;
-        this.motionZ *= 0.9D;
+        this.quadSize *= 0.995F;
+        this.yd -= 0.03D;
+        this.move(this.xd, this.yd, this.zd);
+        this.xd *= 0.9D;
+        this.yd *= 0.2D;
+        this.zd *= 0.9D;
 
         if (this.onGround) {
-            this.motionX *= 0.7D;
-            this.motionZ *= 0.7D;
+            this.xd *= 0.7D;
+            this.zd *= 0.7D;
         }
 
-        if (this.maxAge-- <= 0) {
-            this.setExpired();
+        if (this.lifetime-- <= 0) {
+            this.remove();
         }
     }
 
     @Override
-    public IParticleRenderType getRenderType() {
-        return IParticleRenderType.PARTICLE_SHEET_LIT;
+    public ParticleRenderType getRenderType() {
+        return ParticleRenderType.PARTICLE_SHEET_LIT;
     }
 
-    public static class Factory implements IParticleFactory<StarParticleData> {
-        private final IAnimatedSprite spriteSet;
+    public static class Factory implements ParticleProvider<StarParticleData> {
+        private final SpriteSet spriteSet;
 
-        public Factory(IAnimatedSprite spriteSet) {
+        public Factory(SpriteSet spriteSet) {
             this.spriteSet = spriteSet;
         }
 
         @Override
-        public Particle makeParticle(StarParticleData data, ClientWorld world, double x, double y, double z,
+        public Particle createParticle(StarParticleData data, ClientLevel world, double x, double y, double z,
                                      double xSpeed, double ySpeed, double zSpeed) {
             return new MoCEntityFXStar(world, x, y, z, data.red, data.green, data.blue, spriteSet);
         }

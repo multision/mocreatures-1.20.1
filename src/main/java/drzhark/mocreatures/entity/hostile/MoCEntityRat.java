@@ -6,66 +6,70 @@ package drzhark.mocreatures.entity.hostile;
 import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityMob;
+import drzhark.mocreatures.entity.IMoCEntity;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.passive.IronGolemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.pathfinding.ClimberPathNavigator;
-import net.minecraft.pathfinding.PathNavigator;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraftforge.common.BiomeDictionary;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 public class MoCEntityRat extends MoCEntityMob {
 
-    private static final DataParameter<Boolean> CLIMBING = EntityDataManager.createKey(MoCEntityRat.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> CLIMBING = SynchedEntityData.defineId(MoCEntityRat.class,
+            EntityDataSerializers.BOOLEAN);
 
-    public MoCEntityRat(EntityType<? extends MoCEntityRat> type, World world) {
+    public MoCEntityRat(EntityType<? extends MoCEntityRat> type, Level world) {
         super(type, world);
-        //setSize(0.58F, 0.455F);
-        experienceValue = 5;
+        // setSize(0.58F, 0.455F);
+        this.xpReward = 5;
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new MoCEntityRat.AIRatAttack(this, 1.0D, true));
-        this.goalSelector.addGoal(8, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new MoCEntityRat.AIRatTarget<>(this, PlayerEntity.class, true));
-        this.targetSelector.addGoal(3, new MoCEntityRat.AIRatTarget<>(this, IronGolemEntity.class, true));
+        this.targetSelector.addGoal(2, new MoCEntityRat.AIRatTarget<>(this, Player.class, true));
+        this.targetSelector.addGoal(3, new MoCEntityRat.AIRatTarget<>(this, IronGolem.class, true));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityMob.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 16.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.3D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.0D);
-    }
-
-    @Override
-    protected PathNavigator createNavigator(World worldIn) {
-        return new ClimberPathNavigator(this, worldIn);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityMob.createAttributes().add(Attributes.MAX_HEALTH, 16.0D).add(Attributes.MOVEMENT_SPEED, 0.3D)
+                .add(Attributes.ATTACK_DAMAGE, 3.0D);
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(CLIMBING, Boolean.FALSE);
+    protected PathNavigation createNavigation(Level worldIn) {
+        return new WallClimberNavigation(this, worldIn);
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(CLIMBING, Boolean.FALSE);
     }
 
     @Override
@@ -73,7 +77,7 @@ public class MoCEntityRat extends MoCEntityMob {
         checkSpawningBiome();
 
         if (getTypeMoC() == 0) {
-            int i = this.rand.nextInt(100);
+            int i = this.random.nextInt(100);
             if (i <= 65) {
                 setTypeMoC(1);
             } else if (i <= 98) {
@@ -98,15 +102,19 @@ public class MoCEntityRat extends MoCEntityMob {
 
     @Override
     public boolean checkSpawningBiome() {
-        BlockPos pos = new BlockPos(MathHelper.floor(this.getPosX()), MathHelper.floor(getBoundingBox().minY), this.getPosZ());
-        RegistryKey<Biome> currentbiome = MoCTools.biomeKind(this.world, pos);
+        BlockPos pos = new BlockPos(Mth.floor(this.getX()), Mth.floor(getBoundingBox().minY), Mth.floor(this.getZ()));
+        ResourceKey<Biome> currentbiome = MoCTools.biomeKind(this.level(), pos);
 
         try {
-            if (BiomeDictionary.hasType(currentbiome, BiomeDictionary.Type.MESA)) {
+            // Simple check based on biome ID - to be updated when BiomeDictionary is
+            // resolved
+            if (currentbiome.location().getPath().contains("desert")
+                    || currentbiome.location().getPath().contains("mesa")) {
                 setTypeMoC(1); // only brown rats
             }
 
-            if (BiomeDictionary.hasType(currentbiome, BiomeDictionary.Type.SNOWY)) {
+            if (currentbiome.location().getPath().contains("snow")
+                    || currentbiome.location().getPath().contains("frozen")) {
                 setTypeMoC(3); // only white rats
             }
         } catch (Exception ignored) {
@@ -115,44 +123,56 @@ public class MoCEntityRat extends MoCEntityMob {
     }
 
     @Override
-    protected SoundEvent getFallSound(int heightIn) {
-        return null;
+    public Fallsounds getFallSounds() {
+        return new Fallsounds(SoundEvents.EMPTY, SoundEvents.EMPTY);
     }
 
     @Override
-    public boolean onLivingFall(float distance, float damageMultiplier) {
+    public boolean causeFallDamage(float distance, float damageMultiplier, DamageSource source) {
         return false;
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource damagesource, float i) {
-        Entity entity = damagesource.getTrueSource();
+    public boolean hurt(DamageSource damagesource, float i) {
+        Entity entity = damagesource.getEntity();
         if (entity instanceof LivingEntity) {
-            setAttackTarget((LivingEntity) entity);
-            if (!this.world.isRemote) {
-                List<MoCEntityRat> list = this.world.getEntitiesWithinAABB(MoCEntityRat.class, new AxisAlignedBB(this.getPosX(), this.getPosY(), this.getPosZ(), this.getPosX() + 1.0D, this.getPosY() + 1.0D, this.getPosZ() + 1.0D).grow(16D, 4D, 16D));
+            setTarget((LivingEntity) entity);
+            if (!this.level().isClientSide()) {
+                List<MoCEntityRat> list = this.level().getEntitiesOfClass(MoCEntityRat.class,
+                        new AABB(this.getX(), this.getY(), this.getZ(), this.getX() + 1.0D, this.getY() + 1.0D,
+                                this.getZ() + 1.0D).inflate(16D, 4D, 16D));
                 for (MoCEntityRat entityrat : list) {
-                    if ((entityrat != null) && (entityrat.getAttackTarget() == null)) {
-                        entityrat.setAttackTarget((LivingEntity) entity);
+                    if ((entityrat != null) && (entityrat.getTarget() == null)) {
+                        entityrat.setTarget((LivingEntity) entity);
                     }
                 }
             }
         }
-        return super.attackEntityFrom(damagesource, i);
+        return super.hurt(damagesource, i);
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
 
-        if ((this.rand.nextInt(100) == 0) && (this.getBrightness() > 0.5F)) {
-            setAttackTarget(null);
+        if ((this.random.nextInt(100) == 0) && (this.getLightLevelDependentMagicValue() > 0.5F)) {
+            setTarget(null);
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (!this.level().isClientSide()) {
+            this.setBesideClimbableBlock(this.horizontalCollision);
         }
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return MoCreatures.proxy.legacyRatDeathSound ? MoCSoundEvents.ENTITY_RAT_DEATH_LEGACY.get() : MoCSoundEvents.ENTITY_RAT_DEATH.get();
+        return MoCreatures.proxy.legacyRatDeathSound ? MoCSoundEvents.ENTITY_RAT_DEATH_LEGACY.get()
+                : MoCSoundEvents.ENTITY_RAT_DEATH.get();
     }
 
     @Override
@@ -165,34 +185,27 @@ public class MoCEntityRat extends MoCEntityMob {
         return MoCSoundEvents.ENTITY_RAT_AMBIENT.get();
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.RAT;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.RAT;
     }
 
     @Override
-    public boolean isOnLadder() {
+    public boolean onClimbable() {
         return this.isBesideClimbableBlock();
     }
 
     public boolean isBesideClimbableBlock() {
-        return this.dataManager.get(CLIMBING);
+        return this.entityData.get(CLIMBING);
     }
 
     public void setBesideClimbableBlock(boolean climbing) {
-        this.dataManager.set(CLIMBING, climbing);
+        this.entityData.set(CLIMBING, climbing);
     }
 
     @Override
-    public void tick() {
-        super.tick();
-
-        if (!this.world.isRemote) {
-            this.setBesideClimbableBlock(this.collidedHorizontally);
-        }
-    }
-
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return this.getHeight() * 0.5F;
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return this.getBbHeight() * 0.5F;
     }
 
     static class AIRatAttack extends MeleeAttackGoal {
@@ -201,20 +214,20 @@ public class MoCEntityRat extends MoCEntityMob {
         }
 
         @Override
-        public boolean shouldContinueExecuting() {
-            float f = this.attacker.getBrightness();
+        public boolean canContinueToUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
 
-            if (f >= 0.5F && this.attacker.getRNG().nextInt(100) == 0) {
-                this.attacker.setAttackTarget(null);
+            if (f >= 0.5F && this.mob.getRandom().nextInt(100) == 0) {
+                this.mob.setTarget(null);
                 return false;
             } else {
-                return super.shouldContinueExecuting();
+                return super.canContinueToUse();
             }
         }
 
         @Override
         protected double getAttackReachSqr(LivingEntity attackTarget) {
-            return 4.0F + attackTarget.getWidth();
+            return 4.0F + attackTarget.getBbWidth();
         }
     }
 
@@ -224,9 +237,9 @@ public class MoCEntityRat extends MoCEntityMob {
         }
 
         @Override
-        public boolean shouldExecute() {
-            float f = this.goalOwner.getBrightness();
-            return f < 0.5F && super.shouldExecute();
+        public boolean canUse() {
+            float f = this.mob.getLightLevelDependentMagicValue();
+            return f < 0.5F && super.canUse();
         }
     }
 }

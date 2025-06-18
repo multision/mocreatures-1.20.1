@@ -7,24 +7,24 @@ import drzhark.mocreatures.entity.MoCEntityInsect;
 import drzhark.mocreatures.entity.ai.EntityAIFleeFromEntityMoC;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
 public class MoCEntityRoach extends MoCEntityInsect {
 
-    public MoCEntityRoach(EntityType<? extends MoCEntityRoach> type, World world) {
+    public MoCEntityRoach(EntityType<? extends MoCEntityRoach> type, Level world) {
         super(type, world);
         this.texture = "roach.png";
     }
@@ -32,16 +32,16 @@ public class MoCEntityRoach extends MoCEntityInsect {
     @Override
     protected void registerGoals() {
         super.registerGoals();
-        this.goalSelector.addGoal(0, new EntityAIFleeFromEntityMoC(this, entity -> !(entity instanceof MoCEntityCrab) && (entity.getHeight() > 0.3F || entity.getWidth() > 0.3F), 6.0F, 0.8D, 1.3D));
+        this.goalSelector.addGoal(0, new EntityAIFleeFromEntityMoC(this, entity -> !(entity instanceof MoCEntityCrab) && (entity.getEyeHeight() > 0.3F || entity.getBbWidth() > 0.3F), 6.0F, 0.8D, 1.3D));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityInsect.registerAttributes().createMutableAttribute(Attributes.ARMOR, 1.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityInsect.createAttributes().add(Attributes.ARMOR, 1.0D).add(Attributes.FLYING_SPEED, 0.25D);
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
+    public void aiStep() {
+        super.aiStep();
     }
 
     @Override
@@ -60,7 +60,7 @@ public class MoCEntityRoach extends MoCEntityInsect {
     }
 
     @Override
-    public float getAIMoveSpeed() {
+    public float getSpeed() {
         if (getIsFlying()) {
             return 0.1F;
         }
@@ -73,7 +73,7 @@ public class MoCEntityRoach extends MoCEntityInsect {
     }
 
     @Override
-    public float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
+    public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.1F;
     }
 
@@ -88,6 +88,8 @@ public class MoCEntityRoach extends MoCEntityInsect {
     }
 
     @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.ROACH;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.ROACH;
     }
 }

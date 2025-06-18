@@ -1,5 +1,5 @@
 {
-    "itemGroup.MoCreaturesTab": "Mo' Creatures: Nostalgia Edition",
+    "itemGroup.mocreatures_tab": "Mo' Creatures: Nostalgia Edition",
 
     "_comment": "BLOCKS",
     "block.mocreatures.ancient_ore": "Ancient Ore",

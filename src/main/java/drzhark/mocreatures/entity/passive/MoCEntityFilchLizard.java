@@ -8,60 +8,91 @@ import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityAnimal;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.loot.*;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.BiomeDictionary;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
+import java.util.EnumSet;
 
 // Courtesy of Daveyx0, permission given
 public class MoCEntityFilchLizard extends MoCEntityAnimal {
 
     protected ItemStack[] stealItems;
 
-    public MoCEntityFilchLizard(EntityType<? extends MoCEntityFilchLizard> type, World worldIn) {
+    public MoCEntityFilchLizard(EntityType<? extends MoCEntityFilchLizard> type, Level worldIn) {
         super(type, worldIn);
-        this.inventoryHandsDropChances[0] = 0f;
-        this.inventoryHandsDropChances[1] = 0f;
+        this.setDropChance(EquipmentSlot.MAINHAND, 0f);
+        this.setDropChance(EquipmentSlot.OFFHAND, 0f);
         //this.setSize(0.6f, 0.5f);
-        this.experienceValue = 3;
+        this.xpReward = 3;
     }
 
     @Override
     protected void registerGoals() {
-        stealItems = getCustomLootItems(this, this.getStealLootTable(), new ItemStack(Items.IRON_INGOT));
-        this.goalSelector.addGoal(0, new SwimGoal(this));
+        stealItems = getStealItemsFromLootTable();
+        this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new PanicGoal(this, 1.25D));
         this.goalSelector.addGoal(2, new EntityAIGrabItemFromFloor(this, 1.2D, Sets.newHashSet(stealItems), true));
         this.goalSelector.addGoal(3, new EntityAIStealFromPlayer(this, 0.8D, Sets.newHashSet(stealItems), true));
-        this.goalSelector.addGoal(4, new MoCEntityFilchLizard.AIAvoidWhenNasty(this, PlayerEntity.class, 16.0F, 1.0D, 1.33D));
-        this.goalSelector.addGoal(5, new RandomWalkingGoal(this, 1.0D));
-        this.goalSelector.addGoal(6, new LookAtGoal(this, PlayerEntity.class, 6.0F));
-        this.goalSelector.addGoal(7, new LookRandomlyGoal(this));
+        this.goalSelector.addGoal(4, new MoCEntityFilchLizard.AIAvoidWhenNasty(this, Player.class, 16.0F, 1.0D, 1.33D));
+        this.goalSelector.addGoal(5, new RandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+    }
+
+    /**
+     * Get the steal items from the loot table definition.
+     * This method manually defines the items based on filch_lizard_steal.json
+     */
+    private ItemStack[] getStealItemsFromLootTable() {
+        // These items match the entries in loot_tables/entities/filch_lizard/filch_lizard_steal.json
+        return new ItemStack[] {
+            new ItemStack(Items.GOLD_INGOT),
+            new ItemStack(Items.IRON_INGOT),
+            new ItemStack(Items.LAPIS_LAZULI),
+            new ItemStack(Items.DIAMOND),
+            new ItemStack(Items.EMERALD),
+            new ItemStack(Items.ENDER_PEARL),
+            new ItemStack(Items.FLINT)
+        };
+    }
+
+    /**
+     * Get the spawn items for the filch lizard when it spawns with an item.
+     * Based on the spawn loot table definition.
+     */
+    private ItemStack getRandomSpawnItem() {
+        // These would normally come from the spawn loot table
+        ItemStack[] spawnItems = {
+            new ItemStack(Items.GOLD_INGOT),
+            new ItemStack(Items.IRON_INGOT),
+            new ItemStack(Items.DIAMOND),
+            new ItemStack(Items.EMERALD),
+            new ItemStack(Items.ENDER_PEARL)
+        };
+        return spawnItems[this.random.nextInt(spawnItems.length)];
     }
 
     @Override
@@ -85,13 +116,15 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
 
     @Override
     public boolean checkSpawningBiome() {
-        BlockPos pos = new BlockPos(MathHelper.floor(this.getPosX()), MathHelper.floor(getBoundingBox().minY), this.getPosZ());
-        RegistryKey<Biome> biome = MoCTools.biomeKind(this.world, pos);
-        if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.SANDY)) {
+        BlockPos pos = new BlockPos(Mth.floor(this.getX()), Mth.floor(getBoundingBox().minY), Mth.floor(this.getZ()));
+        
+        // In 1.20.1, check biome directly
+        String biomePath = this.level().getBiome(pos).unwrapKey().orElseThrow().location().getPath();
+        if (biomePath.contains("desert") || biomePath.contains("sand")) {
             setTypeMoC(2);
-        } else if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.MESA)) {
+        } else if (biomePath.contains("mesa") || biomePath.contains("badlands")) {
             setTypeMoC(3);
-        } else if (this.world.getDimensionKey() == MoCreatures.proxy.wyvernDimension) {
+        } else if (this.level().dimension() == MoCreatures.proxy.wyvernDimension) {
             setTypeMoC(4);
         } else {
             setTypeMoC(1);
@@ -100,96 +133,53 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
     }
 
     @Override
-    public EntitySize getSize(Pose poseIn) {
-        if (!this.getHeldItemMainhand().isEmpty()) {
-            return super.getSize(poseIn).scale(1.0F, 2.5F);
+    public EntityDimensions getDimensions(Pose poseIn) {
+        if (!this.getMainHandItem().isEmpty()) {
+            return super.getDimensions(poseIn).scale(1.0F, 2.5F);
         } else {
-            return super.getSize(poseIn);
+            return super.getDimensions(poseIn);
         }
     }
 
     @Override
-    protected int getExperiencePoints(PlayerEntity player) {
-        return experienceValue;
+    public int getExperienceReward() {
+        return xpReward;
+    }
+
+    public static AttributeSupplier.Builder registerAttributes() {
+        return MoCEntityAnimal.createAttributes()
+                .add(Attributes.MAX_HEALTH, 8.0D)
+                .add(Attributes.ARMOR, 2.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.25D);
     }
 
     @Nullable
-    protected ResourceLocation getSpawnLootTable() {
-        return MoCLootTables.FILCH_LIZARD_SPAWN;
-    }
-
-    @Nullable
-    protected ResourceLocation getStealLootTable() {
-        return MoCLootTables.FILCH_LIZARD_STEAL;
-    }
-
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityAnimal.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 8.0D).createMutableAttribute(Attributes.ARMOR, 2.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.25D);
-    }
-
     @Override
-    protected void updateAITasks() {
-        super.updateAITasks();
-    }
-
-    @Override
-    public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
-        if (rand.nextInt(100 / MoCreatures.proxy.filchLizardSpawnItemChance) == 0) {
-            while (this.getHeldItemMainhand().isEmpty() && !getEntityWorld().isRemote) {
-                this.setItemStackToSlot(EquipmentSlotType.MAINHAND, getCustomLootItem(this, this.getSpawnLootTable(), new ItemStack(Items.IRON_INGOT)));
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
+        if (random.nextInt(100 / MoCreatures.proxy.filchLizardSpawnItemChance) == 0) {
+            while (this.getMainHandItem().isEmpty() && !level().isClientSide) {
+                this.setItemSlot(EquipmentSlot.MAINHAND, getRandomSpawnItem());
             }
         }
-        return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+        return super.finalizeSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
     }
 
     public void dropItemStack(ItemStack itemIn, float offsetY) {
-        this.entityDropItem(itemIn, offsetY);
+        this.spawnAtLocation(itemIn, offsetY);
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource par1DamageSource, float par2) {
-        if (par1DamageSource.getTrueSource() != null) {
-            this.setLastAttackedEntity(par1DamageSource.getTrueSource());
+    public boolean hurt(DamageSource par1DamageSource, float par2) {
+        if (par1DamageSource.getEntity() != null) {
+            this.setLastHurtByMob(par1DamageSource.getEntity() instanceof LivingEntity ? (LivingEntity) par1DamageSource.getEntity() : null);
         }
-        ItemStack stack = this.getHeldItemMainhand();
-        if (!stack.isEmpty() && !getEntityWorld().isRemote) {
+        ItemStack stack = this.getMainHandItem();
+        if (!stack.isEmpty() && !level().isClientSide) {
             ItemStack newStack = new ItemStack(stack.getItem(), 1);
             this.dropItemStack(newStack, 1);
-            this.setItemStackToSlot(EquipmentSlotType.MAINHAND, ItemStack.EMPTY);
+            this.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
         }
-        return super.attackEntityFrom(par1DamageSource, par2);
-    }
-
-    @Nullable
-    public ItemStack getCustomLootItem(Entity entityIn, ResourceLocation resourceLootTable, ItemStack defaultItem) {
-        if (resourceLootTable != null) {
-            LootTable loottable = entityIn.world.getServer().getLootTableManager().getLootTableFromLocation(resourceLootTable);
-            LootContext.Builder lootContextBuilder = (new LootContext.Builder((ServerWorld) entityIn.world)).withParameter(LootParameters.ORIGIN, entityIn.getPositionVec()).withParameter(LootParameters.THIS_ENTITY, entityIn);
-            for (ItemStack itemstack : loottable.generate(lootContextBuilder.build(LootParameterSets.SELECTOR))) {
-                return itemstack;
-            }
-        }
-        return defaultItem;
-    }
-
-    @Nullable
-    public ItemStack[] getCustomLootItems(Entity entityIn, ResourceLocation resourceLootTable, ItemStack defaultItem) {
-        ItemStack[] arrayOfItems = null;
-        if (resourceLootTable != null) {
-            LootTable loottable = entityIn.world.getServer().getLootTableManager().getLootTableFromLocation(resourceLootTable);
-            LootContext.Builder lootContextBuilder = (new LootContext.Builder((ServerWorld) entityIn.world)).withParameter(LootParameters.ORIGIN, entityIn.getPositionVec()).withParameter(LootParameters.THIS_ENTITY, entityIn);
-            List<ItemStack> listOfItems = loottable.generate(lootContextBuilder.build(LootParameterSets.SELECTOR));
-            arrayOfItems = new ItemStack[listOfItems.size()];
-            int i = 0;
-            for (ItemStack itemstack : listOfItems) {
-                arrayOfItems[i] = itemstack;
-                i += 1;
-            }
-        }
-        if (arrayOfItems == null) {
-            arrayOfItems = new ItemStack[]{defaultItem};
-        }
-        return arrayOfItems;
+        return super.hurt(par1DamageSource, par2);
     }
 
     // Sneaky...
@@ -197,20 +187,34 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
     protected void playStepSound(BlockPos pos, BlockState block) {
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.FILCH_LIZARD;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.FILCH_LIZARD;
     }
 
-    static class AIAvoidWhenNasty extends AvoidEntityGoal {
-        public AIAvoidWhenNasty(CreatureEntity theEntityIn, Class classToAvoidIn, float avoidDistanceIn, double farSpeedIn, double nearSpeedIn) {
+    @Nullable
+    protected ResourceLocation getSpawnLootTable() {
+        // Reference to loot_tables/entities/filch_lizard/filch_lizard_spawn.json
+        return MoCLootTables.FILCH_LIZARD_SPAWN;
+    }
+
+    @Nullable
+    protected ResourceLocation getStealLootTable() {
+        // Reference to loot_tables/entities/filch_lizard/filch_lizard_steal.json
+        return MoCLootTables.FILCH_LIZARD_STEAL;
+    }
+
+    static class AIAvoidWhenNasty extends AvoidEntityGoal<Player> {
+        public AIAvoidWhenNasty(PathfinderMob theEntityIn, Class<Player> classToAvoidIn, float avoidDistanceIn, double farSpeedIn, double nearSpeedIn) {
             super(theEntityIn, classToAvoidIn, avoidDistanceIn, farSpeedIn, nearSpeedIn);
         }
 
         /**
          * Returns whether the Goal should begin execution.
          */
-        public boolean shouldExecute() {
-            return !entity.getHeldItemMainhand().isEmpty() && super.shouldExecute();
+        @Override
+        public boolean canUse() {
+            return !((MoCEntityFilchLizard)mob).getMainHandItem().isEmpty() && super.canUse();
         }
     }
 
@@ -218,7 +222,7 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
         /**
          * The entity using this AI that is tempted by the player.
          */
-        private final CreatureEntity temptedEntity;
+        private final PathfinderMob temptedEntity;
         private final double speed;
         private final Set<ItemStack> temptItem;
         private final boolean canGetScared;
@@ -249,101 +253,118 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
         private boolean isRunning;
         private int stealDelay = 0;
 
-        public EntityAIGrabItemFromFloor(CreatureEntity temptedEntityIn, double speedIn, Set<ItemStack> temptItemIn, boolean canGetScared) {
+        public EntityAIGrabItemFromFloor(PathfinderMob temptedEntityIn, double speedIn, Set<ItemStack> temptItemIn, boolean canGetScared) {
             this.temptedEntity = temptedEntityIn;
             this.speed = speedIn;
             this.temptItem = temptItemIn;
             this.canGetScared = canGetScared;
-            if (!(temptedEntityIn.getNavigator() instanceof GroundPathNavigator)) {
-                throw new IllegalArgumentException("Unsupported mob type for TemptGoal");
-            }
+            this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
         }
 
         /**
          * Returns whether the Goal should begin execution.
          */
-        public boolean shouldExecute() {
-            if (temptedEntity.getLastAttackedEntity() != null && canGetScared && stealDelay <= 0) {
-                this.resetTask();
+        @Override
+        public boolean canUse() {
+            if (this.temptedEntity.getLastHurtByMob() != null && canGetScared && stealDelay <= 0) {
+                this.stop();
                 return false;
             }
-            if (!this.temptedEntity.getHeldItemMainhand().isEmpty()) {
+            if (!(this.temptedEntity instanceof MoCEntityFilchLizard) || !((MoCEntityFilchLizard)this.temptedEntity).getMainHandItem().isEmpty()) {
                 return false;
             }
-            List<Entity> list = this.temptedEntity.getEntityWorld().getEntitiesWithinAABBExcludingEntity(temptedEntity, temptedEntity.getBoundingBox().expand(6D, 4D, 6D));
+            List<ItemEntity> list = this.temptedEntity.level().getEntitiesOfClass(ItemEntity.class, this.temptedEntity.getBoundingBox().inflate(6D, 4D, 6D));
             if (this.stealDelay > 0) {
                 --this.stealDelay;
                 if (stealDelay == 0) {
-                    temptedEntity.setLastAttackedEntity(null);
+                    this.temptedEntity.setLastHurtByMob(null);
                 }
                 return false;
-            } else if (!list.isEmpty()) {
-                for (Entity entity : list) {
-                    if (entity instanceof ItemEntity) {
-                        ItemEntity item = (ItemEntity) entity;
-                        ItemStack stack = item.getItem();
-                        if (!stack.isEmpty() && this.isTempting(stack)) {
-                            this.temptingItem = item;
-                            return true;
-                        }
+            }
+            
+            double d0 = Double.MAX_VALUE;
+            ItemEntity selectedItem = null;
+            
+            for (ItemEntity itemEntity : list) {
+                if (itemEntity != null && this.isTempting(itemEntity.getItem())) {
+                    double d1 = this.temptedEntity.distanceToSqr(itemEntity);
+                    if (d1 < d0) {
+                        d0 = d1;
+                        selectedItem = itemEntity;
                     }
                 }
             }
-            return false;
-        }
-
-        protected boolean isTempting(ItemStack stack) {
-            if (!stack.isEmpty()) {
-                for (ItemStack item : temptItem) {
-                    if (item != null && item.getItem() == stack.getItem()) {
-                        return true;
-                    }
-                }
+            
+            if (selectedItem == null) {
+                return false;
+            } else {
+                this.temptingItem = selectedItem;
+                return true;
             }
-            return false;
         }
 
         /**
          * Returns whether an in-progress Goal should continue executing
          */
-        public boolean shouldContinueExecuting() {
-            return this.shouldExecute();
+        protected boolean isTempting(ItemStack stack) {
+            if (this.temptItem.isEmpty()) {
+                return false;
+            } else {
+                for (ItemStack itemstack : this.temptItem) {
+                    if (itemstack != null && !itemstack.isEmpty() && itemstack.getItem() == stack.getItem()) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        /**
+         * Returns whether execution should begin. You can also read and cache any state necessary for execution in this
+         * method as well.
+         */
+        @Override
+        public boolean canContinueToUse() {
+            return this.canUse();
         }
 
         /**
          * Execute a one shot task or start executing a continuous task
          */
-        public void startExecuting() {
-            this.targetX = this.temptingItem.getPosX();
-            this.targetY = this.temptingItem.getPosY();
-            this.targetZ = this.temptingItem.getPosZ();
+        @Override
+        public void start() {
+            this.targetX = this.temptingItem.getX();
+            this.targetY = this.temptingItem.getY();
+            this.targetZ = this.temptingItem.getZ();
             this.isRunning = true;
         }
 
         /**
-         * Resets the task
+         * Reset the task's internal state. Called when this task is interrupted by another one
          */
-        public void resetTask() {
+        @Override
+        public void stop() {
             this.temptingItem = null;
-            this.temptedEntity.getNavigator().clearPath();
+            this.temptedEntity.getNavigation().stop();
             this.isRunning = false;
             if (canGetScared) {
-                this.stealDelay = 50;
+                this.stealDelay = 100;
             }
         }
 
         /**
-         * Updates the task
+         * Keep ticking a continuous task that has already been started
          */
+        @Override
         public void tick() {
-            this.temptedEntity.getLookController().setLookPositionWithEntity(this.temptingItem, (float) (this.temptedEntity.getHorizontalFaceSpeed() + 20), (float) this.temptedEntity.getVerticalFaceSpeed());
-            if (this.temptedEntity.getDistanceSq(this.temptingItem) < 1.0D) {
-                this.temptedEntity.getNavigator().clearPath();
+            this.temptedEntity.getLookControl().setLookAt(this.temptingItem, (float) (this.temptedEntity.getMaxHeadYRot() + 20), (float) this.temptedEntity.getMaxHeadXRot());
+            if (this.temptedEntity.distanceToSqr(this.temptingItem) < 1.0D) {
+                this.temptedEntity.getNavigation().stop();
                 ItemStack loot = temptingItem.getItem().copy();
-                temptingItem.remove();
-                this.temptedEntity.setItemStackToSlot(EquipmentSlotType.MAINHAND, loot);
+                temptingItem.discard();
+                this.temptedEntity.setItemSlot(EquipmentSlot.MAINHAND, loot);
             } else {
-                this.temptedEntity.getNavigator().tryMoveToEntityLiving(this.temptingItem, this.speed);
+                this.temptedEntity.getNavigation().moveTo(this.temptingItem, this.speed);
             }
         }
 
@@ -359,7 +380,7 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
         /**
          * The entity using this AI that is tempted by the player.
          */
-        private final CreatureEntity temptedEntity;
+        private final PathfinderMob temptedEntity;
         private final double speed;
         private final Set<ItemStack> temptItem;
         private final boolean canGetScared;
@@ -386,53 +407,41 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
         /**
          * The player that is tempting the entity that is using this AI.
          */
-        private PlayerEntity temptingPlayer;
+        private Player temptingPlayer;
         private boolean isRunning;
         private int stealDelay = 0;
 
-        public EntityAIStealFromPlayer(CreatureEntity temptedEntityIn, double speedIn, Set<ItemStack> temptItemIn, boolean canGetScared) {
+        public EntityAIStealFromPlayer(PathfinderMob temptedEntityIn, double speedIn, Set<ItemStack> temptItemIn, boolean canGetScared) {
             this.temptedEntity = temptedEntityIn;
             this.speed = speedIn;
             this.temptItem = temptItemIn;
             this.canGetScared = canGetScared;
-            if (!(temptedEntityIn.getNavigator() instanceof GroundPathNavigator)) {
-                throw new IllegalArgumentException("Unsupported mob type for TemptGoal");
-            }
+            this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
         }
 
         /**
          * Returns whether the Goal should begin execution.
          */
-        public boolean shouldExecute() {
-            if (temptedEntity.getLastAttackedEntity() != null && canGetScared && stealDelay <= 0) {
-                this.resetTask();
+        @Override
+        public boolean canUse() {
+            if (this.temptedEntity.getLastHurtByMob() != null && canGetScared && stealDelay <= 0) {
+                this.stop();
                 return false;
             }
-            if (!this.temptedEntity.getHeldItemMainhand().isEmpty()) {
+            if (!(this.temptedEntity instanceof MoCEntityFilchLizard) || !((MoCEntityFilchLizard)this.temptedEntity).getMainHandItem().isEmpty()) {
                 return false;
             }
-            this.temptingPlayer = this.temptedEntity.getEntityWorld().getClosestPlayer(this.temptedEntity, 10.0D);
+            this.temptingPlayer = this.temptedEntity.level().getNearestPlayer(this.temptedEntity, 10.0D);
             if (this.stealDelay > 0) {
                 --this.stealDelay;
                 if (stealDelay == 0) {
-                    temptedEntity.setLastAttackedEntity(null);
+                    this.temptedEntity.setLastHurtByMob(null);
                 }
                 return false;
             } else if (temptingPlayer != null) {
-                for (int i = 0; i < this.temptingPlayer.inventory.getSizeInventory(); i++) {
-                    ItemStack item = this.temptingPlayer.inventory.getStackInSlot(i);
+                for (int i = 0; i < this.temptingPlayer.getInventory().getContainerSize(); i++) {
+                    ItemStack item = this.temptingPlayer.getInventory().getItem(i);
                     if (!item.isEmpty() && this.isTempting(item)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        protected boolean isTempting(ItemStack stack) {
-            if (!stack.isEmpty()) {
-                for (ItemStack item : temptItem) {
-                    if (item != null && item.getItem() == stack.getItem()) {
                         return true;
                     }
                 }
@@ -443,26 +452,46 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
         /**
          * Returns whether an in-progress Goal should continue executing
          */
-        public boolean shouldContinueExecuting() {
-            return this.shouldExecute();
+        protected boolean isTempting(ItemStack stack) {
+            if (this.temptItem.isEmpty()) {
+                return false;
+            } else {
+                for (ItemStack itemstack : this.temptItem) {
+                    if (itemstack != null && !itemstack.isEmpty() && itemstack.getItem() == stack.getItem()) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        /**
+         * Returns whether execution should begin. You can also read and cache any state necessary for execution in this
+         * method as well.
+         */
+        @Override
+        public boolean canContinueToUse() {
+            return this.canUse();
         }
 
         /**
          * Execute a one shot task or start executing a continuous task
          */
-        public void startExecuting() {
-            this.targetX = this.temptingPlayer.getPosX();
-            this.targetY = this.temptingPlayer.getPosY();
-            this.targetZ = this.temptingPlayer.getPosZ();
+        @Override
+        public void start() {
+            this.targetX = this.temptingPlayer.getX();
+            this.targetY = this.temptingPlayer.getY();
+            this.targetZ = this.temptingPlayer.getZ();
             this.isRunning = true;
         }
 
         /**
-         * Resets the task
+         * Reset the task's internal state. Called when this task is interrupted by another one
          */
-        public void resetTask() {
+        @Override
+        public void stop() {
             this.temptingPlayer = null;
-            this.temptedEntity.getNavigator().clearPath();
+            this.temptedEntity.getNavigation().stop();
             this.isRunning = false;
             if (canGetScared) {
                 this.stealDelay = 100;
@@ -470,21 +499,22 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
         }
 
         /**
-         * Updates the task
+         * Keep ticking a continuous task that has already been started
          */
+        @Override
         public void tick() {
-            this.temptedEntity.getLookController().setLookPositionWithEntity(this.temptingPlayer, (float) (this.temptedEntity.getHorizontalFaceSpeed() + 20), (float) this.temptedEntity.getVerticalFaceSpeed());
-            if (temptingPlayer.abilities.isCreativeMode) return;
-            if (this.temptedEntity.getDistanceSq(this.temptingPlayer) < 3.25D) {
-                this.temptedEntity.getNavigator().clearPath();
-                for (int i = 0; i < this.temptingPlayer.inventory.getSizeInventory(); i++) {
-                    ItemStack item = this.temptingPlayer.inventory.getStackInSlot(i);
+            this.temptedEntity.getLookControl().setLookAt(this.temptingPlayer, (float) (this.temptedEntity.getMaxHeadYRot() + 20), (float) this.temptedEntity.getMaxHeadXRot());
+            if (temptingPlayer.isCreative()) return;
+            if (this.temptedEntity.distanceToSqr(this.temptingPlayer) < 3.25D) {
+                this.temptedEntity.getNavigation().stop();
+                for (int i = 0; i < this.temptingPlayer.getInventory().getContainerSize(); i++) {
+                    ItemStack item = this.temptingPlayer.getInventory().getItem(i);
                     if (!item.isEmpty()) {
                         for (ItemStack itemstack : temptItem) {
                             if (itemstack != null && !itemstack.isEmpty() && itemstack.getItem() == item.getItem()) {
-                                MoCTools.playCustomSound(this.temptedEntity, SoundEvents.ENTITY_ITEM_PICKUP);
+                                MoCTools.playCustomSound(this.temptedEntity, SoundEvents.ITEM_PICKUP);
                                 ItemStack loot = item.copy();
-                                this.temptedEntity.setItemStackToSlot(EquipmentSlotType.MAINHAND, loot);
+                                this.temptedEntity.setItemSlot(EquipmentSlot.MAINHAND, loot);
                                 item.shrink(1);
                                 return;
                             }
@@ -492,7 +522,7 @@ public class MoCEntityFilchLizard extends MoCEntityAnimal {
                     }
                 }
             } else {
-                this.temptedEntity.getNavigator().tryMoveToEntityLiving(this.temptingPlayer, this.speed);
+                this.temptedEntity.getNavigation().moveTo(this.temptingPlayer, this.speed);
             }
         }
 

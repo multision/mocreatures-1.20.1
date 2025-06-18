@@ -1,29 +1,27 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.item;
 
 import drzhark.mocreatures.MoCConstants;
-import net.minecraft.item.Item;
-import net.minecraft.item.MusicDiscItem;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.RecordItem;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class MoCItemRecord extends MusicDiscItem {
+public class MoCItemRecord extends RecordItem {
 
-    public static ResourceLocation RECORD_SHUFFLE_RESOURCE = new ResourceLocation(MoCConstants.MOD_ID, "shuffling");
+    @SuppressWarnings("removal")
+    public static final ResourceLocation RECORD_SHUFFLE_RESOURCE = new ResourceLocation(MoCConstants.MOD_ID, "shuffling");
 
-    public MoCItemRecord(int comparatorValueIn, String name, java.util.function.Supplier<SoundEvent> soundSupplier, Item.Properties builder) {
-        super(comparatorValueIn, soundSupplier, builder);
-        this.setRegistryName(MoCConstants.MOD_ID, name);
+    public MoCItemRecord(int comparatorValueIn, java.util.function.Supplier<SoundEvent> soundSupplier, Item.Properties properties) {
+        super(comparatorValueIn, soundSupplier, properties, 2400);
     }
 
     @OnlyIn(Dist.CLIENT)
-    /*
-     * Return the title for this record.
-     */ public String getRecordTitle() {
-        return "MoC - " + this.getDescription();
+    @Override
+    public MutableComponent getDisplayName() {
+        return Component.literal("MoC - " + getDescription().getString());
     }
 }

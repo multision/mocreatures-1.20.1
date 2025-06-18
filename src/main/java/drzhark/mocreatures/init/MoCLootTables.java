@@ -4,9 +4,10 @@
 package drzhark.mocreatures.init;
 
 import drzhark.mocreatures.MoCConstants;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 // TODO: Ents, Elephants, Horses, Horse Mobs, Snakes
+@SuppressWarnings("removal")
 public class MoCLootTables {
     // Ambient - All of these are empty, they're mainly for modpack developers
     public static final ResourceLocation ANT = new ResourceLocation(MoCConstants.MOD_ID, "entities/ambient/ant");

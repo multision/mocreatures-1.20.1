@@ -5,31 +5,32 @@ package drzhark.mocreatures.entity.hostile;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 public class MoCEntityFireManticore extends MoCEntityManticore {
 
-    public MoCEntityFireManticore(EntityType<? extends MoCEntityFireManticore> type, World world) {
+    public MoCEntityFireManticore(EntityType<? extends MoCEntityFireManticore> type, Level world) {
         super(type, world);
-        //this.isImmuneToFire = true;
-        experienceValue = 10;
+        //this.isImmuneToFire = true; - field doesn't exist in 1.20.1
+        this.xpReward = 10;
     }
 
     @Override
-    public boolean isImmuneToFire() {
+    public boolean fireImmune() {
         return true;
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityManticore.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 50.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.4D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 7.5D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityManticore.createAttributes()
+                .add(Attributes.MAX_HEALTH, 50.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.4D)
+                .add(Attributes.ATTACK_DAMAGE, 7.5D);
     }
 
     @Override
@@ -38,18 +39,18 @@ public class MoCEntityFireManticore extends MoCEntityManticore {
     }
 
     @Override
-    public void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn) {
-        if (!getIsPoisoning() && this.rand.nextInt(5) == 0 && entityIn instanceof LivingEntity) {
+    public void doEnchantDamageEffects(LivingEntity attacker, Entity target) {
+        if (!getIsPoisoning() && this.random.nextInt(5) == 0 && target instanceof LivingEntity) {
             setPoisoning(true);
-            entityIn.setFire(15);
+            target.setSecondsOnFire(15);
         } else {
             openMouth();
         }
-        super.applyEnchantments(entityLivingBaseIn, entityIn);
+        super.doEnchantDamageEffects(attacker, target);
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.FIRE_MANTICORE;
     }
 }

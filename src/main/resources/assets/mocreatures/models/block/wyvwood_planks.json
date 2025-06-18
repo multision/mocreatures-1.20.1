@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "mocreatures:blocks/wood_planks_wyvwood"
+    "all": "mocreatures:block/wood_planks_wyvwood"
   }
 }

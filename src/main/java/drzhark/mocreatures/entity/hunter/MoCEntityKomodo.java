@@ -14,51 +14,53 @@ import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
 import drzhark.mocreatures.network.MoCMessageHandler;
 import drzhark.mocreatures.network.message.MoCMessageAnimation;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.SaddleItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.*;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.PacketDistributor;
-
-import javax.annotation.Nullable;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.SaddleItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.network.PacketDistributor;
 
 public class MoCEntityKomodo extends MoCEntityTameableAnimal {
 
-    private static final DataParameter<Boolean> RIDEABLE = EntityDataManager.createKey(MoCEntityKomodo.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> RIDEABLE = SynchedEntityData.defineId(MoCEntityKomodo.class, EntityDataSerializers.BOOLEAN);
     public int tailCounter;
     public int tongueCounter;
     public int mouthCounter;
     private int sitCounter;
 
-    public MoCEntityKomodo(EntityType<? extends MoCEntityKomodo> type, World world) {
+    public MoCEntityKomodo(EntityType<? extends MoCEntityKomodo> type, Level world) {
         super(type, world);
-        //setSize(1.25F, 0.9F);
         this.texture = "komodo_dragon.png";
         setTamed(false);
         setAdult(true);
-        this.stepHeight = 1.0F;
+        setMaxUpStep(1.0F);
+        // Note: stepHeight is now called maxUpStep and is accessed differently in 1.20.1
 
         // TODO: Make hitboxes adjust depending on size
-        /*if (this.rand.nextInt(6) == 0) {
-            setAge(30 + this.rand.nextInt(40));
+        /*if (this.random.nextInt(6) == 0) {
+            setAge(30 + this.random.nextInt(40));
         } else {
-            setAge(90 + this.rand.nextInt(20));
+            setAge(90 + this.random.nextInt(20));
         }*/
-        setAge(90);
-        experienceValue = 5;
+        setMoCAge(90);
+        this.xpReward = 5;
     }
 
     @Override
@@ -67,36 +69,41 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
         this.goalSelector.addGoal(3, new EntityAIFleeFromPlayer(this, 1.1D, 4D));
         this.goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.0D, false));
         this.goalSelector.addGoal(7, new EntityAIWanderMoC2(this, 0.9D));
-        this.goalSelector.addGoal(9, new LookAtGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         //this.targetSelector.addGoal(2, new EntityAIHunt<>(this, AnimalEntity.class, true));
-        this.targetSelector.addGoal(3, new EntityAIHunt<>(this, PlayerEntity.class, false));
+        this.targetSelector.addGoal(3, new EntityAIHunt<>(this, Player.class, false));
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityTameableAnimal.registerAttributes().createMutableAttribute(Attributes.FOLLOW_RANGE, 24.0D).createMutableAttribute(Attributes.MAX_HEALTH, 25.0D).createMutableAttribute(Attributes.ARMOR, 5.0D).createMutableAttribute(Attributes.ATTACK_DAMAGE).createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.5D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.18D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityTameableAnimal.createAttributes()
+            .add(Attributes.FOLLOW_RANGE, 24.0D)
+            .add(Attributes.MAX_HEALTH, 25.0D)
+            .add(Attributes.ARMOR, 5.0D)
+            .add(Attributes.ATTACK_DAMAGE, 4.5D)
+            .add(Attributes.MOVEMENT_SPEED, 0.18D);
     }
 
     @Override
-    protected void registerData() {
-        super.registerData();
-        this.dataManager.register(RIDEABLE, Boolean.FALSE);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(RIDEABLE, Boolean.FALSE);
         // rideable: 0 nothing, 1 saddle
     }
 
     @Override
     public void setRideable(boolean flag) {
-        this.dataManager.set(RIDEABLE, flag);
+        this.entityData.set(RIDEABLE, flag);
     }
 
     @Override
     public boolean getIsRideable() {
-        return this.dataManager.get(RIDEABLE);
+        return this.entityData.get(RIDEABLE);
     }
 
     @Override
-    protected int getExperiencePoints(PlayerEntity player) {
-        return experienceValue;
+    public int getExperienceReward() {
+        return 5;
     }
 
     @Override
@@ -117,24 +124,24 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
         return MoCSoundEvents.ENTITY_SNAKE_AMBIENT.get();
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.KOMODO_DRAGON;
     }
 
     @Override
-    public int getTalkInterval() {
+    public int getAmbientSoundInterval() {
         return 500;
     }
 
     @Override
-    public void livingTick() {
-        super.livingTick();
-        if (this.sitCounter > 0 && (this.isBeingRidden() || ++this.sitCounter > 150)) {
+    public void aiStep() {
+        super.aiStep();
+        if (this.sitCounter > 0 && (this.isVehicle() || ++this.sitCounter > 150)) {
             this.sitCounter = 0;
         }
-        if (!this.world.isRemote) {
-            if (!this.isSwimming() && !this.isBeingRidden() && this.sitCounter == 0 && this.rand.nextInt(500) == 0) { //TODO
+        if (!this.level().isClientSide()) {
+            if (!this.isSwimming() && !this.isVehicle() && this.sitCounter == 0 && this.random.nextInt(500) == 0) { //TODO
                 sit();
             }
 
@@ -144,11 +151,11 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
                 this.tailCounter = 0;
             }
 
-            if (this.rand.nextInt(100) == 0) {
+            if (this.random.nextInt(100) == 0) {
                 this.tailCounter = 1;
             }
 
-            if (this.rand.nextInt(100) == 0) {
+            if (this.random.nextInt(100) == 0) {
                 this.tongueCounter = 1;
             }
 
@@ -168,10 +175,10 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
 
     private void sit() {
         this.sitCounter = 1;
-        if (!this.world.isRemote) {
-            MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getPosX(), this.getPosY(), this.getPosZ(), 64, this.world.getDimensionKey())), new MoCMessageAnimation(this.getEntityId(), 0));
+        if (!this.level().isClientSide()) {
+            MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageAnimation(this.getId(), 0));
         }
-        this.getNavigator().clearPath();
+        this.getNavigation().stop();
     }
 
     @Override
@@ -179,48 +186,48 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
         if (animationType == 0) //sitting animation
         {
             this.sitCounter = 1;
-            this.getNavigator().clearPath();
+            this.getNavigation().stop();
         }
     }
 
     @Override
     public float getSizeFactor() {
         if (!getIsAdult()) {
-            return getAge() * 0.01F;
+            return getMoCAge() * 0.01F;
         }
         return 1.2F;
     }
 
     @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity player, Hand hand) {
-        final ActionResultType tameResult = this.processTameInteract(player, hand);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        final InteractionResult tameResult = this.processTameInteract(player, hand);
         if (tameResult != null) {
             return tameResult;
         }
 
-        final ItemStack stack = player.getHeldItem(hand);
-        if (!stack.isEmpty() && getIsTamed() && (getAge() > 90 || getIsAdult()) && !getIsRideable()
-                && (stack.getItem() instanceof SaddleItem || stack.getItem() == MoCItems.horsesaddle)) {
-            if (!player.abilities.isCreativeMode) stack.shrink(1);
+        final ItemStack stack = player.getItemInHand(hand);
+        if (!stack.isEmpty() && getIsTamed() && (getMoCAge() > 90 || getIsAdult()) && !getIsRideable()
+                && (stack.getItem() instanceof SaddleItem || stack.getItem() == MoCItems.HORSE_SADDLE.get())) {
+            if (!player.isCreative()) stack.shrink(1);
             setRideable(true);
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        if (getIsRideable() && getIsTamed() && getAge() > 90 && (!this.isBeingRidden())) {
-            if (!this.world.isRemote && player.startRiding(this)) {
-                player.rotationYaw = this.rotationYaw;
-                player.rotationPitch = this.rotationPitch;
+        if (getIsRideable() && getIsTamed() && getMoCAge() > 90 && (!this.isVehicle())) {
+            if (!this.level().isClientSide() && player.startRiding(this)) {
+                player.setYRot(this.getYRot());
+                player.setXRot(this.getXRot());
             }
 
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        return super.getEntityInteractionResult(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
     public boolean isMovementCeased() {
-        return this.getIsSitting() || (this.isBeingRidden());
+        return this.getIsSitting() || (this.isVehicle());
     }
 
     @Override
@@ -233,7 +240,7 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
         if (getIsAdult()) {
             return (-50);
         }
-        return (-50 + (getAge() / 2));
+        return (-50 + (getMoCAge() / 2));
     }
 
     @Override
@@ -242,41 +249,41 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public void writeAdditional(CompoundNBT nbttagcompound) {
-        super.writeAdditional(nbttagcompound);
+    public void addAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.addAdditionalSaveData(nbttagcompound);
         nbttagcompound.putBoolean("Saddle", getIsRideable());
     }
 
     @Override
-    public void readAdditional(CompoundNBT nbttagcompound) {
-        super.readAdditional(nbttagcompound);
+    public void readAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.readAdditionalSaveData(nbttagcompound);
         setRideable(nbttagcompound.getBoolean("Saddle"));
     }
 
     @Override
-    public double getMountedYOffset() {
+    public double getPassengersRidingOffset() {
         double yOff = 0.15F;
         if (getIsAdult()) {
-            return yOff + (this.getHeight());
+            return yOff + (this.getBbHeight());
         }
-        return this.getHeight() * ((double) 120 / getAge());
+        return this.getBbHeight() * ((double) 120 / getMoCAge());
     }
 
     @Override
-    public boolean attackEntityFrom(DamageSource damagesource, float i) {
-        if (super.attackEntityFrom(damagesource, i)) {
-            Entity entity = damagesource.getTrueSource();
+    public boolean hurt(DamageSource damagesource, float i) {
+        if (super.hurt(damagesource, i)) {
+            Entity entity = damagesource.getEntity();
 
-            if ((entity != null && getIsTamed() && entity instanceof PlayerEntity) || !(entity instanceof LivingEntity)) {
+            if ((entity != null && getIsTamed() && entity instanceof Player) || !(entity instanceof LivingEntity)) {
                 return false;
             }
 
-            if ((this.isBeingRidden()) && (entity == this.getRidingEntity())) {
+            if ((this.isVehicle()) && (entity == this.getVehicle())) {
                 return false;
             }
 
             if ((entity != this) && (super.shouldAttackPlayers())) {
-                setAttackTarget((LivingEntity) entity);
+                setTarget((LivingEntity) entity);
             }
             return true;
         }
@@ -285,24 +292,24 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
 
     @Override
     public boolean isMyHealFood(ItemStack stack) {
-        return !stack.isEmpty() && (stack.getItem() == MoCItems.ratRaw || stack.getItem() == MoCItems.rawTurkey);
+        return !stack.isEmpty() && (stack.getItem() == MoCItems.RAT_RAW.get() || stack.getItem() == MoCItems.RAW_TURKEY.get());
     }
 
     @Override
     public boolean canBeCollidedWith() {
-        return !this.isBeingRidden();
+        return !this.isVehicle();
     }
 
     @Override
     public void dropMyStuff() {
-        if (!this.world.isRemote) {
+        if (!this.level().isClientSide()) {
             dropArmor();
-            MoCTools.dropSaddle(this, this.world);
+            MoCTools.dropSaddle(this, this.level());
         }
     }
 
     @Override
-    public int getMaxSpawnedInChunk() {
+    public int getMaxSpawnClusterSize() {
         return 2;
     }
 
@@ -312,7 +319,7 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public int getMaxAge() {
+    public int getMoCMaxAge() {
         return 120;
     }
 
@@ -323,18 +330,18 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
 
     @Override
     public boolean isNotScared() {
-        return getAge() > 70;
+        return getMoCAge() > 70;
     }
 
     @Override
-    public void applyEnchantments(LivingEntity entityLivingBaseIn, Entity entityIn) {
-        ((LivingEntity) entityIn).addPotionEffect(new EffectInstance(Effects.POISON, 150, 0));
-        super.applyEnchantments(entityLivingBaseIn, entityIn);
+    public void doEnchantDamageEffects(LivingEntity entityLivingBaseIn, Entity entityIn) {
+        ((LivingEntity) entityIn).addEffect(new MobEffectInstance(MobEffects.POISON, 150, 0));
+        super.doEnchantDamageEffects(entityLivingBaseIn, entityIn);
     }
 
     @Override
     public boolean isReadyToHunt() {
-        return this.isNotScared() && !this.isMovementCeased() && !this.isBeingRidden();
+        return this.isNotScared() && !this.isMovementCeased() && !this.isVehicle();
     }
 
     @Override
@@ -347,7 +354,7 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
         return this.isInWater();
     }
 
-    protected float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn) {
-        return !this.isMovementCeased() ? this.getHeight() * 0.7F : this.getHeight() * 0.365F;
+    protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+        return !this.isMovementCeased() ? this.getBbHeight() * 0.7F : this.getBbHeight() * 0.365F;
     }
 }

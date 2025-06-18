@@ -4,10 +4,10 @@
 package drzhark.mocreatures.network.message;
 
 import drzhark.mocreatures.entity.passive.MoCEntityHorse;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -24,27 +24,28 @@ public class MoCMessageShuffle {
         this.flag = flag;
     }
 
-    public void encode(ByteBuf buffer) {
+    public void encode(FriendlyByteBuf buffer) {
         buffer.writeInt(this.entityId);
         buffer.writeBoolean(this.flag);
     }
 
-    public MoCMessageShuffle(ByteBuf buffer) {
+    public MoCMessageShuffle(FriendlyByteBuf buffer) {
         this.entityId = buffer.readInt();
         this.flag = buffer.readBoolean();
     }
 
-    public static boolean onMessage(MoCMessageShuffle message, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().setPacketHandled(true);
-        Entity ent = Minecraft.getInstance().player.world.getEntityByID(message.entityId);
-        if (ent instanceof MoCEntityHorse) {
-            if (message.flag) {
-                //((MoCEntityHorse) ent).shuffle();
-            } else {
-                ((MoCEntityHorse) ent).shuffleCounter = 0;
+    public static void onMessage(MoCMessageShuffle message, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            Entity ent = Minecraft.getInstance().player.level().getEntity(message.entityId);
+            if (ent instanceof MoCEntityHorse) {
+                if (message.flag) {
+                    //((MoCEntityHorse) ent).shuffle();
+                } else {
+                    ((MoCEntityHorse) ent).shuffleCounter = 0;
+                }
             }
-        }
-        return true;
+        });
+        ctx.get().setPacketHandled(true);
     }
 
     @Override

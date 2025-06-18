@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "mocreatures:items/horse_armor_crystal"
+    "layer0": "mocreatures:item/horse_armor_crystal"
   }
 }

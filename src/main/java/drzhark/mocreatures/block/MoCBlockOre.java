@@ -4,36 +4,41 @@
 package drzhark.mocreatures.block;
 
 import drzhark.mocreatures.init.MoCBlocks;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Random;
 
 public class MoCBlockOre extends Block {
 
-    public MoCBlockOre(AbstractBlock.Properties properties) {
-        super(properties.sound(SoundType.STONE));
+    public MoCBlockOre(BlockBehaviour.Properties properties) {
+        super(properties
+                .strength(3.0F, 3.0F)
+                .sound(SoundType.STONE));
     }
 
     @Override
-    public int getExpDrop(BlockState state, net.minecraft.world.IWorldReader reader, BlockPos pos, int fortune, int silktouch) {
-        return silktouch == 0 ? this.getExperience(RANDOM) : 0;
+    public int getExpDrop(BlockState state, LevelReader level, RandomSource randomSource, BlockPos pos, int fortuneLevel, int silkTouchLevel) {
+        return silkTouchLevel == 0 ? getExperience(new Random()) : 0;
     }
-    public int getExperience(Random rand) {
-        if (this == MoCBlocks.ancientOre) {
-            return MathHelper.nextInt(rand, 2, 5);
-        } else if (this == MoCBlocks.wyvernDiamondOre) {
-            return MathHelper.nextInt(rand, 4, 8);
-        } else if (this == MoCBlocks.wyvernEmeraldOre) {
-            return MathHelper.nextInt(rand, 4, 8);
-        } else if (this == MoCBlocks.wyvernLapisOre) {
-            return MathHelper.nextInt(rand, 3, 6);
+
+    private int getExperience(Random rand) {
+        if (this == MoCBlocks.ancientOre.get()) {
+            return Mth.nextInt((RandomSource) rand, 2, 5);
+        } else if (this == MoCBlocks.wyvernDiamondOre.get()) {
+            return Mth.nextInt((RandomSource) rand, 4, 8);
+        } else if (this == MoCBlocks.wyvernEmeraldOre.get()) {
+            return Mth.nextInt((RandomSource) rand, 4, 8);
+        } else if (this == MoCBlocks.wyvernLapisOre.get()) {
+            return Mth.nextInt((RandomSource) rand, 3, 6);
         } else {
             return 0;
         }
-}
+    }
 }

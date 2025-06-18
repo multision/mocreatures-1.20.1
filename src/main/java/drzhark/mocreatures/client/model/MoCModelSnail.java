@@ -3,88 +3,140 @@
  */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.ambient.MoCEntitySnail;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-
+/**
+ * Port of MoCModelSnail from 1.16.5 → 1.20.1.
+ */
+@OnlyIn(Dist.CLIENT)
 public class MoCModelSnail<T extends MoCEntitySnail> extends EntityModel<T> {
 
-    ModelRenderer Head;
-    ModelRenderer Antenna;
-    ModelRenderer Body;
-    ModelRenderer ShellUp;
-    ModelRenderer ShellDown;
-    ModelRenderer Tail;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "snail"), "main"
+    );
+
+    private final ModelPart head;
+    private final ModelPart antenna;
+    private final ModelPart body;
+    private final ModelPart shellUp;
+    private final ModelPart shellDown;
+    private final ModelPart tail;
+
+    // Animation state for rendering
     private boolean isHiding;
     private int type;
 
-    public MoCModelSnail() {
-        this.textureWidth = 32;
-        this.textureHeight = 32;
-
-        this.Head = new ModelRenderer(this, 0, 6);
-        this.Head.addBox(-1F, 0F, -1F, 2, 2, 2);
-        this.Head.setRotationPoint(0F, 21.8F, -1F);
-        setRotation(this.Head, -0.4537856F, 0F, 0F);
-
-        this.Antenna = new ModelRenderer(this, 8, 0);
-        this.Antenna.addBox(-1.5F, 0F, -1F, 3, 2, 0);
-        this.Antenna.setRotationPoint(0F, 19.4F, -1F);
-        setRotation(this.Antenna, 0.0523599F, 0F, 0F);
-
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(-1F, 0F, -1F, 2, 2, 4);
-        this.Body.setRotationPoint(0F, 22F, 0F);
-
-        this.ShellUp = new ModelRenderer(this, 12, 0);
-        this.ShellUp.addBox(-1F, -3F, 0F, 2, 3, 3);
-        this.ShellUp.setRotationPoint(0F, 22.3F, -0.2F);
-        setRotation(this.ShellUp, 0.2268928F, 0F, 0F);
-
-        this.ShellDown = new ModelRenderer(this, 12, 0);
-        this.ShellDown.addBox(-1F, 0F, 0F, 2, 3, 3);
-        this.ShellDown.setRotationPoint(0F, 21F, 0F);
-
-        this.Tail = new ModelRenderer(this, 1, 2);
-        this.Tail.addBox(-1F, 0F, 0F, 2, 1, 3);
-        this.Tail.setRotationPoint(0F, 23F, 3F);
-
+    public MoCModelSnail(ModelPart root) {
+        this.head      = root.getChild("head");
+        this.antenna   = root.getChild("antenna");
+        this.body      = root.getChild("body");
+        this.shellUp   = root.getChild("shellUp");
+        this.shellDown = root.getChild("shellDown");
+        this.tail      = root.getChild("tail");
     }
 
-    public void setLivingAnimations(T entityIn, float limbSwing, float limbSwingAmount, float partialTick) {
-        this.isHiding = entityIn.getIsHiding();
-        this.type = entityIn.getTypeMoC();
+    /**
+     * Define the snail's geometry (all cubes and part poses).
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // Head
+        PartDefinition head = root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(0, 6)
+                        .addBox(-1F, 0F, -1F, 2, 2, 2),
+                PartPose.offsetAndRotation(0F, 21.8F, -1F, -0.4537856F, 0F, 0F)
+        );
+
+        // Antenna
+        PartDefinition antenna = root.addOrReplaceChild("antenna",
+                CubeListBuilder.create()
+                        .texOffs(8, 0)
+                        .addBox(-1.5F, 0F, -1F, 3, 2, 0),
+                PartPose.offsetAndRotation(0F, 19.4F, -1F, 0.0523599F, 0F, 0F)
+        );
+
+        // Body
+        PartDefinition body = root.addOrReplaceChild("body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1F, 0F, -1F, 2, 2, 4),
+                PartPose.offset(0F, 22F, 0F)
+        );
+
+        // ShellUp
+        PartDefinition shellUp = root.addOrReplaceChild("shellUp",
+                CubeListBuilder.create()
+                        .texOffs(12, 0)
+                        .addBox(-1F, -3F, 0F, 2, 3, 3),
+                PartPose.offsetAndRotation(0F, 22.3F, -0.2F, 0.2268928F, 0F, 0F)
+        );
+
+        // ShellDown
+        PartDefinition shellDown = root.addOrReplaceChild("shellDown",
+                CubeListBuilder.create()
+                        .texOffs(12, 0)
+                        .addBox(-1F, 0F, 0F, 2, 3, 3),
+                PartPose.offset(0F, 21F, 0F)
+        );
+
+        // Tail
+        PartDefinition tail = root.addOrReplaceChild("tail",
+                CubeListBuilder.create()
+                        .texOffs(1, 2)
+                        .addBox(-1F, 0F, 0F, 2, 1, 3),
+                PartPose.offset(0F, 23F, 3F)
+        );
+
+        return LayerDefinition.create(mesh, 32, 32);
     }
 
+    /**
+     * Capture “hiding” state and “type” from the entity each tick, so renderToBuffer can choose which parts to draw.
+     */
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        if (this.isHiding && this.type < 5) {
-            this.ShellDown.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
-        } else {
-            this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
-            this.Antenna.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
-            this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
-            this.ShellUp.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
-            this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn);
-        }
-    }
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        this.isHiding = entity.getIsHiding();
+        this.type     = entity.getTypeMoC();
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    public void setRotationAngles(MoCEntitySnail entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float tailMov = MathHelper.cos((ageInTicks * 0.3F)) * 0.8F;
+        // Tail animation: swing based on “ageInTicks”, but only if snail is not nearly stationary.
+        float tailMov = Mth.cos(ageInTicks * 0.3F) * 0.8F;
         if (limbSwingAmount < 0.1F) {
             tailMov = 0F;
         }
-        this.Tail.rotationPointZ = 2F + tailMov;
-        this.ShellUp.rotateAngleX = 0.2268928F + (tailMov / 10F);
+        // Move the tail forward/back by tailMov units:
+        this.tail.setPos(0F, 23F, 3F + tailMov);
+        // Slightly tilt the shellUp based on tail movement:
+        this.shellUp.xRot = 0.2268928F + (tailMov / 10F);
+    }
+
+    /**
+     * Render all parts—but if “hiding” and type<5, only render shellDown; otherwise render the rest.
+     */
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        if (this.isHiding && this.type < 5) {
+            this.shellDown.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.antenna.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.shellUp.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
     }
 }

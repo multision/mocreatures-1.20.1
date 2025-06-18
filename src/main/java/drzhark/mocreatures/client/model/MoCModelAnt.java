@@ -1,103 +1,202 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.ambient.MoCEntityAnt;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCModelAnt<T extends MoCEntityAnt> extends EntityModel<T> {
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION =
+            new ModelLayerLocation(
+                    new ResourceLocation("mocreatures", "ant"),
+                    "main"
+            );
 
-    ModelRenderer Head;
-    ModelRenderer Mouth;
-    ModelRenderer RightAntenna;
-    ModelRenderer LeftAntenna;
-    ModelRenderer Thorax;
-    ModelRenderer Abdomen;
-    ModelRenderer MidLegs;
-    ModelRenderer FrontLegs;
-    ModelRenderer RearLegs;
+    private final ModelPart root;
+    private final ModelPart head;
+    private final ModelPart mouth;
+    private final ModelPart rightAntenna;
+    private final ModelPart leftAntenna;
+    private final ModelPart thorax;
+    private final ModelPart abdomen;
+    private final ModelPart midLegs;
+    private final ModelPart frontLegs;
+    private final ModelPart rearLegs;
 
-    public MoCModelAnt() {
-        this.textureWidth = 32;
-        this.textureHeight = 32;
+    public MoCModelAnt(ModelPart root) {
+        this.root = root;
+        this.head = root.getChild("head");
+        this.mouth = root.getChild("mouth");
+        this.rightAntenna = root.getChild("right_antenna");
+        this.leftAntenna = root.getChild("left_antenna");
+        this.thorax = root.getChild("thorax");
+        this.abdomen = root.getChild("abdomen");
+        this.midLegs = root.getChild("mid_legs");
+        this.frontLegs = root.getChild("front_legs");
+        this.rearLegs = root.getChild("rear_legs");
+    }
 
-        this.Head = new ModelRenderer(this, 0, 11);
-        this.Head.addBox(-0.5F, 0F, 0F, 1, 1, 1);
-        this.Head.setRotationPoint(0F, 21.9F, -1.3F);
-        setRotation(this.Head, -2.171231F, 0F, 0F);
+    /**
+     * Registers all parts of the Ant model and returns a LayerDefinition.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
 
-        this.Mouth = new ModelRenderer(this, 8, 10);
-        this.Mouth.addBox(0F, 0F, 0F, 2, 1, 0);
-        this.Mouth.setRotationPoint(-1F, 22.3F, -1.9F);
-        setRotation(this.Mouth, -0.8286699F, 0F, 0F);
+        // Head
+        root.addOrReplaceChild(
+                "head",
+                CubeListBuilder.create()
+                        .texOffs(0, 11)
+                        .addBox(-0.5F, 0F, 0F, 1, 1, 1),
+                PartPose.offsetAndRotation(
+                        0F, 21.9F, -1.3F,
+                        -2.171231F, 0F, 0F
+                )
+        );
 
-        this.RightAntenna = new ModelRenderer(this, 0, 6);
-        this.RightAntenna.addBox(-0.5F, 0F, -1F, 1, 0, 1);
-        this.RightAntenna.setRotationPoint(-0.5F, 21.7F, -2.3F);
-        setRotation(this.RightAntenna, -1.041001F, 0.7853982F, 0F);
+        // Mouth
+        root.addOrReplaceChild(
+                "mouth",
+                CubeListBuilder.create()
+                        .texOffs(8, 10)
+                        // Note: original depth was zero (2,1,0)
+                        .addBox(0F, 0F, 0F, 2, 1, 0),
+                PartPose.offsetAndRotation(
+                        -1F, 22.3F, -1.9F,
+                        -0.8286699F, 0F, 0F
+                )
+        );
 
-        this.LeftAntenna = new ModelRenderer(this, 4, 6);
-        this.LeftAntenna.addBox(-0.5F, 0F, -1F, 1, 0, 1);
-        this.LeftAntenna.setRotationPoint(0.5F, 21.7F, -2.3F);
-        setRotation(this.LeftAntenna, -1.041001F, -0.7853982F, 0F);
+        // Right Antenna
+        root.addOrReplaceChild(
+                "right_antenna",
+                CubeListBuilder.create()
+                        .texOffs(0, 6)
+                        // This is 1×0×1 (height zero)
+                        .addBox(-0.5F, 0F, -1F, 1, 0, 1),
+                PartPose.offsetAndRotation(
+                        -0.5F, 21.7F, -2.3F,
+                        -1.041001F, 0.7853982F, 0F
+                )
+        );
 
-        this.Thorax = new ModelRenderer(this, 0, 0);
-        this.Thorax.addBox(-0.5F, 1.5F, -1F, 1, 1, 2);
-        this.Thorax.setRotationPoint(0F, 20F, -0.5F);
+        // Left Antenna
+        root.addOrReplaceChild(
+                "left_antenna",
+                CubeListBuilder.create()
+                        .texOffs(4, 6)
+                        .addBox(-0.5F, 0F, -1F, 1, 0, 1),
+                PartPose.offsetAndRotation(
+                        0.5F, 21.7F, -2.3F,
+                        -1.041001F, -0.7853982F, 0F
+                )
+        );
 
-        this.Abdomen = new ModelRenderer(this, 8, 1);
-        this.Abdomen.addBox(-0.5F, -0.2F, -1F, 1, 2, 1);
-        this.Abdomen.setRotationPoint(0F, 21.5F, 0.3F);
-        setRotation(this.Abdomen, 1.706911F, 0F, 0F);
+        // Thorax
+        root.addOrReplaceChild(
+                "thorax",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-0.5F, 1.5F, -1F, 1, 1, 2),
+                PartPose.offset(0F, 20F, -0.5F)
+        );
 
-        this.MidLegs = new ModelRenderer(this, 4, 8);
-        this.MidLegs.addBox(-1F, 0F, 0F, 2, 3, 0);
-        this.MidLegs.setRotationPoint(0F, 22F, -0.7F);
-        setRotation(this.MidLegs, 0.5948578F, 0F, 0F);
+        // Abdomen
+        root.addOrReplaceChild(
+                "abdomen",
+                CubeListBuilder.create()
+                        .texOffs(8, 1)
+                        .addBox(-0.5F, -0.2F, -1F, 1, 2, 1),
+                PartPose.offsetAndRotation(
+                        0F, 21.5F, 0.3F,
+                        1.706911F, 0F, 0F
+                )
+        );
 
-        this.FrontLegs = new ModelRenderer(this, 0, 8);
-        this.FrontLegs.addBox(-1F, 0F, 0F, 2, 3, 0);
-        this.FrontLegs.setRotationPoint(0F, 22F, -0.8F);
-        setRotation(this.FrontLegs, -0.6192304F, 0F, 0F);
+        // Mid Legs
+        root.addOrReplaceChild(
+                "mid_legs",
+                CubeListBuilder.create()
+                        .texOffs(4, 8)
+                        .addBox(-1F, 0F, 0F, 2, 3, 0),
+                PartPose.offsetAndRotation(
+                        0F, 22F, -0.7F,
+                        0.5948578F, 0F, 0F
+                )
+        );
 
-        this.RearLegs = new ModelRenderer(this, 0, 8);
-        this.RearLegs.addBox(-1F, 0F, 0F, 2, 3, 0);
-        this.RearLegs.setRotationPoint(0F, 22F, 0F);
-        setRotation(this.RearLegs, 0.9136644F, 0F, 0F);
+        // Front Legs
+        root.addOrReplaceChild(
+                "front_legs",
+                CubeListBuilder.create()
+                        .texOffs(0, 8)
+                        .addBox(-1F, 0F, 0F, 2, 3, 0),
+                PartPose.offsetAndRotation(
+                        0F, 22F, -0.8F,
+                        -0.6192304F, 0F, 0F
+                )
+        );
+
+        // Rear Legs
+        root.addOrReplaceChild(
+                "rear_legs",
+                CubeListBuilder.create()
+                        .texOffs(0, 8)
+                        .addBox(-1F, 0F, 0F, 2, 3, 0),
+                PartPose.offsetAndRotation(
+                        0F, 22F, 0F,
+                        0.9136644F, 0F, 0F
+                )
+        );
+
+        // No other parts (we only had those nine ModelRenderers)
+
+        return LayerDefinition.create(mesh, 32, 32);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Mouth.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RightAntenna.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LeftAntenna.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Thorax.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Abdomen.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.MidLegs.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.FrontLegs.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.RearLegs.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void setupAnim(
+            @NotNull T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // Exactly the same logic as setRotationAngles in 1.16.5, but now applied to xRot fields:
+
+        float legMov   = Mth.cos(limbSwing + (float)Math.PI) * limbSwingAmount;
+        float legMovB  = Mth.cos(limbSwing) * limbSwingAmount;
+
+        this.frontLegs.xRot = -0.6192304F + legMov;
+        this.midLegs.xRot   = 0.5948578F + legMovB;
+        this.rearLegs.xRot  = 0.9136644F + legMov;
     }
 
-    private void setRotation(ModelRenderer model, float x, float y, float z) {
-        model.rotateAngleX = x;
-        model.rotateAngleY = y;
-        model.rotateAngleZ = z;
-    }
-
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float legMov = MathHelper.cos((limbSwing) + 3.141593F) * limbSwingAmount;
-        float legMovB = MathHelper.cos(limbSwing) * limbSwingAmount;
-        this.FrontLegs.rotateAngleX = -0.6192304F + legMov;
-        this.MidLegs.rotateAngleX = 0.5948578F + legMovB;
-        this.RearLegs.rotateAngleX = 0.9136644F + legMov;
+    @Override
+    public void renderToBuffer(
+            @NotNull PoseStack poseStack,
+            @NotNull VertexConsumer buffer,
+            int packedLight,
+            int packedOverlay,
+            float red,
+            float green,
+            float blue,
+            float alpha
+    ) {
+        // Just render the root; it will draw all nine children.
+        this.root.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

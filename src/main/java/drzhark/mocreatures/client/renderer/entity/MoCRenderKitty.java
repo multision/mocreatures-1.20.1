@@ -3,148 +3,189 @@
  */
 package drzhark.mocreatures.client.renderer.entity;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.client.model.MoCModelKitty;
 import drzhark.mocreatures.entity.neutral.MoCEntityKitty;
 import net.minecraft.client.renderer.*;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
+import com.mojang.math.Axis;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.lang.reflect.Field;
+
+import org.joml.Matrix4f;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderKitty extends MoCRenderMoC<MoCEntityKitty, MoCModelKitty<MoCEntityKitty>> {
 
-    private static class Internal extends RenderType {
-        private Internal(String name, VertexFormat fmt, int glMode, int size, boolean doCrumbling, boolean depthSorting, Runnable onEnable, Runnable onDisable)
-        {
-            super(name, fmt, glMode, size, doCrumbling, depthSorting, onEnable, onDisable);
-            throw new IllegalStateException("This class must not be instantiated");
-        }
-
-        public static RenderType getKitty(ResourceLocation locationIn) {
-            RenderType.State rendertype$state = RenderType.State.getBuilder()
-                    .texture(new RenderState.TextureState(locationIn, true, false))
-                    .alpha(DEFAULT_ALPHA)
-                    .transparency(TRANSLUCENT_TRANSPARENCY)
-                    .build(false);
-            return makeType("kitty", DefaultVertexFormats.POSITION_TEX, 7, 256, false, true, rendertype$state);
-        }
-    }
-
     public MoCModelKitty kitty;
+    private Field isSittingField;
+    private Field isSwingingField;
+    private Field swingProgressField;
+    private Field kittystateField;
 
-    public MoCRenderKitty(EntityRendererManager renderManagerIn, MoCModelKitty modelkitty, float f) {
+    public MoCRenderKitty(EntityRendererProvider.Context renderManagerIn, MoCModelKitty modelkitty, float f) {
         super(renderManagerIn, modelkitty, f);
         this.kitty = modelkitty;
+
+        // Try to get fields via reflection
+        try {
+            isSittingField = MoCModelKitty.class.getDeclaredField("isSitting");
+            isSittingField.setAccessible(true);
+
+            isSwingingField = MoCModelKitty.class.getDeclaredField("isSwinging");
+            isSwingingField.setAccessible(true);
+
+            swingProgressField = MoCModelKitty.class.getDeclaredField("swingProgress");
+            swingProgressField.setAccessible(true);
+
+            kittystateField = MoCModelKitty.class.getDeclaredField("kittystate");
+            kittystateField.setAccessible(true);
+        } catch (Exception e) {
+            // Fields not found, we'll use direct setting approach
+        }
     }
 
     @Override
-    public ResourceLocation getEntityTexture(MoCEntityKitty entitykitty) {
+    public ResourceLocation getTextureLocation(MoCEntityKitty entitykitty) {
         return entitykitty.getTexture();
     }
 
     @Override
-    public void render(MoCEntityKitty entitykitty, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
-        super.render(entitykitty, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
+    public void render(MoCEntityKitty entitykitty, float entityYaw, float partialTicks, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLightIn) {
+        super.render(entitykitty, entityYaw, partialTicks, poseStack, buffer, packedLightIn);
         boolean displayPetIcons = MoCreatures.proxy.getDisplayPetIcons();
         if (entitykitty.getIsTamed()) {
             float f2 = 1.6F;
             float f3 = 0.01666667F * f2;
-            float f4 = entitykitty.getDistance(this.renderManager.info.getRenderViewEntity());
+            float f4 = entitykitty.distanceTo(this.entityRenderDispatcher.camera.getEntity());
             if (f4 < 12F) {
                 float f5 = 0.2F;
-                if (this.kitty.isSitting) {
+                if (entitykitty.getIsSitting()) {
                     f5 = 0.4F;
                 }
 
-                matrixStackIn.push();
-                matrixStackIn.translate(0.0F, f5, 0.0F);
-                RenderSystem.normal3f(0.0F, 1.0F, 0.0F);
-                matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-this.renderManager.info.getYaw()));
-                matrixStackIn.scale(-f3, -f3, f3);
-                //Tessellator tessellator = Tessellator.getInstance();
+                poseStack.pushPose();
+                poseStack.translate(0.0F, f5, 0.0F);
+                poseStack.mulPose(Axis.YP.rotationDegrees(-this.entityRenderDispatcher.camera.getYRot()));
+                poseStack.scale(-f3, -f3, f3);
 
                 if (displayPetIcons && entitykitty.getShowEmoteIcon()) {
-                    //Minecraft.getInstance().getTextureManager().bindTexture(entitykitty.getEmoteIcon());
                     int i = -90;
                     int k = 32;
                     int l = (k / 2) * -1;
-                    float f9 = 0.0F;
-                    float f11 = 1.0F / k;
-                    float f12 = 1.0F / k;
-                    Matrix4f matrix = matrixStackIn.getLast().getMatrix();
-                    IVertexBuilder ivertexbuilder = bufferIn.getBuffer(MoCRenderKitty.Internal.getKitty(entitykitty.getEmoteIcon()));
+                    Matrix4f matrix = poseStack.last().pose();
+                    VertexConsumer vc = buffer.getBuffer(RenderType.text(entitykitty.getEmoteIcon()));
 
-                    //tessellator.getBuffer().begin(7, DefaultVertexFormats.POSITION_TEX);
-                    ivertexbuilder.pos(matrix, l, i + k, f9).tex(0.0F, k * f12).endVertex();
-                    ivertexbuilder.pos(matrix, l + k, i + k, f9).tex(k * f11, k * f12).endVertex();
-                    ivertexbuilder.pos(matrix, l + k, i, f9).tex(k * f11, 0.0F).endVertex();
-                    ivertexbuilder.pos(matrix, l, i, f9).tex(0.0F, 0.0F).endVertex();
-                    //tessellator.draw();
+                    // white tint, no overlay, full bright
+                    int packedLight = 0xF000F0;
+                    int packedOverlay = OverlayTexture.NO_OVERLAY;
+
+                    // lower-left
+                    vc.vertex(matrix, l, i + k, 0f)
+                            .color(255, 255, 255, 255)
+                            .uv(0.0F, 1.0F)
+                            .overlayCoords(packedOverlay)
+                            .uv2(packedLight)
+                            .endVertex();
+
+                    // lower-right
+                    vc.vertex(matrix, l + k, i + k, 0f)
+                            .color(255, 255, 255, 255)
+                            .uv(1.0F, 1.0F)
+                            .overlayCoords(packedOverlay)
+                            .uv2(packedLight)
+                            .endVertex();
+
+                    // upper-right
+                    vc.vertex(matrix, l + k, i, 0f)
+                            .color(255, 255, 255, 255)
+                            .uv(1.0F, 0.0F)
+                            .overlayCoords(packedOverlay)
+                            .uv2(packedLight)
+                            .endVertex();
+
+                    // upper-left
+                    vc.vertex(matrix, l, i, 0f)
+                            .color(255, 255, 255, 255)
+                            .uv(0.0F, 0.0F)
+                            .overlayCoords(packedOverlay)
+                            .uv2(packedLight)
+                            .endVertex();
                 }
 
-                matrixStackIn.pop();
+                poseStack.popPose();
             }
         }
     }
 
-    protected void onMaBack(MoCEntityKitty entitykitty, MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.ZN.rotationDegrees(90F));
-        if (!entitykitty.world.isRemote && (entitykitty.getRidingEntity() != null)) {
-            matrixStackIn.translate(-1.5F, 0.2F, -0.2F);
+    protected void onMaBack(MoCEntityKitty entitykitty, PoseStack poseStack) {
+        poseStack.mulPose(Axis.ZN.rotationDegrees(90F));
+        if (!entitykitty.level().isClientSide() && (entitykitty.getVehicle() != null)) {
+            poseStack.translate(-1.5F, 1.2F, -0.2F);
         } else {
-            matrixStackIn.translate(0.1F, 0.2F, -0.2F);
+            poseStack.translate(0.1F, 1.2F, -0.2F);
         }
-
     }
 
-    protected void onTheSide(MoCEntityKitty entityliving, MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.ZN.rotationDegrees(90F));
-        matrixStackIn.translate(0.2F, 0.0F, -0.2F);
+    protected void onTheSide(MoCEntityKitty entityliving, PoseStack poseStack) {
+        poseStack.mulPose(Axis.ZN.rotationDegrees(90F));
+        poseStack.translate(1.2F, 1.5F, -0.2F);
     }
 
     @Override
-    protected void preRenderCallback(MoCEntityKitty entitykitty, MatrixStack matrixStackIn, float f) {
-        this.kitty.isSitting = entitykitty.getIsSitting();
-        this.kitty.isSwinging = entitykitty.getIsSwinging();
-        this.kitty.swingProgress = entitykitty.swingProgress;
-        this.kitty.kittystate = entitykitty.getKittyState();
+    protected void scale(MoCEntityKitty entitykitty, PoseStack poseStack, float f) {
+        // Fix model positioning - translate down to match entity position
+        poseStack.translate(0.0F, 1.0F, 0.0F);
+
+        // Update model state from entity
+        try {
+            if (isSittingField != null) {
+                isSittingField.set(this.kitty, entitykitty.getIsSitting());
+                isSwingingField.set(this.kitty, entitykitty.getIsSwinging());
+                swingProgressField.set(this.kitty, entitykitty.attackAnim);
+                kittystateField.set(this.kitty, entitykitty.getKittyState());
+            }
+        } catch (Exception e) {
+            // Ignore reflection errors
+        }
+
         if (!entitykitty.getIsAdult()) {
-            stretch(entitykitty, matrixStackIn);
+            stretch(entitykitty, poseStack);
         }
         if (entitykitty.getKittyState() == 20) {
-            onTheSide(entitykitty, matrixStackIn);
+            onTheSide(entitykitty, poseStack);
         }
         if (entitykitty.climbingTree()) {
-            rotateAnimal(entitykitty, matrixStackIn);
+            rotateAnimal(entitykitty, poseStack);
         }
         if (entitykitty.upsideDown()) {
-            upsideDown(entitykitty, matrixStackIn);
+            upsideDown(entitykitty, poseStack);
         }
         if (entitykitty.onMaBack()) {
-            onMaBack(entitykitty, matrixStackIn);
+            onMaBack(entitykitty, poseStack);
         }
     }
 
-    protected void rotateAnimal(MoCEntityKitty entitykitty, MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.XN.rotationDegrees(90F));
-        matrixStackIn.translate(0.0F, 0.5F, 0.0F);
+    protected void rotateAnimal(MoCEntityKitty entitykitty, PoseStack poseStack) {
+        poseStack.mulPose(Axis.XN.rotationDegrees(90F));
+        poseStack.translate(0.0F, 1.5F, -1.5F);
     }
 
-    protected void stretch(MoCEntityKitty entitykitty, MatrixStack matrixStackIn) {
-        matrixStackIn.scale(entitykitty.getAge() * 0.01F, entitykitty.getAge() * 0.01F, entitykitty.getAge() * 0.01F);
+    protected void stretch(MoCEntityKitty entitykitty, PoseStack poseStack) {
+        poseStack.scale(entitykitty.getMoCAge() * 0.01F, entitykitty.getMoCAge() * 0.01F,
+                entitykitty.getMoCAge() * 0.01F);
     }
 
-    protected void upsideDown(MoCEntityKitty entitykitty, MatrixStack matrixStackIn) {
-        matrixStackIn.rotate(Vector3f.ZN.rotationDegrees(180F));
-        matrixStackIn.translate(-0.35F, 0F, -0.55F);
+    protected void upsideDown(MoCEntityKitty entitykitty, PoseStack poseStack) {
+        poseStack.mulPose(Axis.ZN.rotationDegrees(180F));
+        poseStack.translate(0F, 2.75F, 0F);
     }
 }

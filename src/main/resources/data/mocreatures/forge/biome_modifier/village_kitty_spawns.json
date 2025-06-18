@@ -1,0 +1,10 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": "#mocreatures:is_village",
+  "spawners": {
+    "type": "mocreatures:kitty",
+    "weight": 30,
+    "minCount": 1,
+    "maxCount": 3
+  }
+} 

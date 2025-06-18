@@ -1,85 +1,186 @@
 /*
  * GNU GENERAL PUBLIC LICENSE Version 3
  */
+/*
+ * GNU GENERAL PUBLIC LICENSE Version 3
+ */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.hunter.MoCEntityFox;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-
+@OnlyIn(Dist.CLIENT)
 public class MoCModelFox<T extends MoCEntityFox> extends EntityModel<T> {
 
-    public ModelRenderer Body;
-    public ModelRenderer Leg1;
-    public ModelRenderer Leg2;
-    public ModelRenderer Leg3;
-    public ModelRenderer Leg4;
-    public ModelRenderer Snout;
-    public ModelRenderer Head;
-    public ModelRenderer Tail;
-    public ModelRenderer Ears;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
+            new ResourceLocation("mocreatures", "fox"), "main"
+    );
 
-    public MoCModelFox() {
-        byte byte0 = 8;
-        this.Body = new ModelRenderer(this, 0, 0);
-        this.Body.addBox(1.0F, 0.0F, 0.0F, 6, 6, 12, 0.0F);
-        this.Body.setRotationPoint(-4F, 10F, -6F);
-        this.Head = new ModelRenderer(this, 0, 20);
-        this.Head.addBox(-2F, -3F, -4F, 6, 6, 4, 0.0F);
-        this.Head.setRotationPoint(-1F, 11F, -6F);
-        this.Snout = new ModelRenderer(this, 20, 20);
-        this.Snout.addBox(0.0F, 1.0F, -7F, 2, 2, 4, 0.0F);
-        this.Snout.setRotationPoint(-1F, 11F, -6F);
-        this.Ears = new ModelRenderer(this, 50, 20);
-        this.Ears.addBox(-2F, -6F, -2F, 6, 4, 1, 0.0F);
-        this.Ears.setRotationPoint(-1F, 11F, -6F);
-        this.Tail = new ModelRenderer(this, 32, 20);
-        this.Tail.addBox(-4F, -5F, -2F, 3, 3, 8, 0.0F);
-        this.Tail.setRotationPoint(2.5F, 15F, 5F);
-        this.Tail.rotateAngleX = -0.5235988F;
-        this.Leg1 = new ModelRenderer(this, 0, 0);
-        this.Leg1.addBox(-1F, 0.0F, -2F, 3, byte0, 3, 0.0F);
-        this.Leg1.setRotationPoint(-2F, 24 - byte0, 5F);
-        this.Leg2 = new ModelRenderer(this, 0, 0);
-        this.Leg2.addBox(-1F, 0.0F, -2F, 3, byte0, 3, 0.0F);
-        this.Leg2.setRotationPoint(1.0F, 24 - byte0, 5F);
-        this.Leg3 = new ModelRenderer(this, 0, 0);
-        this.Leg3.addBox(-1F, 0.0F, -2F, 3, byte0, 3, 0.0F);
-        this.Leg3.setRotationPoint(-2F, 24 - byte0, -4F);
-        this.Leg4 = new ModelRenderer(this, 0, 0);
-        this.Leg4.addBox(-1F, 0.0F, -2F, 3, byte0, 3, 0.0F);
-        this.Leg4.setRotationPoint(1.0F, 24 - byte0, -4F);
+    private final ModelPart body;
+    private final ModelPart leg1;
+    private final ModelPart leg2;
+    private final ModelPart leg3;
+    private final ModelPart leg4;
+    private final ModelPart head;
+    private final ModelPart snout;
+    private final ModelPart ears;
+    private final ModelPart tail;
+
+    public MoCModelFox(ModelPart root) {
+        this.body  = root.getChild("body");
+        this.leg1  = root.getChild("leg1");
+        this.leg2  = root.getChild("leg2");
+        this.leg3  = root.getChild("leg3");
+        this.leg4  = root.getChild("leg4");
+        this.head  = root.getChild("head");
+        this.snout = root.getChild("snout");
+        this.ears  = root.getChild("ears");
+        this.tail  = root.getChild("tail");
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Snout.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Tail.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Ears.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void setupAnim(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float ageInTicks,
+            float netHeadYaw,
+            float headPitch
+    ) {
+        // Head rotation
+        this.head.yRot  = netHeadYaw * ((float)Math.PI / 180F);
+        this.head.xRot  = headPitch * ((float)Math.PI / 180F);
+        this.snout.yRot = this.head.yRot;
+        this.snout.xRot = this.head.xRot;
+        this.ears.yRot  = this.head.yRot;
+        this.ears.xRot  = this.head.xRot;
+
+        // Leg animation: front/back opposite phase, left/right opposite phase
+        this.leg1.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+        this.leg2.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+        this.leg3.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+        this.leg4.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.Head.rotateAngleY = netHeadYaw / 57.29578F;
-        this.Head.rotateAngleX = headPitch / 57.29578F;
-        this.Snout.rotateAngleY = this.Head.rotateAngleY;//netHeadYaw / 57.29578F;
-        this.Snout.rotateAngleX = this.Head.rotateAngleX;//headPitch / 57.29578F;
-        //Snout.rotationPointX = 0.0F + ((netHeadYaw / 57.29578F) * 0.8F);
-        this.Ears.rotateAngleY = this.Head.rotateAngleY;//netHeadYaw / 57.29578F;
-        this.Ears.rotateAngleX = this.Head.rotateAngleX;//headPitch / 57.29578F;
-        //Ears.rotationPointX = 0.0F + ((netHeadYaw / 57.29578F) * 2.5F);
-        this.Leg1.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        this.Leg2.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
-        this.Leg3.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
-        this.Leg4.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+    @Override
+    public void renderToBuffer(
+            PoseStack poseStack,
+            VertexConsumer vertexConsumer,
+            int packedLight,
+            int packedOverlay,
+            float red,
+            float green,
+            float blue,
+            float alpha
+    ) {
+        this.body.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg1.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg2.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg3.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.leg4.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.head.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.snout.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tail.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.ears.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+    }
+
+    /**
+     * Creates the mesh + texture size for MoCModelFox.
+     */
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh    = new MeshDefinition();
+        PartDefinition root    = mesh.getRoot();
+        byte legHeight = 8;
+
+        // BODY
+        // Original: addBox(1, 0, -) size (6,6,12), pivot (-4,10,-6)
+        root.addOrReplaceChild("body",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(1F, 0F, 0F, 6, 6, 12, new CubeDeformation(0.0F)),
+                PartPose.offset(-4F, 10F, -6F)
+        );
+
+        // HEAD
+        root.addOrReplaceChild("head",
+                CubeListBuilder.create()
+                        .texOffs(0, 20)
+                        .addBox(-2F, -3F, -4F, 6, 6, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(-1F, 11F, -6F)
+        );
+
+        // SNOUT
+        root.addOrReplaceChild("snout",
+                CubeListBuilder.create()
+                        .texOffs(20, 20)
+                        .addBox(0F, 1F, -7F, 2, 2, 4, new CubeDeformation(0.0F)),
+                PartPose.offset(-1F, 11F, -6F)
+        );
+
+        // EARS
+        root.addOrReplaceChild("ears",
+                CubeListBuilder.create()
+                        .texOffs(50, 20)
+                        .addBox(-2F, -6F, -2F, 6, 4, 1, new CubeDeformation(0.0F)),
+                PartPose.offset(-1F, 11F, -6F)
+        );
+
+        // TAIL
+        // Original: addBox(-4,-5,-2, 3,3,8), pivot (2.5,15,5), rotateX = -0.5235988
+        root.addOrReplaceChild("tail",
+                CubeListBuilder.create()
+                        .texOffs(32, 20)
+                        .addBox(-4F, -5F, -2F, 3, 3, 8, new CubeDeformation(0.0F)),
+                PartPose.offsetAndRotation(2.5F, 15F, 5F, -0.5235988F, 0F, 0F)
+        );
+
+        // LEG1
+        root.addOrReplaceChild("leg1",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1F, 0F, -2F, 3, legHeight, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(-2F, 24 - legHeight, 5F)
+        );
+
+        // LEG2
+        root.addOrReplaceChild("leg2",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1F, 0F, -2F, 3, legHeight, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(1F, 24 - legHeight, 5F)
+        );
+
+        // LEG3
+        root.addOrReplaceChild("leg3",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1F, 0F, -2F, 3, legHeight, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(-2F, 24 - legHeight, -4F)
+        );
+
+        // LEG4
+        root.addOrReplaceChild("leg4",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-1F, 0F, -2F, 3, legHeight, 3, new CubeDeformation(0.0F)),
+                PartPose.offset(1F, 24 - legHeight, -4F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 32);
     }
 }

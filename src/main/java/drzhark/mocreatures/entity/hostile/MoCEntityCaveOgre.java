@@ -6,26 +6,28 @@ package drzhark.mocreatures.entity.hostile;
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityMob;
 import drzhark.mocreatures.init.MoCLootTables;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 
-import javax.annotation.Nullable;
 import java.util.Random;
 
 public class MoCEntityCaveOgre extends MoCEntityOgre {
 
-    public MoCEntityCaveOgre(EntityType<? extends MoCEntityCaveOgre> type, World world) {
+    public MoCEntityCaveOgre(EntityType<? extends MoCEntityCaveOgre> type, Level world) {
         super(type, world);
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MoCEntityOgre.registerAttributes().createMutableAttribute(Attributes.MAX_HEALTH, 60.0D).createMutableAttribute(Attributes.ARMOR, 10.0D).createMutableAttribute(Attributes.ATTACK_DAMAGE, 8.0D);
+    public static AttributeSupplier.Builder createAttributes() {
+        return MoCEntityOgre.createAttributes()
+                .add(Attributes.MAX_HEALTH, 60.0D)
+                .add(Attributes.ARMOR, 10.0D)
+                .add(Attributes.ATTACK_DAMAGE, 8.0D);
     }
 
     @Override
@@ -42,15 +44,16 @@ public class MoCEntityCaveOgre extends MoCEntityOgre {
     }
 
     @Override
-    protected boolean isHarmedByDaylight() {
+    protected boolean isDaylightSensitive() {
         return true;
     }
 
-    public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, IServerWorld world, SpawnReason reason, BlockPos pos, Random randomIn) {
+    public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, ServerLevel world, MobSpawnType reason, BlockPos pos, Random randomIn) {
         return MoCEntityMob.getCanSpawnHere(type, world, reason, pos, randomIn) && !world.canSeeSky(pos) && (pos.getY() < 50.0D);
     }
 
-    @Nullable
-    protected ResourceLocation getLootTable() {        return MoCLootTables.CAVE_OGRE;
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return MoCLootTables.CAVE_OGRE;
     }
 }

@@ -1,100 +1,197 @@
-/*
- * GNU GENERAL PUBLIC LICENSE Version 3
- */
 package drzhark.mocreatures.client.model;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import drzhark.mocreatures.entity.passive.MoCEntityBunny;
-import net.minecraft.client.renderer.entity.model.EntityModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class MoCModelBunny<T extends MoCEntityBunny> extends EntityModel<T> {
 
-    public ModelRenderer part1;
-    public ModelRenderer part2;
-    public ModelRenderer part3;
-    public ModelRenderer part4;
-    public ModelRenderer part5;
-    public ModelRenderer part6;
-    public ModelRenderer part7;
-    public ModelRenderer part8;
-    public ModelRenderer part9;
-    public ModelRenderer part10;
-    public ModelRenderer part11;
+    @SuppressWarnings("removal")
+    public static final ModelLayerLocation LAYER_LOCATION =
+            new ModelLayerLocation(new ResourceLocation("mocreatures", "bunny"), "main");
 
-    public MoCModelBunny() {
-        byte byte0 = 16;
-        this.part1 = new ModelRenderer(this, 0, 0);
-        this.part1.addBox(-2F, -1F, -4F, 4, 4, 6, 0.0F);
-        this.part1.setRotationPoint(0.0F, -1 + byte0, -4F);
-        this.part8 = new ModelRenderer(this, 14, 0);
-        this.part8.addBox(-2F, -5F, -3F, 1, 4, 2, 0.0F);
-        this.part8.setRotationPoint(0.0F, -1 + byte0, -4F);
-        this.part9 = new ModelRenderer(this, 14, 0);
-        this.part9.addBox(1.0F, -5F, -3F, 1, 4, 2, 0.0F);
-        this.part9.setRotationPoint(0.0F, -1 + byte0, -4F);
-        this.part10 = new ModelRenderer(this, 20, 0);
-        this.part10.addBox(-4F, 0.0F, -3F, 2, 3, 2, 0.0F);
-        this.part10.setRotationPoint(0.0F, -1 + byte0, -4F);
-        this.part11 = new ModelRenderer(this, 20, 0);
-        this.part11.addBox(2.0F, 0.0F, -3F, 2, 3, 2, 0.0F);
-        this.part11.setRotationPoint(0.0F, -1 + byte0, -4F);
-        this.part2 = new ModelRenderer(this, 0, 10);
-        this.part2.addBox(-3F, -4F, -3F, 6, 8, 6, 0.0F);
-        this.part2.setRotationPoint(0.0F, byte0, 0.0F);
-        this.part3 = new ModelRenderer(this, 0, 24);
-        this.part3.addBox(-2F, 4F, -2F, 4, 3, 4, 0.0F);
-        this.part3.setRotationPoint(0.0F, byte0, 0.0F);
-        this.part4 = new ModelRenderer(this, 24, 16);
-        this.part4.addBox(-2F, 0.0F, -1F, 2, 2, 2);
-        this.part4.setRotationPoint(3F, 3 + byte0, -3F);
-        this.part5 = new ModelRenderer(this, 24, 16);
-        this.part5.addBox(0.0F, 0.0F, -1F, 2, 2, 2);
-        this.part5.setRotationPoint(-3F, 3 + byte0, -3F);
-        this.part6 = new ModelRenderer(this, 16, 24);
-        this.part6.addBox(-2F, 0.0F, -4F, 2, 2, 4);
-        this.part6.setRotationPoint(3F, 3 + byte0, 4F);
-        this.part7 = new ModelRenderer(this, 16, 24);
-        this.part7.addBox(0.0F, 0.0F, -4F, 2, 2, 4);
-        this.part7.setRotationPoint(-3F, 3 + byte0, 4F);
+    private final ModelPart part1;
+    private final ModelPart part2;
+    private final ModelPart part3;
+    private final ModelPart part4;
+    private final ModelPart part5;
+    private final ModelPart part6;
+    private final ModelPart part7;
+    private final ModelPart part8;
+    private final ModelPart part9;
+    private final ModelPart part10;
+    private final ModelPart part11;
+
+    public MoCModelBunny(ModelPart root) {
+        this.part1  = root.getChild("part1");
+        this.part8  = root.getChild("part8");
+        this.part9  = root.getChild("part9");
+        this.part10 = root.getChild("part10");
+        this.part11 = root.getChild("part11");
+        this.part2  = root.getChild("part2");
+        this.part3  = root.getChild("part3");
+        this.part4  = root.getChild("part4");
+        this.part5  = root.getChild("part5");
+        this.part6  = root.getChild("part6");
+        this.part7  = root.getChild("part7");
+    }
+
+    public static LayerDefinition createBodyLayer() {
+        MeshDefinition mesh = new MeshDefinition();
+        PartDefinition root = mesh.getRoot();
+
+        // part1 (head)
+        root.addOrReplaceChild("part1",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-2F, -1F, -4F, 4, 4, 6),
+                PartPose.offset(0F, 15F, -4F)
+        );
+
+        // part8 (left ear)
+        root.addOrReplaceChild("part8",
+                CubeListBuilder.create()
+                        .texOffs(14, 0)
+                        .addBox(-2F, -5F, -3F, 1, 4, 2),
+                PartPose.offset(0F, 15F, -4F)
+        );
+
+        // part9 (right ear)
+        root.addOrReplaceChild("part9",
+                CubeListBuilder.create()
+                        .texOffs(14, 0)
+                        .addBox(1F, -5F, -3F, 1, 4, 2),
+                PartPose.offset(0F, 15F, -4F)
+        );
+
+        // part10 (left cheek)
+        root.addOrReplaceChild("part10",
+                CubeListBuilder.create()
+                        .texOffs(20, 0)
+                        .addBox(-4F, 0F, -3F, 2, 3, 2),
+                PartPose.offset(0F, 15F, -4F)
+        );
+
+        // part11 (right cheek)
+        root.addOrReplaceChild("part11",
+                CubeListBuilder.create()
+                        .texOffs(20, 0)
+                        .addBox(2F, 0F, -3F, 2, 3, 2),
+                PartPose.offset(0F, 15F, -4F)
+        );
+
+        // part2 (torso)
+        root.addOrReplaceChild("part2",
+                CubeListBuilder.create()
+                        .texOffs(0, 10)
+                        .addBox(-3F, -4F, -3F, 6, 8, 6),
+                PartPose.offset(0F, 16F, 0F)
+        );
+
+        // part3 (belly)
+        root.addOrReplaceChild("part3",
+                CubeListBuilder.create()
+                        .texOffs(0, 24)
+                        .addBox(-2F, 4F, -2F, 4, 3, 4),
+                PartPose.offset(0F, 16F, 0F)
+        );
+
+        // part4 (front right leg)
+        root.addOrReplaceChild("part4",
+                CubeListBuilder.create()
+                        .texOffs(24, 16)
+                        .addBox(-2F, 0F, -1F, 2, 2, 2),
+                PartPose.offset(3F, 19F, -3F)
+        );
+
+        // part5 (front left leg)
+        root.addOrReplaceChild("part5",
+                CubeListBuilder.create()
+                        .texOffs(24, 16)
+                        .addBox(0F, 0F, -1F, 2, 2, 2),
+                PartPose.offset(-3F, 19F, -3F)
+        );
+
+        // part6 (hind right leg)
+        root.addOrReplaceChild("part6",
+                CubeListBuilder.create()
+                        .texOffs(16, 24)
+                        .addBox(-2F, 0F, -4F, 2, 2, 4),
+                PartPose.offset(3F, 19F, 4F)
+        );
+
+        // part7 (hind left leg)
+        root.addOrReplaceChild("part7",
+                CubeListBuilder.create()
+                        .texOffs(16, 24)
+                        .addBox(0F, 0F, -4F, 2, 2, 4),
+                PartPose.offset(-3F, 19F, 4F)
+        );
+
+        return LayerDefinition.create(mesh, 64, 32);
     }
 
     @Override
-    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.part1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part8.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part9.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part10.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part11.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part6.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.part7.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer,
+                               int packedLight, int packedOverlay,
+                               float red, float green, float blue, float alpha) {
+        part1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part8.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part9.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part10.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part11.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part5.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part6.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        part7.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
-    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        this.part1.rotateAngleX = -(headPitch / 57.29578F);
-        this.part1.rotateAngleY = netHeadYaw / 57.29578F;
+    @Override
+    public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount,
+                          float ageInTicks, float netHeadYaw, float headPitch) {
+        // Head rotation
+        float headX    = -headPitch * Mth.DEG_TO_RAD;
+        float headY    = netHeadYaw * Mth.DEG_TO_RAD;
 
-        this.part8.rotateAngleX = this.part1.rotateAngleX;
-        this.part8.rotateAngleY = this.part1.rotateAngleY;
-        this.part9.rotateAngleX = this.part1.rotateAngleX;
-        this.part9.rotateAngleY = this.part1.rotateAngleY;
-        this.part10.rotateAngleX = this.part1.rotateAngleX;
-        this.part10.rotateAngleY = this.part1.rotateAngleY;
-        this.part11.rotateAngleX = this.part1.rotateAngleX;
-        this.part11.rotateAngleY = this.part1.rotateAngleY;
-        this.part2.rotateAngleX = 1.570796F;
-        this.part3.rotateAngleX = 1.570796F;
-        if (entityIn.getRidingEntity() == null) {
-            this.part4.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.0F * limbSwingAmount;
-            this.part6.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.2F * limbSwingAmount;
-            this.part5.rotateAngleX = MathHelper.cos(limbSwing * 0.6662F) * 1.0F * limbSwingAmount;
-            this.part7.rotateAngleX = MathHelper.cos((limbSwing * 0.6662F) + 3.141593F) * 1.2F * limbSwingAmount;
+        part1.xRot   = headX;
+        part1.yRot   = headY;
+        part8.xRot   = headX;
+        part8.yRot   = headY;
+        part9.xRot   = headX;
+        part9.yRot   = headY;
+        part10.xRot  = headX;
+        part10.yRot  = headY;
+        part11.xRot  = headX;
+        part11.yRot  = headY;
+
+        // Torso and belly always lie flat
+        part2.xRot = (float) (Math.PI / 2.0F);
+        part3.xRot = (float) (Math.PI / 2.0F);
+
+        // Leg movement (if not riding)
+        if (entityIn.getVehicle() == null) {
+            float frontLeg  = Mth.cos(limbSwing * 0.6662F) * 1.0F * limbSwingAmount;
+            float hindLeg   = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 1.2F * limbSwingAmount;
+
+            part4.xRot = frontLeg;  // front right
+            part5.xRot = frontLeg;  // front left
+            part6.xRot = hindLeg;   // hind right
+            part7.xRot = hindLeg;   // hind left
         }
     }
 }
