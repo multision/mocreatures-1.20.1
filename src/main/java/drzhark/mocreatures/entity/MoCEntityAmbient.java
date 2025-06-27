@@ -416,7 +416,7 @@ public abstract class MoCEntityAmbient extends PathfinderMob implements IMoCEnti
 
     @Override
     public boolean canBeLeashed(Player player) {
-        if (!this.level().isClientSide && !MoCTools.isThisPlayerAnOP((ServerPlayer) player) && this.getIsTamed()
+        if (!this.level().isClientSide && !MoCTools.isThisPlayerAnOP(player) && this.getIsTamed()
                 && !player.getUUID().equals(this.getOwnerId())) {
             return false;
         }
@@ -515,7 +515,7 @@ public abstract class MoCEntityAmbient extends PathfinderMob implements IMoCEnti
             Player player = (Player) leashHolder;
             if (MoCreatures.proxy.enableOwnership && this.getOwnerId() != null
                     && !player.getUUID().equals(this.getOwnerId())
-                    && !MoCTools.isThisPlayerAnOP((ServerPlayer) player)) {
+                    && !MoCTools.isThisPlayerAnOP(player)) {
                 return;
             }
         }

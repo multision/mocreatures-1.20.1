@@ -16,11 +16,19 @@ import drzhark.mocreatures.network.MoCMessageHandler;
 import drzhark.mocreatures.network.message.MoCMessageHeart;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.RandomSwimmingGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -29,10 +37,12 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.List;
@@ -49,13 +59,22 @@ public class MoCEntityFishy extends MoCEntityTameableAquatic {
         setAdult(true);
         //setAge(50 + this.random.nextInt(50));
         setMoCAge(100);
+
+        this.moveControl = new FishMoveControl(this);
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new WaterBoundPathNavigation(this, level);
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(2, new EntityAIPanicMoC(this, 1.3D));
-        this.goalSelector.addGoal(3, new EntityAIFleeFromEntityMoC(this, entity -> (entity.getBbHeight() > 0.3F || entity.getBbWidth() > 0.3F), 2.0F, 0.6D, 1.5D));
-        this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 1.0D, 80));
+        this.goalSelector.addGoal(1, new FishSwimGoal(this));
+        this.goalSelector.addGoal(3, new PanicGoal(this, 1.25D));
+        this.goalSelector.addGoal(4,
+                new AvoidEntityGoal<>(this, Player.class, 8.0F, 1.6D, 1.4D, EntitySelector.NO_SPECTATORS::test));
+        //this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 1.0D, 80));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -136,6 +155,21 @@ public class MoCEntityFishy extends MoCEntityTameableAquatic {
     }
 
     @Override
+    public void travel(Vec3 p_27490_) {
+        if (this.isEffectiveAi() && this.isInWater()) {
+            this.moveRelative(0.01F, p_27490_);
+            this.move(MoverType.SELF, this.getDeltaMovement());
+            this.setDeltaMovement(this.getDeltaMovement().scale(0.9D));
+            if (this.getTarget() == null) {
+                this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.005D, 0.0D));
+            }
+        } else {
+            super.travel(p_27490_);
+        }
+
+    }
+
+    @Override
     public void aiStep() {
         super.aiStep();
 
@@ -161,6 +195,8 @@ public class MoCEntityFishy extends MoCEntityTameableAquatic {
             }
 
             if (i > 1) {
+                // Clear the list to help GC
+                list.clear();
                 return;
             }
             List<Entity> list1 = this.level().getEntitiesOfClass(Entity.class, this.getBoundingBox().inflate(4D, 2D, 4D), entity -> entity != this);
@@ -208,6 +244,9 @@ public class MoCEntityFishy extends MoCEntityTameableAquatic {
                 }
                 break;
             }
+            // Clear the lists to help GC
+            list.clear();
+            list1.clear();
         }
     }
 
@@ -245,7 +284,7 @@ public class MoCEntityFishy extends MoCEntityTameableAquatic {
 
     @Override
     public float getSpeed() {
-        return 0.10F;
+        return 0.5F;
     }
 
     @Override
@@ -282,5 +321,55 @@ public class MoCEntityFishy extends MoCEntityTameableAquatic {
     @Override
     protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return sizeIn.height * 0.65F;
+    }
+
+    static class FishMoveControl extends MoveControl {
+        private final MoCEntityFishy fish;
+
+        FishMoveControl(MoCEntityFishy p_27501_) {
+            super(p_27501_);
+            this.fish = p_27501_;
+        }
+
+        public void tick() {
+            if (this.fish.isEyeInFluid(FluidTags.WATER)) {
+                this.fish.setDeltaMovement(this.fish.getDeltaMovement().add(0.0D, 0.005D, 0.0D));
+            }
+
+            if (this.operation == MoveControl.Operation.MOVE_TO && !this.fish.getNavigation().isDone()) {
+                float f = (float) (this.speedModifier * this.fish.getAttributeValue(Attributes.MOVEMENT_SPEED));
+                this.fish.setSpeed(Mth.lerp(0.125F, this.fish.getSpeed(), f));
+                double d0 = this.wantedX - this.fish.getX();
+                double d1 = this.wantedY - this.fish.getY();
+                double d2 = this.wantedZ - this.fish.getZ();
+                if (d1 != 0.0D) {
+                    double d3 = Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+                    this.fish.setDeltaMovement(this.fish.getDeltaMovement().add(0.0D,
+                            (double) this.fish.getSpeed() * (d1 / d3) * 0.1D, 0.0D));
+                }
+
+                if (d0 != 0.0D || d2 != 0.0D) {
+                    float f1 = (float) (Mth.atan2(d2, d0) * (double) (180F / (float) Math.PI)) - 90.0F;
+                    this.fish.setYRot(this.rotlerp(this.fish.getYRot(), f1, 90.0F));
+                    this.fish.yBodyRot = this.fish.getYRot();
+                }
+
+            } else {
+                this.fish.setSpeed(0.0F);
+            }
+        }
+    }
+
+    static class FishSwimGoal extends RandomSwimmingGoal {
+        private final MoCEntityFishy fish;
+
+        public FishSwimGoal(MoCEntityFishy p_27505_) {
+            super(p_27505_, 1.0D, 40);
+            this.fish = p_27505_;
+        }
+
+        public boolean canUse() {
+            return super.canUse();
+        }
     }
 }

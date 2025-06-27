@@ -32,6 +32,11 @@ public class MoCCommandHandler {
             // Legacy/old commands that have been updated
             MoCWyvernCommand.register(dispatcher);
             CommandSpawnMoCHorse.register(dispatcher);
+
+            ReloadSpawnConfigCommand.register(dispatcher);
+            
+            // Debug commands
+            MoCDebugSpawnCommand.register(dispatcher);
         } catch (Exception e) {
             LOGGER.error("Error registering MoCreatures commands", e);
         }

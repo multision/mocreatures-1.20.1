@@ -105,7 +105,7 @@ public class RandomPositionGeneratorMoCFlyer {
                     }
                 }
 
-                BlockPos blockpos1 = new BlockPos((int)((double) l + entitycreatureIn.getX()), (int)((double) k1 + entitycreatureIn.getY()), (int)((double) i1 + entitycreatureIn.getZ()));
+                BlockPos blockpos1 = new BlockPos(Mth.floor((double) l + entitycreatureIn.getX()), Mth.floor((double) k1 + entitycreatureIn.getY()), Mth.floor((double) i1 + entitycreatureIn.getZ()));
 
                 if ((!flag1 || entitycreatureIn.isWithinRestriction(blockpos1)))// && pathnavigate.canEntityStandOnPos(blockpos1))
                 {

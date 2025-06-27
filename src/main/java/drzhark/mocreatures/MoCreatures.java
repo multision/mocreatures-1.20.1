@@ -1,9 +1,13 @@
 package drzhark.mocreatures;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.serialization.Codec;
+
 import drzhark.mocreatures.client.MoCKeyHandler;
 import drzhark.mocreatures.client.renderer.fx.MoCParticles;
 import drzhark.mocreatures.compat.CompatHandler;
+import drzhark.mocreatures.config.biome.BiomeConfig;
+import drzhark.mocreatures.config.biome.BiomeSpawnConfig;
 import drzhark.mocreatures.entity.MoCEntityData;
 import drzhark.mocreatures.entity.tameable.MoCPetMapData;
 import drzhark.mocreatures.event.MoCEventHooks;
@@ -20,29 +24,33 @@ import drzhark.mocreatures.network.MoCMessageHandler;
 import drzhark.mocreatures.proxy.MoCProxy;
 import drzhark.mocreatures.proxy.MoCProxyClient;
 import drzhark.mocreatures.registry.MoCPOI;
-import drzhark.mocreatures.world.MoCSpawnConfig;
-import drzhark.mocreatures.world.MoCSpawnRegistry;
+import drzhark.mocreatures.world.MoCSpawnBiomeModifier;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.world.BiomeModifier;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import drzhark.mocreatures.command.MoCDebugCommand;
 import drzhark.mocreatures.event.MoCWyvernDimensionHandler;
 
 import java.util.UUID;
@@ -69,9 +77,11 @@ public class MoCreatures {
     public MoCreatures() {
         instance = this;
 
+        // Register for config events
         this.proxy = DistExecutor.unsafeRunForDist(() -> MoCProxyClient::new, () -> MoCProxy::new);
         MoCMessageHandler.init();
         final IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        eventBus.addListener(this::setup);
         MinecraftForge.EVENT_BUS.register(new MoCEventHooks());
         MinecraftForge.EVENT_BUS.register(new MoCEventHooksTerrain());
         //proxy.configInit();
@@ -88,51 +98,41 @@ public class MoCreatures {
         proxy.registerRenderers();
         proxy.registerRenderInformation();
 
-        MoCEventHooksTerrain.addBiomeTypes();
-
         CompatHandler.init();
         registerDeferredRegistries(eventBus);
+
+        // Don't init BiomeConfig here - wait for config event
         
-        // Register the setup method for mod loading
-        eventBus.addListener(this::setup);
-        
-        // Register our spawn registry
-        MinecraftForge.EVENT_BUS.register(MoCSpawnRegistry.class);
+        final DeferredRegister<Codec<? extends BiomeModifier>> biomeModifiers = DeferredRegister.create(ForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS, MoCConstants.MOD_ID);
+        biomeModifiers.register(eventBus);
+        biomeModifiers.register("moc_spawns", MoCSpawnBiomeModifier::makeCodec);
     }
     
     private void setup(final FMLCommonSetupEvent event) {
         // This is called after registry events - safe to build spawn lists
         event.enqueueWork(() -> {
             LOGGER.info("Building Mo'Creatures world gen spawn lists");
-            MoCEventHooksTerrain.buildWorldGenSpawnLists();
             
-            // Initialize the spawn registry
-            MoCSpawnRegistry.init();
+            // Initialize entity maps now that registries are available
+            LOGGER.info("Initializing Mo'Creatures entity maps...");
+            proxy.initializeMocEntityMap();
+            //proxy.readMocConfigValues();
+            LOGGER.info("Entity maps initialized with {} entities", entityMap.size());
+            
+            // Initialize BiomeConfig now that configs are loaded
+            LOGGER.info("Initializing BiomeConfig during setup...");
+            BiomeSpawnConfig.init();
+            LOGGER.info("BiomeConfig initialized during setup");
+            
+            // Enable debug mode for spawn testing
+            debug = proxy.debug;
+            LOGGER.info("Mo'Creatures debug mode: {}", debug);
+            
+            MoCEventHooksTerrain.buildWorldGenSpawnLists();
             
             // Initialize the POI registry
             MoCPOI.init();
         });
-    }
-
-    @SubscribeEvent
-    public static void onCommonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> {
-            // Register spawn data
-            MoCSpawnConfig.register();
-            // MoCSpawnRegistry is handled via event handlers, no need to call register()
-        });
-    }
-
-    @SubscribeEvent
-    public static void onServerStarting(ServerStartingEvent event) {
-        // Register commands
-        MoCDebugCommand.register(event.getServer().getCommands().getDispatcher());
-    }
-    
-    @SubscribeEvent
-    public static void onRegisterCommands(RegisterCommandsEvent event) {
-        // Register commands
-        MoCDebugCommand.register(event.getDispatcher());
     }
 
     public static boolean isServer(Level world) {

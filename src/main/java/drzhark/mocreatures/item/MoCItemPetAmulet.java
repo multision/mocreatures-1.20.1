@@ -142,7 +142,7 @@ public class MoCItemPetAmulet extends MoCItem {
 
         MoCPetData data = MoCreatures.instance.mapData.getPetData(player.getUUID());
         int max = MoCreatures.proxy.maxTamed;
-        if (MoCTools.isThisPlayerAnOP((ServerPlayer) player)) max = MoCreatures.proxy.maxOPTamed;
+        if (MoCTools.isThisPlayerAnOP(player)) max = MoCreatures.proxy.maxOPTamed;
 
         if (data == null) {
             if (max > 0 || !MoCreatures.proxy.enableOwnership) {
@@ -161,7 +161,7 @@ public class MoCItemPetAmulet extends MoCItem {
         MoCPetData oldData = MoCreatures.instance.mapData.getPetData(oldOwner);
         MoCPetData newData = MoCreatures.instance.mapData.getPetData(newOwner);
         int max = MoCreatures.proxy.maxTamed;
-        if (MoCTools.isThisPlayerAnOP((ServerPlayer) player)) max = MoCreatures.proxy.maxOPTamed;
+        if (MoCTools.isThisPlayerAnOP(player)) max = MoCreatures.proxy.maxOPTamed;
 
         if ((newData != null && newData.getTamedList().size() < max) || (newData == null && max > 0) || !MoCreatures.proxy.enableOwnership) {
             MoCreatures.instance.mapData.updateOwnerPet(creature);

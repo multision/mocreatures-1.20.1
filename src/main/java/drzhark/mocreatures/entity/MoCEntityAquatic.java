@@ -29,6 +29,8 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.SmoothSwimmingLookControl;
+import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
 import net.minecraft.world.entity.animal.WaterAnimal;
@@ -46,9 +48,11 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeMod;
+import net.minecraftforge.fluids.FluidType;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -91,8 +95,22 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
         this.riderIsDisconnecting = false;
         this.texture = "blank.jpg";
         this.navigatorWater = new WaterBoundPathNavigation(this, level);
-        this.moveControl = new EntityAIMoverHelperMoC(this);
+        //this.moveControl = new EntityAIMoverHelperMoC(this);
+        this.moveControl = new SmoothSwimmingMoveControl(this, 85, 5, 0.01F, 0.1F, true);
+        this.lookControl = new SmoothSwimmingLookControl(this, 10);
     }
+
+    @Override
+protected PathNavigation createNavigation(Level level) {
+    return new WaterBoundPathNavigation(this, level);
+}
+
+// 1.20.1 – stop water from steering the mob
+@Override
+public boolean isPushedByFluid(FluidType type) {
+    return false;
+}
+
 
     // === ATTRIBUTE REGISTRATION ===
     /**
@@ -406,7 +424,7 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
     }
 
     @Override
-    public void tick() {
+    public void aiStep() {
         if (!this.level().isClientSide) {
             if (this.isVehicle() && this.getControllingPassenger() instanceof Player) {
                 riding();
@@ -426,11 +444,16 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
                 }
             }
 
-            this.getNavigation().tick();
+            // Conditional navigation tick for aquatic entities in water
+            // Only tick when in water to prevent memory leaks on land
+            if (this.isInWater() && this.tickCount % 2 == 0) {
+                this.getNavigation().tick();
+            }
 
-            // Update diving depth after movement
+            // Update diving depth after movement - reduced frequency to prevent memory leaks
             if (!this.getNavigation().isDone()) {
-                if (!this.updateDivingDepth) {
+                // Only update diving depth every few ticks instead of every tick
+                if (this.tickCount % 3 == 0 && !this.updateDivingDepth) {
                     float targetDepth = MoCTools.distanceToSurface(
                             this.moveControl.getWantedX(),
                             this.moveControl.getWantedY(),
@@ -439,6 +462,10 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
                     );
                     setNewDivingDepth(targetDepth);
                     this.updateDivingDepth = true;
+                }
+                // Reset the flag periodically to prevent it from getting stuck
+                else if (this.tickCount % 10 == 0) {
+                    this.updateDivingDepth = false;
                 }
             } else {
                 this.updateDivingDepth = false;
@@ -463,6 +490,8 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
                     // TODO: Call hook.onHit (Reflection might be needed, as onEntityHit is private).
                     // hook.onEntityHit(new EntityRayTraceResult(this));
                 }
+                // Clear the list reference to help GC
+                hooks.clear();
             }
         }
 
@@ -513,7 +542,7 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
             }
         }
 
-        super.tick();
+        super.aiStep();
     }
 
     public boolean isSwimming() {
@@ -722,17 +751,29 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
     // === TRAVEL / MOVEMENT ===
     @Override
     public void travel(Vec3 movementInput) {
-        if (this.isInWater()) {
-            if (this.isVehicle()) {
-                Entity passenger = this.getControllingPassenger();
-                if (passenger instanceof LivingEntity) {
-                    this.moveWithRider((LivingEntity) passenger, movementInput);
-                }
+        // MoCreatures.LOGGER.info("TRAVEL: {} called - isVehicle: {}, inWater: {}, movementInput: {}", 
+        //     this.getType().getDescription().getString(), 
+        //     this.isVehicle(), 
+        //     this.isInWater(),
+        //     movementInput);
+            
+        if (this.isVehicle()) {
+            Entity passenger = this.getControllingPassenger();
+            if (passenger instanceof LivingEntity) {
+                // MoCreatures.LOGGER.info("TRAVEL: {} has rider {}, calling moveWithRider", 
+                //     this.getType().getDescription().getString(), 
+                //     passenger.getType().getDescription().getString());
+                this.moveWithRider(movementInput, (LivingEntity) passenger);
                 return;
             }
+        }
+        
+        // Non-ridden movement
+        if (this.isInWater()) {
+            // MoCreatures.LOGGER.info("TRAVEL: {} non-ridden water movement", this.getType().getDescription().getString());
             this.moveRelative(0.1F, movementInput);
             this.move(MoverType.SELF, this.getDeltaMovement());
-            this.setDeltaMovement(this.getDeltaMovement().scale(0.9D));
+            this.setDeltaMovement(this.getDeltaMovement().scale(0.8999999761581421D));
 
             if (this.getTarget() == null && this.getNavigation().isDone()) {
                 this.setDeltaMovement(this.getDeltaMovement().subtract(0.0, 0.005, 0.0));
@@ -740,93 +781,175 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
 
             this.calculateEntityAnimation(true); // sets limbSwing, etc.
         } else {
+            // MoCreatures.LOGGER.info("TRAVEL: {} non-ridden land movement", this.getType().getDescription().getString());
             super.travel(movementInput);
         }
     }
 
     /**
      * Riding code when ridden by a player or other entity.
+     * Based on MoCEntityAnimal pattern but adapted for aquatic creatures.
      */
-    public void moveWithRider(LivingEntity passenger, Vec3 movementInput) {
-        if (passenger == null) {
+    public void moveWithRider(Vec3 movementInput, LivingEntity passenger) {
+        if (!this.isVehicle() || passenger == null) {
+            // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} not vehicle or no passenger", this.getType().getDescription().getString());
             return;
         }
-        // Buckle rider if out of water and untamed
-        if (this.isVehicle() && !getIsTamed() && !isSwimming()) {
-            this.removePassenger(passenger);
+        
+        // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} with passenger {}, tamed: {}, swimming: {}", 
+        //     this.getType().getDescription().getString(),
+        //     passenger.getType().getDescription().getString(),
+        //     this.getIsTamed(),
+        //     this.isSwimming());
+            
+        // Untamed behavior
+        if (!getIsTamed()) {
+            // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} calling untamed behavior", this.getType().getDescription().getString());
+            this.moveEntityWithRiderUntamed(movementInput, passenger);
             return;
         }
-
-        if (this.isVehicle() && !getIsTamed()) {
-            this.moveWithRiderUntamed(passenger, movementInput);
-            return;
+        
+        // Tamed behavior - align rotation with rider
+        // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} tamed movement - inputs: forward={}, strafe={}, jump={}, dive={}", 
+        //     this.getType().getDescription().getString(),
+        //     passenger.zza,
+        //     passenger.xxa,
+        //     this.jumpPending,
+        //     this.divePending);
+            
+        this.setYRot(passenger.getYRot());
+        this.yRotO = this.getYRot();
+        this.setXRot(passenger.getXRot() * 0.5F);
+        this.yBodyRot = this.getYRot();
+        this.yHeadRot = this.yBodyRot;
+        
+        // Convert rider inputs to movement vector (reduced speed for aquatic)
+        movementInput = new Vec3(
+            passenger.xxa * 0.2F,  // reduced strafe speed
+            movementInput.y,
+            passenger.zza * 0.4F   // reduced forward speed
+        );
+        
+        // Handle jumping
+        if (this.jumpPending) {
+            if (this.isSwimming()) {
+                this.setDeltaMovement(this.getDeltaMovement().add(0.0, getCustomJump(), 0.0));
+                // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} jumping in water", this.getType().getDescription().getString());
+            }
+            this.jumpPending = false;
         }
-
-        if (this.isVehicle() && getIsTamed()) {
-            // Align rotation with the rider
-            this.yRotO = passenger.yRotO;
-            this.xRotO = passenger.xRotO * 0.5F;
-            this.setYHeadRot(this.yRotO);
-            this.yHeadRot = this.yRotO;
-            this.yBodyRot = this.yRotO;
-
-            float forward = passenger.xxa * 0.35F;
-            float yawRad = (float) (passenger.zza * (this.getCustomSpeed() / 5.0D));
-            Vec3 inputMovement = new Vec3(forward, movementInput.y, yawRad);
-
-            if (this.jumpPending) {
-                if (this.isSwimming()) {
-                    this.setDeltaMovement(this.getDeltaMovement().add(0.0, getCustomJump(), 0.0));
-                }
-                this.jumpPending = false;
-            }
-            // Prevent sinking
-            if (this.getDeltaMovement().y < 0D && isSwimming()) {
-                this.setDeltaMovement(this.getDeltaMovement().x, 0D, this.getDeltaMovement().z);
-            }
-            if (this.divePending) {
-                this.divePending = false;
-                this.setDeltaMovement(this.getDeltaMovement().subtract(0.0, 0.3, 0.0));
-            }
+        
+        // Handle diving
+        if (this.divePending) {
+            this.divePending = false;
+            this.setDeltaMovement(this.getDeltaMovement().subtract(0.0, 0.3, 0.0));
+            // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} diving", this.getType().getDescription().getString());
+        }
+        
+        // Prevent sinking when idle in water
+        if (this.getDeltaMovement().y < 0D && isSwimming() && movementInput.z == 0) {
+            this.setDeltaMovement(this.getDeltaMovement().x, 0D, this.getDeltaMovement().z);
+        }
+        
+        // Aquatic-specific movement
+        if (this.isInWater()) {
+            this.moveRelative(0.1F, movementInput);
+            this.move(MoverType.SELF, this.getDeltaMovement());
+            this.setDeltaMovement(this.getDeltaMovement().scale(0.85D)); // slight drag in water
+            // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} water movement applied", this.getType().getDescription().getString());
+        } else {
+            // Land movement (for when dolphin is out of water)
             this.setSpeed((float) this.getAttributeValue(Attributes.MOVEMENT_SPEED));
-            super.travel(inputMovement);
-            this.moveRelative(0.1F, inputMovement);
+            super.travel(movementInput);
+            // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} land movement applied", this.getType().getDescription().getString());
         }
     }
 
-    public void moveWithRiderUntamed(LivingEntity passenger, Vec3 movementInput) {
-        if ((this.isVehicle()) && !getIsTamed()) {
-            if ((this.random.nextInt(5) == 0) && !getIsJumping() && this.jumpPending) {
-                this.setDeltaMovement(this.getDeltaMovement().add(0.0, getCustomJump(), 0.0));
-                setIsJumping(true);
-                this.jumpPending = false;
-            }
-            if (this.random.nextInt(10) == 0) {
-                Vec3 randomMotion = this.getDeltaMovement().add(
-                        this.random.nextDouble() / 30D,
-                        0.0,
-                        this.random.nextDouble() / 10D
-                );
-                this.setDeltaMovement(randomMotion);
-            }
-            this.move(MoverType.SELF, this.getDeltaMovement());
-            if (!this.level().isClientSide && this.random.nextInt(100) == 0) {
-                this.setDeltaMovement(this.getDeltaMovement().add(0.0, 0.9D, -0.3D));
-                passenger.stopRiding();
-            }
-            if (this.onGround()) {
-                setIsJumping(false);
-            }
-            if (!this.level().isClientSide && this instanceof IMoCTameable && passenger instanceof Player) {
-                int chance = (getMaxTemper() - getTemper());
-                if (chance <= 0) {
-                    chance = 1;
-                }
-                if (this.random.nextInt(chance * 8) == 0) {
-                    MoCTools.tameWithName((Player) passenger, (IMoCTameable) this);
-                }
+    public void moveEntityWithRiderUntamed(Vec3 movementInput, LivingEntity passenger) {
+        // MoCreatures.LOGGER.info("MOVE_WITH_RIDER_UNTAMED: {} bucking behavior - temper: {}/{}, inWater: {}", 
+        //     this.getType().getDescription().getString(),
+        //     this.getTemper(),
+        //     this.getMaxTemper(),
+        //     this.isSwimming());
+            
+        // Subtle erratic movement - less frequent and gentler
+        if (this.random.nextInt(20) == 0) {
+            double deltaX = this.random.nextGaussian() / 80D; // Much weaker
+            double deltaZ = this.random.nextGaussian() / 80D; // Much weaker
+            
+            // Apply movement more gently by adding to existing movement instead of replacing
+            Vec3 currentMovement = this.getDeltaMovement();
+            this.setDeltaMovement(
+                currentMovement.x + deltaX, 
+                currentMovement.y, 
+                currentMovement.z + deltaZ
+            );
+            
+            // Gentler rotation - only slight direction changes
+            if (Math.abs(deltaX) > 0.001 || Math.abs(deltaZ) > 0.001) {
+                float currentYaw = this.getYRot();
+                float targetYaw = (float)(Math.atan2(deltaZ, deltaX) * (180D / Math.PI)) - 90F;
+                // Only rotate slightly towards the new direction (10% blend)
+                float newYaw = currentYaw + (targetYaw - currentYaw) * 0.1F;
+                this.setYRot(newYaw);
+                this.yRotO = newYaw;
+                this.yBodyRot = newYaw;
+                this.yHeadRot = newYaw;
             }
         }
+        
+        this.move(MoverType.SELF, this.getDeltaMovement());
+        
+        // Bucking logic - needs to run on both sides for consistent behavior
+        // but state changes only happen server-side
+        // boolean riderUnderwater = passenger.isEyeInFluid(FluidTags.WATER);
+        // int buckingChance = riderUnderwater ? 50 : 15; // Much more likely to buck if rider isn't underwater
+        
+        // // Use a deterministic random based on entity ID and tick count for sync
+        // long seed = this.getId() + this.tickCount;
+        // Random syncRandom = new Random(seed);
+        
+        // if (syncRandom.nextInt(buckingChance) == 0) {
+        //     if (!this.level().isClientSide()) {
+        //         // Server-side dismount with proper position sync to prevent rubberband
+        //         // 1. Calculate a safe dismount position near the entity
+        //         double offsetX = syncRandom.nextGaussian() * 0.5D;
+        //         double offsetZ = syncRandom.nextGaussian() * 0.5D;
+        //         double dismountX = this.getX() + offsetX;
+        //         double dismountY = this.getY();
+        //         double dismountZ = this.getZ() + offsetZ;
+                
+        //         // 2. Force dismount on server side
+        //         passenger.stopRiding();
+                
+        //         // 3. Immediately set the passenger's position to prevent client desync
+        //         passenger.teleportTo(dismountX, dismountY, dismountZ);
+                
+        //         // 4. Clear entity state and force updates
+        //         this.ejectPassengers();
+        //         this.refreshDimensions();
+        //         this.jumpFromGround();
+                
+        //         // 5. Force position sync by marking both entities as dirty
+        //         passenger.setPos(dismountX, dismountY, dismountZ);
+        //         this.setPos(this.getX(), this.getY(), this.getZ());
+                
+        //         MoCreatures.LOGGER.info("MOVE_WITH_RIDER_UNTAMED: {} successfully bucked rider off! (rider underwater: {})", 
+        //             this.getType().getDescription().getString(), riderUnderwater);
+        //     } else {
+        //         // Client-side: just visual effects, no state changes
+        //         this.jumpFromGround();
+        //     }
+        // }
+        
+        // // Pure RNG taming chance while riding (server-side only for state changes)
+        // if (!this.level().isClientSide() && this instanceof IMoCTameable && passenger instanceof Player) {
+        //     // 1 in 400 chance per tick to tame while riding (about 20 seconds on average)
+        //     // Use same deterministic random for consistency
+        //     if (syncRandom.nextInt(400) == 0) {
+        //         MoCTools.tameWithName((Player) passenger, (IMoCTameable) this);
+        //     }
+        // }
     }
 
     @Override
@@ -939,7 +1062,7 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
             Player player = (Player) entity;
             if (MoCreatures.proxy.enableOwnership && this.getOwnerId() != null &&
                     !player.getUUID().equals(this.getOwnerId()) &&
-                    !MoCTools.isThisPlayerAnOP((ServerPlayer) player)) {
+                    !MoCTools.isThisPlayerAnOP(player)) {
                 return;
             }
         }
@@ -998,5 +1121,19 @@ public abstract class MoCEntityAquatic extends WaterAnimal implements IMoCEntity
     @Override
     public boolean checkSpawningBiome() {
         return true;
+    }
+
+    @Override
+    public void remove(Entity.RemovalReason reason) {
+        // Clean up navigation and AI to prevent memory leaks
+        if (this.getNavigation() != null) {
+            this.getNavigation().stop();
+        }
+        
+        // Clear any references that might cause memory leaks
+        this.fishHooked = false;
+        this.updateDivingDepth = false;
+        
+        super.remove(reason);
     }
 }

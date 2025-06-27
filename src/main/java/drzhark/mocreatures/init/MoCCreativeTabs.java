@@ -1,6 +1,7 @@
 package drzhark.mocreatures.init;
 
 import drzhark.mocreatures.MoCConstants;
+import drzhark.mocreatures.item.ItemHorseGuide;
 import drzhark.mocreatures.item.MoCItemEgg;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -47,6 +48,12 @@ public class MoCCreativeTabs {
                             try {
                                 if (itemEntry.isPresent()) {
                                     Item item = itemEntry.get();
+
+                                    // Special handling for the horse guide item to add the display stack
+                                    if (item == MoCItems.HORSE_GUIDE.get()) {
+                                        output.accept(ItemHorseGuide.createDisplayStack());
+                                        continue; 
+                                    }
                                     
                                     // Special handling for the egg item to add all variants
                                     if (item instanceof MoCItemEgg) {

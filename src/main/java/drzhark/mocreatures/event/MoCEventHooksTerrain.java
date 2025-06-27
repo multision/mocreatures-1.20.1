@@ -55,25 +55,6 @@ public class MoCEventHooksTerrain {
         }
     }
 
-    /*
-     * The BiomeDictionary was deprecated in 1.19+ and replaced with biome tags.
-     * Most of this code is no longer needed as biome tags are now defined in JSON files.
-     * In 1.20.1, we should use the tag system instead.
-     */
-    public static void addBiomeTypes() {
-        // This method is kept for backwards compatibility but its functionality
-        // has been replaced by tag files in the data/minecraft/tags/worldgen/biome directory
-        
-        // For custom mod biomes that need to be tagged, we should create JSON tag files
-        // Example: src/main/resources/data/minecraft/tags/worldgen/biome/is_mountain.json
-        
-        // For the Wyvern dimension biomes, we've already created appropriate tag files:
-        // - data/mocreatures/tags/worldgen/biome/is_wyvernlair.json
-        // - data/mocreatures/tags/worldgen/biome/is_wyvern_forest.json
-        // - data/mocreatures/tags/worldgen/biome/is_wyvern_plains.json
-        // - etc.
-    }
-
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (!(event.getLevel() instanceof ServerLevel)) return;

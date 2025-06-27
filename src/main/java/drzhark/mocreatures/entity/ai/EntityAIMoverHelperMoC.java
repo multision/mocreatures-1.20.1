@@ -187,7 +187,7 @@ public class EntityAIMoverHelperMoC extends MoveControl {
                 yMotion = -0.005D; // descend slightly
             }
 
-            this.theCreature.setDeltaMovement(this.theCreature.getDeltaMovement().add(d4 * d5, yMotion, d4 * d5));
+            this.theCreature.setDeltaMovement(this.theCreature.getDeltaMovement().add(d4 * d5, yMotion, d4 * d6));
         }
     }
 

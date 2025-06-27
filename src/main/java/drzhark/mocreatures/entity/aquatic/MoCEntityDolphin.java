@@ -21,6 +21,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -33,8 +34,10 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 public class MoCEntityDolphin extends MoCEntityTameableAquatic {
@@ -197,7 +200,7 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
             Entity entity = damagesource.getEntity();
             if (entity instanceof LivingEntity) {
                 LivingEntity entityliving = (LivingEntity) entity;
-                if (this.isVehicle() && entity == this.getPassengers().get(0)) {
+                if (this.isVehicle() && !this.getPassengers().isEmpty() && entity == this.getPassengers().get(0)) {
                     return true;
                 }
                 if (entity != this && this.getMoCAge() >= 100) {
@@ -268,12 +271,17 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
             if (!player.isCreative()) stack.shrink(1);
             if (!this.level().isClientSide()) {
                 setTemper(getTemper() + 25);
-                if (getTemper() > getMaxTemper()) {
+                if (getTemper() >= getMaxTemper() && !getIsTamed()) {
+                    // Tame the dolphin when temper reaches maximum
+                    MoCTools.tameWithName(player, this);
+                } else if (getTemper() > getMaxTemper()) {
                     setTemper(getMaxTemper() - 1);
                 }
 
                 if ((getHealth() + 15) > getMaxHealth()) {
                     this.setHealth(getMaxHealth());
+                } else {
+                    this.setHealth(getHealth() + 15);
                 }
 
                 if (!getIsAdult()) {
@@ -289,6 +297,8 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
             if (!player.isCreative()) stack.shrink(1);
             if ((getHealth() + 25) > getMaxHealth()) {
                 this.setHealth(getMaxHealth());
+            } else {
+                this.setHealth(getHealth() + 25);
             }
             setHasEaten(true);
             MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GENERIC_EATING.get());
@@ -298,7 +308,6 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
             if (!this.level().isClientSide() && player.startRiding(this)) {
                 player.setYRot(this.getYRot());
                 player.setXRot(this.getXRot());
-                player.setPos(player.getX(), this.getY(), player.getZ());
             }
 
             return InteractionResult.SUCCESS;
@@ -416,7 +425,7 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
 
     public boolean ReadyforParenting(MoCEntityDolphin entitydolphin) {
         LivingEntity passenger = (LivingEntity) this.getControllingPassenger();
-        return (entitydolphin.getVehicle() == null) && (passenger == null) && entitydolphin.getIsTamed()
+        return !entitydolphin.isVehicle() && (passenger == null) && entitydolphin.getIsTamed()
                 && entitydolphin.getHasEaten() && entitydolphin.getIsAdult();
     }
 
@@ -468,13 +477,15 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
         return 160;
     }
 
-    // We need to use a different name for this method as positionRider is final in Entity
+    // We need to use positionRider for proper passenger positioning in 1.20.1
     @Override
-    public void onPassengerTurned(Entity passenger) {
-        double dist = (0.8D);
-        double newPosX = this.getX() + (dist * Math.sin(this.yBodyRot / 57.29578F));
-        double newPosZ = this.getZ() - (dist * Math.cos(this.yBodyRot / 57.29578F));
-        passenger.setPos(newPosX, this.getY() + getMountedYOffset() + passenger.getMyRidingOffset(), newPosZ);
+    public void positionRider(Entity passenger, Entity.MoveFunction moveFunction) {
+        if (this.hasPassenger(passenger)) {
+            double dist = (0.8D);
+            double newPosX = this.getX() + (dist * Math.sin(this.yBodyRot / 57.29578F));
+            double newPosZ = this.getZ() - (dist * Math.cos(this.yBodyRot / 57.29578F));
+            moveFunction.accept(passenger, newPosX, this.getY() + getMountedYOffset() + passenger.getMyRidingOffset(), newPosZ);
+        }
     }
 
     public double getMountedYOffset() {
@@ -484,5 +495,78 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
     @Override
     protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return this.getBbHeight() * 0.315F;
+    }
+
+    public boolean canBeControlledByRider() {
+        return this.getControllingPassenger() instanceof Player && this.getIsTamed();
+    }
+
+    @Override
+    public LivingEntity getControllingPassenger() {
+        if (this.isVehicle()) {
+            Entity entity = this.getPassengers().get(0);
+            if (entity instanceof LivingEntity) {
+                return (LivingEntity) entity;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        
+        // Server-side bucking and taming logic for untamed dolphins with riders
+        if (!this.level().isClientSide() && this.isVehicle() && !this.getIsTamed()) {
+            Entity passenger = this.getControllingPassenger();
+            if (passenger != null && passenger instanceof Player) {
+                Player player = (Player) passenger;
+                
+                // Check if rider is underwater - if not, more likely to buck them off
+                boolean riderUnderwater = passenger.isEyeInFluid(FluidTags.WATER);
+                int buckingChance = riderUnderwater ? 50 : 15; // Much more likely to buck if rider isn't underwater
+                
+                // Use deterministic random for consistent behavior
+                long seed = this.getId() + this.tickCount;
+                Random syncRandom = new Random(seed);
+                
+                if (syncRandom.nextInt(buckingChance) == 0) {
+                    // Server-side dismount with proper position sync to prevent rubberband
+                    // 1. Calculate a safe dismount position near the entity
+                    double offsetX = syncRandom.nextGaussian() * 0.5D;
+                    double offsetZ = syncRandom.nextGaussian() * 0.5D;
+                    double dismountX = this.getX() + offsetX;
+                    double dismountY = this.getY();
+                    double dismountZ = this.getZ() + offsetZ;
+                    
+                    // 2. Force dismount on server side
+                    passenger.stopRiding();
+                    
+                    // 3. Immediately set the passenger's position to prevent client desync
+                    passenger.teleportTo(dismountX, dismountY, dismountZ);
+                    
+                    // 4. Clear entity state and force updates
+                    this.ejectPassengers();
+                    this.refreshDimensions();
+                    this.jumpFromGround();
+                    
+                    // 5. Force position sync by marking both entities as dirty
+                    passenger.setPos(dismountX, dismountY, dismountZ);
+                    this.setPos(this.getX(), this.getY(), this.getZ());
+                    
+                    MoCreatures.LOGGER.info("DOLPHIN_TICK: {} successfully bucked rider off! (rider underwater: {})", 
+                        this.getType().getDescription().getString(), riderUnderwater);
+                }
+                
+                // Pure RNG taming chance while riding (server-side only for state changes)
+                // 1 in 400 chance per tick to tame while riding (about 20 seconds on average)
+                // Use same deterministic random for consistency
+                if (syncRandom.nextInt(400) == 0) {
+                    MoCTools.tameWithName(player, this);
+                    MoCreatures.LOGGER.info("DOLPHIN_TICK: {} RNG taming successful while being ridden!", 
+                        this.getType().getDescription().getString());
+                }
+            }
+        }
     }
 }

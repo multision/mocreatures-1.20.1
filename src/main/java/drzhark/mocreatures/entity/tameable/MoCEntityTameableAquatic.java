@@ -36,6 +36,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -104,6 +105,18 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
         }
     }
 
+    /**
+     * If the rider should be dismounted from the entity when the entity goes
+     * underwater
+     *
+     * @param rider The entity that is riding
+     * @return if the entity should be dismounted when underwater
+     */
+    @Override
+    public boolean canBeRiddenUnderFluidType(FluidType type, Entity rider) {
+        return this.getIsTamed();
+    }
+
     @Override
     public boolean hurt(DamageSource damagesource, float i) {
         Entity entity = damagesource.getEntity();
@@ -116,7 +129,7 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
 
         //this avoids damage done by Players to a tamed creature that is not theirs
         if (MoCreatures.proxy.enableOwnership && this.getOwnerId() != null && entity instanceof Player player && !entity.getUUID().equals(this.getOwnerId())
-                && !MoCTools.isThisPlayerAnOP((ServerPlayer) player)) {
+                && !MoCTools.isThisPlayerAnOP(player)) {
             return false;
         }
 
@@ -125,7 +138,7 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
 
     private boolean checkOwnership(Player player, InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
-        if (!this.getIsTamed() || MoCTools.isThisPlayerAnOP((ServerPlayer) player)) {
+        if (!this.getIsTamed() || MoCTools.isThisPlayerAnOP(player)) {
             return true;
         }
 
@@ -170,7 +183,7 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
         final ItemStack stack = player.getItemInHand(hand);
         //before ownership check
         if (!stack.isEmpty() && getIsTamed() && stack.is(MoCItems.SCROLLOFOWNER.get()) && MoCreatures.proxy.enableResetOwnership
-                && MoCTools.isThisPlayerAnOP((ServerPlayer) player)) {
+                && MoCTools.isThisPlayerAnOP(player)) {
             if (!player.isCreative()) stack.shrink(1);
             if (!this.level().isClientSide()) {
                 if (this.getOwnerPetId() != -1) // required since getInt will always return 0 if no key is found
@@ -184,7 +197,7 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
         }
         //if the player interacting is not the owner, do nothing!
         if (MoCreatures.proxy.enableOwnership && getOwnerId() != null
-                && !player.getUUID().equals(this.getOwnerId()) && !MoCTools.isThisPlayerAnOP((ServerPlayer) player)) {
+                && !player.getUUID().equals(this.getOwnerId()) && !MoCTools.isThisPlayerAnOP(player)) {
             return InteractionResult.SUCCESS;
         }
 
@@ -342,17 +355,6 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
         }
     }
 
-    /**
-     * If the rider should be dismounted from the entity when the entity goes
-     * underwater
-     *
-     * @param rider The entity that is riding
-     * @return if the entity should be dismounted when underwater
-     */
-    public boolean canBeRiddenInWater(Entity rider) {
-        return this.getIsTamed();
-    }
-
     // Override to fix heart animation on clients
     @Override
     @OnlyIn(Dist.CLIENT)
@@ -459,6 +461,8 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
         }
 
         if (i > 1) {
+            // Clear the list to help GC
+            list.clear();
             return;
         }
 
@@ -469,6 +473,9 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
             }
 
             if (!this.readytoBreed()) {
+                // Clear lists before returning
+                list.clear();
+                list1.clear();
                 return;
             }
 
@@ -519,6 +526,9 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
             ((IMoCTameable) mate).setGestationTime(0);
             break;
         }
+        // Clear the lists to help GC
+        list.clear();
+        list1.clear();
     }
 
     /**

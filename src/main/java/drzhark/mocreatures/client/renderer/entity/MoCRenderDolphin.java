@@ -26,18 +26,12 @@ public class MoCRenderDolphin extends MobRenderer<MoCEntityDolphin, MoCModelDolp
         super(renderManagerIn, modelbase, f);
     }
 
-    @Override
-    protected void scale(MoCEntityDolphin entitydolphin, PoseStack poseStack, float par2) {
-        stretch(entitydolphin, poseStack);
-    }
-
     @SuppressWarnings("removal")
     @Override
     public void render(MoCEntityDolphin entitydolphin, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLightIn) {
         super.render(entitydolphin, entityYaw, partialTicks, poseStack, buffer, packedLightIn);
         boolean flag = MoCreatures.proxy.getDisplayPetName() && !(entitydolphin.getPetName().isEmpty());
         boolean flag1 = MoCreatures.proxy.getDisplayPetHealth();
-        
         if (entitydolphin.getIsTamed()) {
             float f2 = 1.6F;
             float f3 = 0.01666667F * f2;
@@ -67,33 +61,38 @@ public class MoCRenderDolphin extends MobRenderer<MoCEntityDolphin, MoCModelDolp
                     
                     // Red background
                     VertexConsumer vertexconsumer = buffer.getBuffer(RenderType.text(new ResourceLocation("textures/misc/white.png")));
-                    vertexconsumer.vertex(matrix4f, -20F + f9, -10 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(0, 0).endVertex();
-                    vertexconsumer.vertex(matrix4f, -20F + f9, -6 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(0, 1).endVertex();
-                    vertexconsumer.vertex(matrix4f, 20F, -6 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(1, 1).endVertex();
-                    vertexconsumer.vertex(matrix4f, 20F, -10 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, -20F + f9, -10 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(0, 0).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, -20F + f9, -6 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(0, 1).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, 20F, -6 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(1, 1).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, 20F, -10 + byte0, 0.0F).color(0.7F, 0.0F, 0.0F, 1.0F).uv(1, 0).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
                     
                     // Green health
                     vertexconsumer = buffer.getBuffer(RenderType.text(new ResourceLocation("textures/misc/white.png")));
-                    vertexconsumer.vertex(matrix4f, -20F, -10 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(0, 0).endVertex();
-                    vertexconsumer.vertex(matrix4f, -20F, -6 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(0, 1).endVertex();
-                    vertexconsumer.vertex(matrix4f, f9 - 20F, -6 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(1, 1).endVertex();
-                    vertexconsumer.vertex(matrix4f, f9 - 20F, -10 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, -20F, -10 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(0, 0).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, -20F, -6 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(0, 1).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, f9 - 20F, -6 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(1, 1).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
+                    vertexconsumer.vertex(matrix4f, f9 - 20F, -10 + byte0, 0.01F).color(0.0F, 0.7F, 0.0F, 1.0F).uv(1, 0).overlayCoords(0).uv2(packedLightIn).normal(0, 1, 0).endVertex();
                 }
                 
                 if (flag) {
                     // Render pet name
                     int textWidth = font.width(s);
-                    float textScale = 1.0f;
                     float textX = -textWidth / 2.0f;
                     float textY = byte0;
                     
                     // Name background
                     Matrix4f matrix4f = poseStack.last().pose();
-                    VertexConsumer vertexconsumer = buffer.getBuffer(RenderType.textBackground());
-                    vertexconsumer.vertex(matrix4f, textX - 1, textY - 1, 0.0F).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-                    vertexconsumer.vertex(matrix4f, textX - 1, textY + 8, 0.0F).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-                    vertexconsumer.vertex(matrix4f, textX + textWidth + 1, textY + 8, 0.0F).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
-                    vertexconsumer.vertex(matrix4f, textX + textWidth + 1, textY - 1, 0.0F).color(0.0F, 0.0F, 0.0F, 0.25F).endVertex();
+                    VertexConsumer vertexconsumer = buffer.getBuffer(RenderType.gui());
+                    int left = (int)(textX - 1);
+                    int top = (int)(textY - 1);
+                    int right = (int)(textX + textWidth + 1);
+                    int bottom = (int)(textY + 8);
+                    
+                    // Draw quad with minimal attributes
+                    vertexconsumer.vertex(matrix4f, left, top, 0.0F).color(0, 0, 0, 64).endVertex();
+                    vertexconsumer.vertex(matrix4f, left, bottom, 0.0F).color(0, 0, 0, 64).endVertex();
+                    vertexconsumer.vertex(matrix4f, right, bottom, 0.0F).color(0, 0, 0, 64).endVertex();
+                    vertexconsumer.vertex(matrix4f, right, top, 0.0F).color(0, 0, 0, 64).endVertex();
                     
                     // Render text
                     font.drawInBatch(s, textX, textY, 0x20ffffff, false, matrix4f, buffer, Font.DisplayMode.SEE_THROUGH, 0, packedLightIn);
@@ -103,6 +102,11 @@ public class MoCRenderDolphin extends MobRenderer<MoCEntityDolphin, MoCModelDolp
                 poseStack.popPose();
             }
         }
+    }
+
+    @Override
+    protected void scale(MoCEntityDolphin entitydolphin, PoseStack poseStack, float partialTickTime) {
+        stretch(entitydolphin, poseStack);
     }
 
     protected void stretch(MoCEntityDolphin entitydolphin, PoseStack poseStack) {

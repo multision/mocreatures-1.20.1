@@ -7,9 +7,9 @@ import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.entity.IMoCEntity;
 import drzhark.mocreatures.entity.MoCEntityMob;
 import drzhark.mocreatures.entity.ambient.MoCEntityAnt;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
@@ -40,6 +40,12 @@ public class EntityAIWanderMoC2 extends Goal {
      */
     @Override
     public boolean canUse() {
+
+
+        if (this.entity.horizontalCollision || this.entity.isInWater() && this.entity.getRandom().nextInt(40) == 0) {
+            this.mustUpdate = true; // force re-pathing if stuck or floating too long
+        }
+        
         if (this.entity instanceof IMoCEntity && ((IMoCEntity) this.entity).isMovementCeased()) {
             return false;
         }

@@ -209,7 +209,21 @@ public class MoCModelTurkey<T extends MoCEntityTurkey> extends EntityModel<T> {
     }
 
     /**
-     * Called once before rendering; store “male” flag.
+     * Equivalent to 1.16.5's setLivingAnimations - sets the male flag before animations
+     */
+    @Override
+    public void prepareMobModel(
+            T entity,
+            float limbSwing,
+            float limbSwingAmount,
+            float partialTick
+    ) {
+        // Set male flag first (equivalent to setLivingAnimations in 1.16.5)
+        this.male = entity.getTypeMoC() == 1;
+    }
+
+    /**
+     * Called once before rendering; this now just delegates to setRotationAngles.
      */
     @Override
     public void setupAnim(
@@ -220,24 +234,13 @@ public class MoCModelTurkey<T extends MoCEntityTurkey> extends EntityModel<T> {
             float netHeadYaw,
             float headPitch
     ) {
-        this.male = entity.getTypeMoC() == 1;
-        // NB: Other per‐frame state (like wingF, leg rotations, etc.) happens in setRotationAngles().
+        // Call setRotationAngles with the exact same parameters as 1.16.5
+        setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     }
 
     /**
-     * Called each frame to position/rotate all parts.  Mirrors your old setRotationAngles(...) exactly.
+     * Exact port of 1.16.5 setRotationAngles method
      */
-    @Override
-    public void prepareMobModel(
-            T entity,
-            float limbSwing,
-            float limbSwingAmount,
-            float partialTick
-    ) {
-        // We call the original “setRotationAngles” inside prepareMobModel:
-        setRotationAngles(entity, limbSwing, limbSwingAmount, partialTick, entity.yHeadRot, entity.xRotO);
-    }
-
     public void setRotationAngles(
             T entity,
             float limbSwing,
@@ -246,30 +249,30 @@ public class MoCModelTurkey<T extends MoCEntityTurkey> extends EntityModel<T> {
             float netHeadYaw,
             float headPitch
     ) {
-        // Copy your old logic exactly:
+        // Exact same calculations as 1.16.5
         float LLegXRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        float RLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 1.4F * limbSwingAmount;
-        float wingF    = (Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount) / 4F;
+        float RLegXRot = Mth.cos((limbSwing * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
+        float wingF = (Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount) / 4F;
 
-        // HEAD pitch & yaw
+        // HEAD pitch & yaw - exact same as 1.16.5
         this.head.xRot = 0.4833219F + headPitch / 57.29578F;
-        this.head.yRot = netHeadYaw / 57.29578F;
+        this.head.yRot = netHeadYaw / (180F / (float) Math.PI);
 
-        // BEAK follows head (slightly offset)
-        this.beak.xRot = 0.7807508F - this.head.xRot + 0.4833219F;
+        // BEAK follows head - EXACT same calculation as 1.16.5
+        this.beak.xRot = 0.2974F + this.head.xRot;
         this.beak.yRot = this.head.yRot;
 
-        // LEGS
+        // LEGS - exact same as 1.16.5
         this.lLeg.xRot  = LLegXRot;
         this.lFoot.xRot = this.lLeg.xRot;
         this.rLeg.xRot  = RLegXRot;
         this.rFoot.xRot = this.rLeg.xRot;
 
-        // WINGS
+        // WINGS - exact same as 1.16.5
         this.lWing.yRot = wingF;
         this.rWing.yRot = -wingF;
 
-        // TAIL & body‐positioning
+        // TAIL & body‐positioning - exact same as 1.16.5
         if (this.male) {
             this.tail.xRot = -0.2974289F + wingF;
             this.tail.y = 14F;
@@ -290,7 +293,7 @@ public class MoCModelTurkey<T extends MoCEntityTurkey> extends EntityModel<T> {
     }
 
     /**
-     * Renders all parts.  Mirrors your old render(...) logic, including child‐scaling.
+     * Renders all parts. Exact port of 1.16.5 render method.
      */
     @Override
     public void renderToBuffer(
@@ -304,7 +307,7 @@ public class MoCModelTurkey<T extends MoCEntityTurkey> extends EntityModel<T> {
             float alpha
     ) {
         if (this.young) {
-            // All children rendered as “female” roughly the same way your code did:
+            // All children rendered as "female" - exact same as 1.16.5
             poseStack.pushPose();
             poseStack.translate(0.0F, 5.0F, 2.0F);
             poseStack.popPose();
@@ -332,7 +335,7 @@ public class MoCModelTurkey<T extends MoCEntityTurkey> extends EntityModel<T> {
 
             poseStack.popPose();
         } else {
-            // Adult rendering
+            // Adult rendering - exact same as 1.16.5
             this.beak.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             this.neck.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
