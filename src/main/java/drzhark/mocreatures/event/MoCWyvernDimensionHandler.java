@@ -86,35 +86,35 @@ public class MoCWyvernDimensionHandler {
         }
     }
 
-    @SubscribeEvent
-    public static void onServerAboutToStart(ServerAboutToStartEvent event) {
-        MoCreatures.LOGGER.info("Adding wyvern island features to biomes directly");
+    // @SubscribeEvent
+    // public static void onServerAboutToStart(ServerAboutToStartEvent event) {
+    //     MoCreatures.LOGGER.info("Adding wyvern island features to biomes directly");
         
-        var biomeRegistry = event.getServer().registryAccess().registryOrThrow(Registries.BIOME);
+    //     var biomeRegistry = event.getServer().registryAccess().registryOrThrow(Registries.BIOME);
         
-        ResourceKey<?>[] biomeKeys = {
-            ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlairlands")),
-            ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlairlandsforest")),
-            ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlair_mountains")),
-            ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlair_desertlands"))
-        };
+    //     ResourceKey<?>[] biomeKeys = {
+    //         ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlairlands")),
+    //         ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlairlandsforest")),
+    //         ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlair_mountains")),
+    //         ResourceKey.create(Registries.BIOME, new ResourceLocation(MoCConstants.MOD_ID, "wyvernlair_desertlands"))
+    //     };
         
-        for (ResourceKey<?> biomeKey : biomeKeys) {
-            MoCreatures.LOGGER.info("Attempting to add wyvern islands to biome: {}", biomeKey.location());
+    //     for (ResourceKey<?> biomeKey : biomeKeys) {
+    //         MoCreatures.LOGGER.info("Attempting to add wyvern islands to biome: {}", biomeKey.location());
             
-            if (biomeRegistry.containsKey(ResourceKey.create(Registries.BIOME, biomeKey.location()))) {
-                MoCreatures.LOGGER.info("Found biome {} in registry", biomeKey.location());
-            } else {
-                MoCreatures.LOGGER.error("Could not find biome {} in registry", biomeKey.location());
-            }
-        }
+    //         if (biomeRegistry.containsKey(ResourceKey.create(Registries.BIOME, biomeKey.location()))) {
+    //             MoCreatures.LOGGER.info("Found biome {} in registry", biomeKey.location());
+    //         } else {
+    //             MoCreatures.LOGGER.error("Could not find biome {} in registry", biomeKey.location());
+    //         }
+    //     }
         
-        MoCreatures.LOGGER.info("Wyvern island feature registration complete");
+    //     MoCreatures.LOGGER.info("Wyvern island feature registration complete");
         
-        // Log allowed entities for debugging
-        MoCreatures.LOGGER.info("Allowed entities in Wyvern dimension:");
-        for (EntityType<?> entityType : getAllowedEntities()) {
-            MoCreatures.LOGGER.info("  - {}", EntityType.getKey(entityType));
-        }
-    }
+    //     // Log allowed entities for debugging
+    //     MoCreatures.LOGGER.info("Allowed entities in Wyvern dimension:");
+    //     for (EntityType<?> entityType : getAllowedEntities()) {
+    //         MoCreatures.LOGGER.info("  - {}", EntityType.getKey(entityType));
+    //     }
+    // }
 } 

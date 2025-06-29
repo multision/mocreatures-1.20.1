@@ -10,6 +10,7 @@ import drzhark.mocreatures.config.biome.MoCConfig;
 import drzhark.mocreatures.config.biome.SpawnBiomeData;
 import drzhark.mocreatures.entity.MoCEntityData;
 import drzhark.mocreatures.init.MoCEntities;
+import drzhark.mocreatures.world.MoCSpawnRegistryCache;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -22,17 +23,23 @@ import net.minecraftforge.common.world.ModifiableBiomeInfo;
 import net.minecraftforge.common.world.ModifiableStructureInfo;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.Map;
+
 @Mod.EventBusSubscriber(modid = MoCConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class MoCWorldRegistry {
 
     public static void modifyStructure(Holder<Structure> structure, ModifiableStructureInfo.StructureInfo.Builder builder) {
         if (structure.is(BuiltinStructures.VILLAGE_DESERT) || structure.is(BuiltinStructures.VILLAGE_PLAINS) || structure.is(BuiltinStructures.VILLAGE_SAVANNA) || structure.is(BuiltinStructures.VILLAGE_SNOWY) || structure.is(BuiltinStructures.VILLAGE_TAIGA)) {
-            // Get kitty spawn data from entity map
-            MoCEntityData kittyData = getEntityData(MoCEntities.KITTY.get());
-            if (kittyData != null && kittyData.getCanSpawn() && kittyData.getFrequency() > 0) {
-                int spawnWeight = Math.max(1, kittyData.getFrequency() / 4); // Reduced weight for village spawns
-                builder.getStructureSettings().getOrAddSpawnOverrides(MobCategory.CREATURE)
-                    .addSpawn(new MobSpawnSettings.SpawnerData(MoCEntities.KITTY.get(), spawnWeight, 1, 3));
+            // Get kitty from cache to avoid chunk deadlocks
+            EntityType<?> kitty = MoCSpawnRegistryCache.ENTITIES.get("kitty");
+            if (kitty != null) {
+                // Get kitty spawn data from entity map
+                MoCEntityData kittyData = getEntityData(kitty);
+                if (kittyData != null && kittyData.getCanSpawn() && kittyData.getFrequency() > 0) {
+                    int spawnWeight = Math.max(1, kittyData.getFrequency() / 4); // Reduced weight for village spawns
+                    builder.getStructureSettings().getOrAddSpawnOverrides(MobCategory.CREATURE)
+                        .addSpawn(new MobSpawnSettings.SpawnerData(kitty, spawnWeight, 1, 3));
+                }
             }
         }
     }
@@ -66,185 +73,79 @@ public class MoCWorldRegistry {
     }
 
     public static void addBiomeSpawns(Holder<Biome> biome, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
-        String biomeName = getBiomeName(biome) != null ? getBiomeName(biome).toString() : "unknown";
-        MoCreatures.LOGGER.info("MoCWorldRegistry: Adding spawns for biome {}", biomeName);
-        
-        // Initialize the JSON config system
-        BiomeSpawnConfig.init();
-        
-        // MoCreatures Animal Spawns
-        
-        // Bears
-        addCreatureSpawn("black_bear", MoCEntities.BLACK_BEAR.get(), biome, biomeName, builder);
-        addCreatureSpawn("grizzly_bear", MoCEntities.GRIZZLY_BEAR.get(), biome, biomeName, builder);
-        addCreatureSpawn("polar_bear", MoCEntities.POLAR_BEAR.get(), biome, biomeName, builder);
-        addCreatureSpawn("panda_bear", MoCEntities.PANDA_BEAR.get(), biome, biomeName, builder);
-        
-        // Birds
-        addCreatureSpawn("bird", MoCEntities.BIRD.get(), biome, biomeName, builder);
-        addCreatureSpawn("duck", MoCEntities.DUCK.get(), biome, biomeName, builder);
-        addCreatureSpawn("turkey", MoCEntities.TURKEY.get(), biome, biomeName, builder);
-        
-        // Land animals
-        addCreatureSpawn("boar", MoCEntities.BOAR.get(), biome, biomeName, builder);
-        addCreatureSpawn("bunny", MoCEntities.BUNNY.get(), biome, biomeName, builder);
-        addCreatureSpawn("deer", MoCEntities.DEER.get(), biome, biomeName, builder);
-        addCreatureSpawn("goat", MoCEntities.GOAT.get(), biome, biomeName, builder);
-        addCreatureSpawn("kitty", MoCEntities.KITTY.get(), biome, biomeName, builder);
-        
-        // Semi-aquatic creatures
-        addCreatureSpawn("crocodile", MoCEntities.CROCODILE.get(), biome, biomeName, builder);
-        addCreatureSpawn("turtle", MoCEntities.TURTLE.get(), biome, biomeName, builder);
-        
-        // Desert/savanna creatures
-        addCreatureSpawn("elephant", MoCEntities.ELEPHANT.get(), biome, biomeName, builder);
-        addCreatureSpawn("filch_lizard", MoCEntities.FILCH_LIZARD.get(), biome, biomeName, builder);
-        addCreatureSpawn("ostrich", MoCEntities.OSTRICH.get(), biome, biomeName, builder);
-        
-        // Foxes
-        addCreatureSpawn("fox", MoCEntities.FOX.get(), biome, biomeName, builder);
-        
-        // Reptiles
-        addCreatureSpawn("komodo_dragon", MoCEntities.KOMODO_DRAGON.get(), biome, biomeName, builder);
-        addCreatureSpawn("snake", MoCEntities.SNAKE.get(), biome, biomeName, builder);
-        
-        // Big cats
-        addCreatureSpawn("leopard", MoCEntities.LEOPARD.get(), biome, biomeName, builder);
-        addCreatureSpawn("lion", MoCEntities.LION.get(), biome, biomeName, builder);
-        addCreatureSpawn("panther", MoCEntities.PANTHER.get(), biome, biomeName, builder);
-        addCreatureSpawn("tiger", MoCEntities.TIGER.get(), biome, biomeName, builder);
-        
-        // Big cat hybrids
-        addCreatureSpawn("liger", MoCEntities.LIGER.get(), biome, biomeName, builder);
-        addCreatureSpawn("lither", MoCEntities.LITHER.get(), biome, biomeName, builder);
-        addCreatureSpawn("panthger", MoCEntities.PANTHGER.get(), biome, biomeName, builder);
-        addCreatureSpawn("panthard", MoCEntities.PANTHARD.get(), biome, biomeName, builder);
-        addCreatureSpawn("leoger", MoCEntities.LEOGER.get(), biome, biomeName, builder);
-        
-        // Small mammals
-        addCreatureSpawn("mouse", MoCEntities.MOUSE.get(), biome, biomeName, builder);
-        addCreatureSpawn("mole", MoCEntities.MOLE.get(), biome, biomeName, builder);
-        addCreatureSpawn("raccoon", MoCEntities.RACCOON.get(), biome, biomeName, builder);
-        
-        // Horses
-        addCreatureSpawn("wild_horse", MoCEntities.WILDHORSE.get(), biome, biomeName, builder);
-        
-        // Magical creatures
-        addCreatureSpawn("ent", MoCEntities.ENT.get(), biome, biomeName, builder);
-        addCreatureSpawn("wyvern", MoCEntities.WYVERN.get(), biome, biomeName, builder);
-        
-        // Monsters
-        addCreatureSpawn("green_ogre", MoCEntities.GREEN_OGRE.get(), biome, biomeName, builder);
-        addCreatureSpawn("cave_ogre", MoCEntities.CAVE_OGRE.get(), biome, biomeName, builder);
-        addCreatureSpawn("fire_ogre", MoCEntities.FIRE_OGRE.get(), biome, biomeName, builder);
-        
-        // Scorpions
-        addCreatureSpawn("cave_scorpion", MoCEntities.CAVE_SCORPION.get(), biome, biomeName, builder);
-        addCreatureSpawn("dirt_scorpion", MoCEntities.DIRT_SCORPION.get(), biome, biomeName, builder);
-        addCreatureSpawn("fire_scorpion", MoCEntities.FIRE_SCORPION.get(), biome, biomeName, builder);
-        addCreatureSpawn("frost_scorpion", MoCEntities.FROST_SCORPION.get(), biome, biomeName, builder);
-        addCreatureSpawn("undead_scorpion", MoCEntities.UNDEAD_SCORPION.get(), biome, biomeName, builder);
-        
-        // Golems
-        addCreatureSpawn("big_golem", MoCEntities.BIG_GOLEM.get(), biome, biomeName, builder);
-        addCreatureSpawn("mini_golem", MoCEntities.MINI_GOLEM.get(), biome, biomeName, builder);
-        
-        // Manticores
-        addCreatureSpawn("dark_manticore", MoCEntities.DARK_MANTICORE.get(), biome, biomeName, builder);
-        addCreatureSpawn("fire_manticore", MoCEntities.FIRE_MANTICORE.get(), biome, biomeName, builder);
-        addCreatureSpawn("frost_manticore", MoCEntities.FROST_MANTICORE.get(), biome, biomeName, builder);
-        addCreatureSpawn("plain_manticore", MoCEntities.PLAIN_MANTICORE.get(), biome, biomeName, builder);
-        addCreatureSpawn("toxic_manticore", MoCEntities.TOXIC_MANTICORE.get(), biome, biomeName, builder);
-        
-        // Werewolves and variants
-        addCreatureSpawn("werewolf", MoCEntities.WEREWOLF.get(), biome, biomeName, builder);
-        addCreatureSpawn("wwolf", MoCEntities.WWOLF.get(), biome, biomeName, builder);
-        
-        // Rats
-        addCreatureSpawn("rat", MoCEntities.RAT.get(), biome, biomeName, builder);
-        addCreatureSpawn("hell_rat", MoCEntities.HELL_RAT.get(), biome, biomeName, builder);
-        
-        // Undead
-        addCreatureSpawn("silver_skeleton", MoCEntities.SILVER_SKELETON.get(), biome, biomeName, builder);
-        
-        // Wraiths
-        addCreatureSpawn("wraith", MoCEntities.WRAITH.get(), biome, biomeName, builder);
-        addCreatureSpawn("flame_wraith", MoCEntities.FLAME_WRAITH.get(), biome, biomeName, builder);
-        
-        // Nether mounts
-        addCreatureSpawn("horse_mob", MoCEntities.HORSE_MOB.get(), biome, biomeName, builder);
-        
-        // Aquatic creatures
-        addCreatureSpawn("dolphin", MoCEntities.DOLPHIN.get(), biome, biomeName, builder);
-        addCreatureSpawn("shark", MoCEntities.SHARK.get(), biome, biomeName, builder);
-        addCreatureSpawn("manta_ray", MoCEntities.MANTA_RAY.get(), biome, biomeName, builder);
-        addCreatureSpawn("jellyfish", MoCEntities.JELLYFISH.get(), biome, biomeName, builder);
-        
-        // River/swamp creatures
-        addCreatureSpawn("bass", MoCEntities.BASS.get(), biome, biomeName, builder);
-        addCreatureSpawn("sting_ray", MoCEntities.STING_RAY.get(), biome, biomeName, builder);
-        
-        // Fish
-        addCreatureSpawn("anchovy", MoCEntities.ANCHOVY.get(), biome, biomeName, builder);
-        addCreatureSpawn("angelfish", MoCEntities.ANGELFISH.get(), biome, biomeName, builder);
-        addCreatureSpawn("angler", MoCEntities.ANGLER.get(), biome, biomeName, builder);
-        addCreatureSpawn("clownfish", MoCEntities.CLOWNFISH.get(), biome, biomeName, builder);
-        addCreatureSpawn("goldfish", MoCEntities.GOLDFISH.get(), biome, biomeName, builder);
-        addCreatureSpawn("hippotang", MoCEntities.HIPPOTANG.get(), biome, biomeName, builder);
-        addCreatureSpawn("manderin", MoCEntities.MANDERIN.get(), biome, biomeName, builder);
-        addCreatureSpawn("cod", MoCEntities.COD.get(), biome, biomeName, builder);
-        addCreatureSpawn("salmon", MoCEntities.SALMON.get(), biome, biomeName, builder);
-        addCreatureSpawn("piranha", MoCEntities.PIRANHA.get(), biome, biomeName, builder);
-        addCreatureSpawn("fishy", MoCEntities.FISHY.get(), biome, biomeName, builder);
-        
-        // Ambient creatures
-        addCreatureSpawn("ant", MoCEntities.ANT.get(), biome, biomeName, builder);
-        addCreatureSpawn("bee", MoCEntities.BEE.get(), biome, biomeName, builder);
-        addCreatureSpawn("butterfly", MoCEntities.BUTTERFLY.get(), biome, biomeName, builder);
-        addCreatureSpawn("cricket", MoCEntities.CRICKET.get(), biome, biomeName, builder);
-        addCreatureSpawn("dragonfly", MoCEntities.DRAGONFLY.get(), biome, biomeName, builder);
-        addCreatureSpawn("firefly", MoCEntities.FIREFLY.get(), biome, biomeName, builder);
-        addCreatureSpawn("fly", MoCEntities.FLY.get(), biome, biomeName, builder);
-        addCreatureSpawn("grasshopper", MoCEntities.GRASSHOPPER.get(), biome, biomeName, builder);
-        addCreatureSpawn("maggot", MoCEntities.MAGGOT.get(), biome, biomeName, builder);
-        addCreatureSpawn("roach", MoCEntities.ROACH.get(), biome, biomeName, builder);
-        addCreatureSpawn("crab", MoCEntities.CRAB.get(), biome, biomeName, builder);
-        addCreatureSpawn("snail", MoCEntities.SNAIL.get(), biome, biomeName, builder);
-    }
-    
-    private static void addCreatureSpawn(String creatureName, EntityType<?> entityType, Holder<Biome> biome, String biomeName, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
-        BiomeSpawnConfig.CreatureSpawnData spawnData = BiomeSpawnConfig.getSpawnData(creatureName);
-        if (spawnData == null || !spawnData.enabled || spawnData.weight <= 0) {
+        // Early exit if cache is not initialized
+        if (MoCSpawnRegistryCache.ENTITIES == null || MoCSpawnRegistryCache.ENTITIES.isEmpty()) {
             return;
         }
         
         ResourceLocation biomeRL = getBiomeName(biome);
-        if (!BiomeSpawnConfig.testBiome(creatureName, biome, biomeRL)) {
+        if (biomeRL == null) {
             return;
         }
         
-        // Convert category string to MobCategory
-        MobCategory category;
-        try {
-            category = MobCategory.valueOf(spawnData.category);
-        } catch (IllegalArgumentException e) {
-            MoCreatures.LOGGER.warn("Invalid mob category '{}' for creature '{}', defaulting to CREATURE", spawnData.category, creatureName);
-            category = MobCategory.CREATURE;
+        String biomeName = biomeRL.toString();
+        int spawnsAdded = 0;
+        
+        // Limit the number of spawn attempts to prevent excessive processing
+        int maxSpawnChecks = 50; // Reasonable limit to prevent server freeze
+        int spawnChecks = 0;
+        
+        // Only process entities that are actually in the cache and have valid spawn data
+        for (Map.Entry<String, EntityType<?>> entry : MoCSpawnRegistryCache.ENTITIES.entrySet()) {
+            // Safety check to prevent infinite loops during world generation
+            if (++spawnChecks > maxSpawnChecks) {
+                MoCreatures.LOGGER.warn("Reached maximum spawn checks ({}) for biome {}, stopping to prevent server freeze", maxSpawnChecks, biomeName);
+                break;
+            }
+            
+            String creatureName = entry.getKey();
+            EntityType<?> entityType = entry.getValue();
+            
+            if (entityType == null) continue;
+            
+            try {
+                // Quick check for spawn data first - avoid expensive operations if not needed
+                BiomeSpawnConfig.CreatureSpawnData spawnData = BiomeSpawnConfig.getSpawnData(creatureName);
+                if (spawnData == null || !spawnData.enabled || spawnData.weight <= 0) {
+                    continue;
+                }
+                
+                // Only test biome if we have valid spawn data
+                if (!BiomeSpawnConfig.testBiome(creatureName, biome, biomeRL)) {
+                    continue;
+                }
+                
+                // Convert category string to MobCategory
+                MobCategory category;
+                try {
+                    category = MobCategory.valueOf(spawnData.category);
+                } catch (IllegalArgumentException e) {
+                    category = MobCategory.CREATURE; // Default without logging during world gen
+                }
+                
+                // Add the spawn
+                builder.getMobSpawnSettings().getSpawner(category).add(
+                    new MobSpawnSettings.SpawnerData(entityType, spawnData.weight, spawnData.minCount, spawnData.maxCount)
+                );
+                
+                spawnsAdded++;
+                
+            } catch (Exception e) {
+                // Silent fail during world generation to prevent log spam
+                continue;
+            }
         }
         
-        // Add the spawn
-        builder.getMobSpawnSettings().getSpawner(category).add(
-            new MobSpawnSettings.SpawnerData(entityType, spawnData.weight, spawnData.minCount, spawnData.maxCount)
-        );
-        
-        MoCreatures.LOGGER.debug("Added spawn for {} in biome {} (weight: {}, count: {}-{})", 
-            creatureName, biomeName, spawnData.weight, spawnData.minCount, spawnData.maxCount);
+        // Only log if we actually added spawns, and only at debug level
+        if (spawnsAdded > 0) {
+            MoCreatures.LOGGER.debug("Added {} MoCreatures spawns for biome {}", spawnsAdded, biomeName);
+        }
     }
     
     // Legacy method - remove the old long implementation
     public static void addBiomeSpawnsOld(Holder<Biome> biome, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
         String biomeName = getBiomeName(biome) != null ? getBiomeName(biome).toString() : "unknown";
-        MoCreatures.LOGGER.info("MoCWorldRegistry: Adding spawns for biome {}", biomeName);
+        MoCreatures.LOGGER.debug("MoCWorldRegistry: Adding spawns for biome {}", biomeName);
         
         // MoCreatures Animal Spawns
         

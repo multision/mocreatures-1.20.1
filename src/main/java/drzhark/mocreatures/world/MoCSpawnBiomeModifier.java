@@ -21,7 +21,7 @@ public class MoCSpawnBiomeModifier implements BiomeModifier {
     public void modify(Holder<Biome> biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
         if (phase == Phase.ADD) {
             String biomeName = biome.unwrap().map(key -> key.location().toString(), obj -> "unknown");
-            MoCreatures.LOGGER.info("MoCSpawnBiomeModifier: Processing biome {} in phase {}", biomeName, phase);
+            MoCreatures.LOGGER.debug("MoCSpawnBiomeModifier: Processing biome {} in phase {}", biomeName, phase);
             MoCWorldRegistry.addBiomeSpawns(biome, builder);
         }
     }

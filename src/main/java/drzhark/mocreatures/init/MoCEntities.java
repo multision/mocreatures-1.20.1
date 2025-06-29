@@ -27,9 +27,17 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.SectionPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.StructureTags;
+import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -551,18 +559,8 @@ public class MoCEntities {
 
         // Special Animals with their own spawn methods (matching 1.16.5 MoCEntities)
         SpawnPlacements.register(KITTY.get(), SpawnPlacements.Type.ON_GROUND,
-                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                (entityType, world, spawnType, pos, random) -> {
-                    if (MoCreatures.proxy.kittyVillageChance <= 0)
-                        return MoCEntityAnimal.checkAnimalSpawnRules(entityType, world, spawnType, pos, random);
-                    BlockPos villagePos = world.getLevel()
-                            .findNearestMapStructure(net.minecraft.tags.StructureTags.VILLAGE, pos, 100, true);
-                    if (villagePos != null) {
-                        if (pos.distSqr(villagePos) <= 128 * 128)
-                            return MoCEntityAnimal.checkAnimalSpawnRules(entityType, world, spawnType, pos, random);
-                    }
-                    return false;
-                });
+        Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+        MoCEntityAnimal::checkAnimalSpawnRules);
 
         SpawnPlacements.register(WYVERN.get(), SpawnPlacements.Type.ON_GROUND,
                 Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
