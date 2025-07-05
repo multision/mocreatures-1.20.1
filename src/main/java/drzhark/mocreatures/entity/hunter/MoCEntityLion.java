@@ -70,18 +70,6 @@ public class MoCEntityLion extends MoCEntityBigCat {
     }
 
     @Override
-    public void setMoCAge(int age) {
-        super.setMoCAge(age);
-        // Force adult status synchronization to prevent mane issues
-        if (age >= getMoCMaxAge() && !getIsAdult()) {
-            setAdult(true);
-        } else if (age < getMoCMaxAge() * 0.8 && getIsAdult()) {
-            // Only set to baby if significantly under adult age to prevent flickering
-            setAdult(false);
-        }
-    }
-
-    @Override
     public boolean hasMane() {
         // Only adult male lions should have manes
         // Types 2, 3, and 7 are male lions (regular and white lions)
