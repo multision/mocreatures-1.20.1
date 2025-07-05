@@ -10,6 +10,7 @@ import drzhark.mocreatures.entity.ai.EntityAIFollowOwnerPlayer;
 import drzhark.mocreatures.entity.ai.EntityAIHunt;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.entity.inventory.MoCAnimalChest;
+import drzhark.mocreatures.entity.tameable.IMoCTameable;
 import drzhark.mocreatures.entity.tameable.MoCEntityTameableAnimal;
 import drzhark.mocreatures.entity.tameable.MoCPetData;
 import drzhark.mocreatures.init.MoCItems;
@@ -73,9 +74,15 @@ public class MoCEntityBigCat extends MoCEntityTameableAnimal {
 
     public MoCEntityBigCat(EntityType<? extends MoCEntityBigCat> type, Level world) {
         super(type, world);
-        setMoCAge(45);
         //setSize(1.4F, 1.3F);
-        setAdult(this.random.nextInt(4) != 0);
+        boolean isAdult = this.random.nextInt(4) != 0;
+        setAdult(isAdult);
+        // Set appropriate age based on adult status to prevent mane synchronization issues
+        if (isAdult) {
+            setMoCAge(45); // Close to adult age for faster growth
+        } else {
+            setMoCAge(20); // Much younger for babies to prevent mane issues
+        }
         setMaxUpStep(1.0F);
         xpReward = 5;
     }
@@ -255,7 +262,7 @@ public class MoCEntityBigCat extends MoCEntityTameableAnimal {
                 }
 
                 ghost.setAdult(false);
-                ghost.setMoCAge(1);
+                ghost.setMoCAge(this.getMoCAge());
                 ghost.setTypeMoC(this.getTypeMoC());
                 ghost.selectType();
                 ghost.setIsGhost(true);
@@ -647,6 +654,12 @@ public class MoCEntityBigCat extends MoCEntityTameableAnimal {
             return 0.37F;
         }
         return 0.18F;
+    }
+
+    @Override
+    protected boolean canBeTrappedInNet() {
+        // Ghost variants must stay in Ghost Amulets
+        return !this.getIsGhost() && super.canBeTrappedInNet();
     }
 }
 

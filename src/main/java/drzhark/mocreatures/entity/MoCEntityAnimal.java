@@ -414,32 +414,32 @@ public abstract class MoCEntityAnimal extends Animal implements IMoCEntity {
         return found;
     }
 
-    public void faceLocation(int x, int y, int z, float maxTurn) {
-        double dx = x + 0.5D - this.getX();
-        double dz = z + 0.5D - this.getZ();
-        double dy = y + 0.5D - this.getY();
-        double horizontalDist = Mth.sqrt((float) (dx * dx + dz * dz));
-        float targetYaw = (float) (Mth.atan2(dz, dx) * (180.0D / Math.PI)) - 90.0F;
-        float targetPitch = (float) (-(Mth.atan2(dy, horizontalDist) * (180.0D / Math.PI)));
-        this.xRotO = -updateRotation2(this.xRotO, targetPitch, maxTurn);
-        this.yRotO = updateRotation2(this.yRotO, targetYaw, maxTurn);
-    }
+    /** Faces this entity toward a world-space point.
+ *  @param x X-coord
+ *  @param y Y-coord
+ *  @param z Z-coord
+ *  @param maxTurn maximum yaw change per call, in degrees
+ */
+public void faceLocation(double x, double y, double z, float maxTurn) {
+    double dx = x - getX();
+    double dz = z - getZ();
+    double dy = y - (getY() + getEyeHeight());
 
-    private float updateRotation2(float current, float intended, float maxIncrement) {
-        float diff;
-        for (diff = intended - current; diff < -180.0F; diff += 360.0F) {
-        }
-        while (diff >= 180.0F) {
-            diff -= 360.0F;
-        }
-        if (diff > maxIncrement) {
-            diff = maxIncrement;
-        }
-        if (diff < -maxIncrement) {
-            diff = -maxIncrement;
-        }
-        return current + diff;
-    }
+    double horiz = Math.sqrt(dx * dx + dz * dz);
+
+    // Desired angles
+    float targetYaw   = (float)(Mth.atan2(dz, dx) * (180D / Math.PI)) - 90F;
+    float targetPitch = (float)-(Mth.atan2(dy, horiz) * (180D / Math.PI));
+
+    // Smoothly interpolate toward the target
+    this.setYRot(Mth.approachDegrees(this.getYRot(), targetYaw,  maxTurn));
+    this.setXRot(Mth.approachDegrees(this.getXRot(), targetPitch, maxTurn));
+
+    // Keep head/body in sync so render & AI see the same direction
+    this.yHeadRot = this.getYRot();
+    this.yBodyRot = this.getYRot();
+}
+
 
     public void setPathToEntity(Entity entity, float speed) {
         PathNavigation nav = this.getNavigation();

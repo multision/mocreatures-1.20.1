@@ -333,7 +333,35 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         final ItemStack stack = player.getItemInHand(hand);
         final Item item = stack.getItem();
+
+        final InteractionResult tameResult = this.processTameInteract(player, hand);
+        if (tameResult != null) {
+            return tameResult;
+        }
         
+        if (!stack.isEmpty() && !getIsTamed() && !getIsAdult() && stack.getItem() == Items.CAKE) {
+            if (!player.getAbilities().instabuild) stack.shrink(1);
+            MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GENERIC_EATING.get());
+            this.temper += 2;
+            this.setHealth(getMaxHealth());
+            if (!this.level().isClientSide() && !getIsAdult() && !getIsTamed() && this.temper >= 10) {
+                MoCTools.tameWithName(player, this);
+            }
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
+        }
+
+        if (!stack.isEmpty() && !getIsTamed() && !getIsAdult() && stack.getItem() == MoCItems.SUGAR_LUMP.get()) {
+            if (!player.getAbilities().instabuild) stack.shrink(1);
+            MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GENERIC_EATING.get());
+            this.temper += 1;
+            this.setHealth(getMaxHealth());
+            if (!this.level().isClientSide() && !getIsAdult() && !getIsTamed() && this.temper >= 10) {
+                setTamed(true);
+                MoCTools.tameWithName(player, this);
+            }
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
+        }
+
         if (getIsTamed() && stack.isEmpty() && !player.isShiftKeyDown() && getStorage() > 0) {
             // Open inventory
             if (!this.level().isClientSide()) {

@@ -94,10 +94,11 @@ public class MoCItemHorseAmulet extends MoCItem {
                 storedCreature.setTypeMoC(this.creatureType);
                 storedCreature.setTamed(true);
                 storedCreature.setRideable(this.rideable);
-                storedCreature.setMoCAge(this.age);
                 storedCreature.setPetName(this.name);
                 storedCreature.setHealth(this.health);
+                // Set adult status BEFORE age to prevent automatic adult detection conflicts
                 storedCreature.setAdult(this.adult);
+                storedCreature.setMoCAge(this.age);
                 storedCreature.setArmorType(this.armor);
                 storedCreature.setOwnerPetId(this.PetId);
                 storedCreature.setOwnerId(player.getUUID());
@@ -119,6 +120,8 @@ public class MoCItemHorseAmulet extends MoCItem {
 
                     MoCTools.playCustomSound(storedCreature, MoCSoundEvents.ENTITY_GENERIC_MAGIC_APPEAR.get());
 
+
+                    // Case 3 is for tigers - They don't have a separate creature type for ghost states
                     // Replace amulet
                     ItemStack replacement = switch (this.creatureType) {
                         case 21, 22 -> new ItemStack(MoCItems.AMULET_GHOST.get());
@@ -126,6 +129,11 @@ public class MoCItemHorseAmulet extends MoCItem {
                         case 39, 40 -> new ItemStack(MoCItems.AMULET_PEGASUS.get());
                         default -> (this.creatureType > 47 && this.creatureType < 60) ? new ItemStack(MoCItems.AMULET_FAIRY.get()) : ItemStack.EMPTY;
                     };
+
+                    if (storedCreature.getIsGhost()) {
+                        replacement = new ItemStack(MoCItems.AMULET_GHOST.get());
+                    }
+                    
                     if (!replacement.isEmpty()) {
                         player.setItemInHand(hand, replacement);
                     }

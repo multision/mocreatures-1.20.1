@@ -122,3 +122,4 @@ runClient.launch
 runData.launch
 runGameTestServer.launch
 runServer.launch
+/bin

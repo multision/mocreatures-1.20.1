@@ -266,7 +266,29 @@ public class MoCEntityBird extends MoCEntityTameableAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.PARROT_AMBIENT;
+        if (getTypeMoC() == 1) {
+            return MoCSoundEvents.ENTITY_BIRD_AMBIENT_WHITE.get();
+        }
+        if (getTypeMoC() == 2) {
+            return MoCSoundEvents.ENTITY_BIRD_AMBIENT_BLACK.get();
+        }
+        if (getTypeMoC() == 3) {
+            return MoCSoundEvents.ENTITY_BIRD_AMBIENT_GREEN.get();
+        }
+        if (getTypeMoC() == 4) {
+            return MoCSoundEvents.ENTITY_BIRD_AMBIENT_BLUE.get();
+        }
+        if (getTypeMoC() == 5) {
+            return MoCSoundEvents.ENTITY_BIRD_AMBIENT_YELLOW.get();
+        } else {
+            return MoCSoundEvents.ENTITY_BIRD_AMBIENT_RED.get();
+        }
+    }
+
+    // TODO: Add unique sound event
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState blockIn) {
+        this.playSound(SoundEvents.PARROT_STEP, 0.15F, 1.0F);
     }
 
     @Override
@@ -312,20 +334,89 @@ public class MoCEntityBird extends MoCEntityTameableAnimal {
         return super.mobInteract(player, hand);
     }
 
+    // TODO: Add updated flap ai based on vanilla's parrot
+    @Override
+    public void aiStep() {
+        super.aiStep();
+
+        this.winge = this.wingb;
+        this.wingd = this.wingc;
+        this.wingc = (float) (this.wingc + ((this.onGround() ? -1 : 4) * 0.3D));
+        if (this.wingc < 0.0F) {
+            this.wingc = 0.0F;
+        }
+        if (this.wingc > 1.0F) {
+            this.wingc = 1.0F;
+        }
+        if (!this.onGround() && (this.wingh < 1.0F)) {
+            this.wingh = 1.0F;
+        }
+        this.wingh = (float) (this.wingh * 0.9D);
+        if (!this.onGround() && (this.getDeltaMovement().y < 0.0D)) {
+            this.setDeltaMovement(this.getDeltaMovement().multiply(1.0D, 0.8D, 1.0D));
+        }
+        this.wingb += this.wingh * 2.0F;
+
+        //check added to avoid duplicating behavior on client / server
+        if (!this.level().isClientSide) {
+
+            if (isMovementCeased() && getIsFlying()) {
+                setIsFlying(false);
+            }
+
+            if (getIsFlying() && this.getNavigation().isDone() && !isMovementCeased() && this.getTarget() == null && this.random.nextInt(30) == 0) {
+                this.wander.makeUpdate();
+            }
+
+            if (!getIsFlying() && !getIsTamed() && this.random.nextInt(10) == 0) {
+                List<Entity> list = this.level().getEntitiesOfClass(Entity.class, this.getBoundingBox().inflate(4D), entity -> entity != this);
+                for (Entity entity1 : list) {
+                    if (!(entity1 instanceof LivingEntity) || entity1 instanceof MoCEntityBird) {
+                        continue;
+                    }
+                    if (entity1.getBbWidth() >= 0.4F && entity1.getBbHeight() >= 0.4F && this.hasLineOfSight(entity1)) {
+                        setIsFlying(true);
+                        this.fleeing = true;
+                        this.wander.makeUpdate();
+                    }
+                }
+            }
+
+            if (!isMovementCeased() && !getIsFlying() && this.random.nextInt(getIsTamed() ? 1000 : 400) == 0) {
+                setIsFlying(true);
+                this.wander.makeUpdate();
+            }
+
+            if (getIsFlying() && this.random.nextInt(200) == 0) {
+                setIsFlying(false);
+            }
+
+            if (this.fleeing && this.random.nextInt(50) == 0) {
+                this.fleeing = false;
+            }
+
+            //TODO move to new AI
+            if (!this.fleeing) {
+                ItemEntity entityitem = this.getClosestItem(this, 12D, Ingredient.of(Items.WHEAT_SEEDS, Items.MELON_SEEDS));
+                if (entityitem != null) {
+                    FlyToNextEntity(entityitem);
+                    ItemEntity entityitem1 = this.getClosestItem(this, 1.0D, Ingredient.of(Items.WHEAT_SEEDS, Items.MELON_SEEDS));
+                    if ((this.random.nextInt(50) == 0) && (entityitem1 != null)) {
+                        entityitem1.remove(RemovalReason.DISCARDED);
+                        setPreTamed(true);
+                    }
+                }
+            }
+            if (this.random.nextInt(10) == 0 && this.isEyeInFluid(FluidTags.WATER)) {
+                WingFlap();
+            }
+        }
+    }
+
     @Override
     public void tick() {
         super.tick();
-        
-        if (--this.jumpTimer <= 0 && this.onGround()
-                && ((this.getDeltaMovement().x > 0.05D) || (this.getDeltaMovement().z > 0.05D) || (this.getDeltaMovement().x < -0.05D) || (this.getDeltaMovement().z < -0.05D))) {
-            this.setDeltaMovement(this.getDeltaMovement().x, 0.25D, this.getDeltaMovement().z);
-            float velX = Mth.sin(this.getYRot() * (float) Math.PI / 180.0F);
-            float velZ = Mth.cos(this.getYRot() * (float) Math.PI / 180.0F);
 
-            this.setDeltaMovement(this.getDeltaMovement().add((-0.2F * velX), 0.0D, (0.2F * velZ)));
-            this.jumpTimer = 15;
-        }
-        
         if (this.getVehicle() != null) {
             this.setYRot(this.getVehicle().getYRot());
         }
@@ -337,102 +428,15 @@ public class MoCEntityBird extends MoCEntityTameableAnimal {
             if (entityplayer.getDeltaMovement().y < -0.1D)
                 entityplayer.setDeltaMovement(entityplayer.getDeltaMovement().multiply(1.0D, 0.6D, 1.0D));
         }
-    }
-    
-    @Override
-    public void aiStep() {
-        super.aiStep();
-        
-        this.winge = this.wingb;
-        this.wingd = this.wingc;
-        this.wingc = (float) (this.wingc + ((this.onGround() ? -1 : 4) * 0.3D));
-        if (this.wingc < 0.0F) {
-            this.wingc = 0.0F;
-        }
-        if (this.wingc > 1.0F) {
-            this.wingc = 1.0F;
-        }
-        
-        if (this.wingh < 1.0F) {
-            this.wingh = (float) (this.wingh + 0.050000000000000003D + this.wingh / 30D);
-        }
-        if (this.wingh > 1.0F) {
-            this.wingh = 1.0F;
-        }
-        this.wingh = (float) (this.wingh * 0.9D);
-        
-        if (!this.onGround() && (this.getDeltaMovement().y < 0.0D)) {
-            this.setDeltaMovement(this.getDeltaMovement().multiply(1.0D, 0.8D, 1.0D));
-        }
-        
-        this.wingb += this.wingh * 2.0F;
 
-        //check added to avoid duplicating behavior on client / server
-        if (!this.level().isClientSide()) {
+        if (--this.jumpTimer <= 0 && this.onGround()
+                && ((this.getDeltaMovement().x > 0.05D) || (this.getDeltaMovement().z > 0.05D) || (this.getDeltaMovement().x < -0.05D) || (this.getDeltaMovement().z < -0.05D))) {
+            this.setDeltaMovement(this.getDeltaMovement().x, 0.25D, this.getDeltaMovement().z);
+            float velX = Mth.sin(this.getYRot() * (float) Math.PI / 180.0F);
+            float velZ = Mth.cos(this.getYRot() * (float) Math.PI / 180.0F);
 
-            if (isMovementCeased() && getIsFlying()) {
-                setIsFlying(false);
-            }
-
-            if (getIsFlying() && this.getNavigation().isDone() && !isMovementCeased() && this.getTarget() == null && random.nextInt(30) == 0) {
-                this.wander.makeUpdate();
-            }
-
-            if (!getIsFlying() && !getIsTamed() && this.random.nextInt(10) == 0) {
-                List<Entity> list = this.level().getEntities(this, getBoundingBox().inflate(4D));
-                for (Entity entity1 : list) {
-                    if (!(entity1 instanceof LivingEntity) || entity1 instanceof MoCEntityBird) {
-                        continue;
-                    }
-                    if (entity1.getBbWidth() >= 0.4F && entity1.getBbHeight() >= 0.4F && this.hasLineOfSight(entity1)) {
-                        setIsFlying(true);
-                        this.fleeing = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!isMovementCeased() && !getIsFlying() && this.random.nextInt(getIsTamed() ? 1000 : 400) == 0) {
-                setIsFlying(true);
-                this.wander.makeUpdate();
-            }
-
-            if (getIsFlying() && random.nextInt(200) == 0) {
-                setIsFlying(false);
-            }
-
-            if (this.fleeing && random.nextInt(50) == 0) {
-                this.fleeing = false;
-            }
-
-            if (getIsFlying()) {
-                if (this.fleeing) {
-                    List<Entity> list1 = this.level().getEntities(this, getBoundingBox().inflate(12D, 12D, 12D));
-                    for (Entity entity2 : list1) {
-                        if (!(entity2 instanceof LivingEntity) || (entity2 instanceof MoCEntityBird)) {
-                            continue;
-                        }
-                        if (entity2.getBbWidth() > 0.5F && entity2.getBbHeight() > 0.5F) {
-                            FlyToNextEntity(entity2);
-                            break;
-                        }
-                    }
-                } else if (!getIsTamed()) {
-                    ItemEntity entityitem = getClosestItem(this, 10D, Ingredient.of(Items.WHEAT_SEEDS, Items.MELON_SEEDS));
-                    if (entityitem != null) {
-                        FlyToNextEntity(entityitem);
-                        ItemEntity entityitem1 = getClosestItem(this, 1.0D, Ingredient.of(Items.WHEAT_SEEDS, Items.MELON_SEEDS));
-                        if ((this.random.nextInt(50) == 0) && (entityitem1 != null)) {
-                            entityitem1.remove(RemovalReason.DISCARDED);
-                            setPreTamed(true);
-                        }
-                    }
-                }
-            }
-            
-            if (this.random.nextInt(10) == 0 && this.isEyeInFluid(FluidTags.WATER)) {
-                WingFlap();
-            }
+            this.setDeltaMovement(this.getDeltaMovement().add((-0.2F * velX), 0.0D, (0.2F * velZ)));
+            this.jumpTimer = 15;
         }
     }
 

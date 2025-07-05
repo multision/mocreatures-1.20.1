@@ -103,7 +103,7 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
 
     @Override
     public int getExperienceReward() {
-        return 5;
+        return this.xpReward;
     }
 
     @Override

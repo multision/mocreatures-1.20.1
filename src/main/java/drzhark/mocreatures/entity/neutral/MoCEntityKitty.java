@@ -556,8 +556,8 @@ public class MoCEntityKitty extends MoCEntityTameableAnimal {
                 setShowEmoteIcon(!getShowEmoteIcon());
             }
             if (!getIsAdult() && this.random.nextInt(200) < 1) {
-                setAge(getAge() + 1);
-                if (getAge() >= 100) {
+                setMoCAge(getMoCAge() + 1);
+                if (getMoCAge() >= 100) {
                     setAdult(true);
                 }
             }

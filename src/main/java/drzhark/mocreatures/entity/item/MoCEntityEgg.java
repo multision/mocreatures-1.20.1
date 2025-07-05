@@ -124,6 +124,7 @@ public class MoCEntityEgg extends Mob {
             if (getEggType() > 20 && getEggType() < 29) {
                 MoCEntitySnake snakey = new MoCEntitySnake(MoCEntities.SNAKE.get(), this.level());
                 snakey.setTypeMoC(getEggType() - 20);
+                snakey.setAge(50);
                 spawnEggEntity(snakey, player);
             }
 
@@ -136,8 +137,13 @@ public class MoCEntityEgg extends Mob {
                 if (getEggType() == 31 && player != null) MoCTools.tameWithName(player, ostrich);
             }
 
-            if (getEggType() == 33)
-                spawnEggEntity(new MoCEntityKomodo(MoCEntities.KOMODO_DRAGON.get(), this.level()), player);
+            if (getEggType() == 33) {
+                MoCEntityKomodo komodo = new MoCEntityKomodo(MoCEntities.KOMODO_DRAGON.get(), this.level());
+                komodo.setPos(this.getX(), this.getY(), this.getZ());
+                komodo.setAge(35);
+                this.level().addFreshEntity(komodo);
+                if (player != null) MoCTools.tameWithName(player, komodo);
+            }
 
             if (getEggType() > 40 && getEggType() < 46) {
                 MoCEntityPetScorpion scorp = new MoCEntityPetScorpion(MoCEntities.PET_SCORPION.get(), this.level());

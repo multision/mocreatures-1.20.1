@@ -388,6 +388,7 @@
     "info.mocreatures.stingdefault3": "Burns the target for 10 seconds",
     "info.mocreatures.stingdefault4": "Inflicts Weakness on the target (Nausea on players) for 10 seconds",
     "info.mocreatures.stingdefault5": "Inflicts Wither on the target (Blindness on players) for 10 seconds",
+    "container.elephant_chest": "Elephant Chest",
 
     "_comment": "SPAWN EGGS",
     "item.mocreatures.ant_spawn_egg": "Ant Spawn Egg",
