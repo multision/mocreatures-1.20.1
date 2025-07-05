@@ -84,11 +84,7 @@ public class MoCreatures {
         eventBus.addListener(this::setup);
         MinecraftForge.EVENT_BUS.register(new MoCEventHooks());
         MinecraftForge.EVENT_BUS.register(new MoCEventHooksTerrain());
-        //proxy.configInit();
-        if (true) {
-            MinecraftForge.EVENT_BUS.register(new MoCEventHooksClient());
-            MinecraftForge.EVENT_BUS.register(new MoCKeyHandler());
-        }
+
         // Register the Wyvern dimension handler
         MinecraftForge.EVENT_BUS.register(MoCWyvernDimensionHandler.class);
         

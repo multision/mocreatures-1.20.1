@@ -19,7 +19,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class MoCEventHooksClient {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void displayCompatScreen(ScreenEvent.Opening event) {
+    public static void displayCompatScreen(ScreenEvent.Opening event) {
         if (event.getScreen() instanceof TitleScreen && CompatScreen.showScreen && ModList.get().isLoaded("customspawner")) {
             event.setNewScreen(new CompatScreen());
             CompatScreen.showScreen = false;
