@@ -5,9 +5,9 @@ package drzhark.mocreatures.entity.passive;
 
 import drzhark.mocreatures.MoCTools;
 import drzhark.mocreatures.MoCreatures;
-import drzhark.mocreatures.entity.ai.EntityAIMateMoC;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.entity.tameable.MoCEntityTameableAnimal;
+import drzhark.mocreatures.entity.tameable.IMoCTameable;
 import drzhark.mocreatures.init.MoCEntities;
 import drzhark.mocreatures.init.MoCLootTables;
 import drzhark.mocreatures.init.MoCSoundEvents;
@@ -19,7 +19,6 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.TemptGoal;
-import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -29,27 +28,35 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraftforge.network.PacketDistributor;
+import drzhark.mocreatures.network.MoCMessageHandler;
+import drzhark.mocreatures.network.message.MoCMessageHeart;
+import java.util.List;
+import java.util.UUID;
 
 public class MoCEntityTurkey extends MoCEntityTameableAnimal {
     private static final Ingredient TEMPTATION_ITEMS = Ingredient.of(Items.WHEAT_SEEDS, Items.PUMPKIN_SEEDS, Items.BEETROOT_SEEDS);
+    private int gestationTime = 0;
 
     public MoCEntityTurkey(EntityType<? extends MoCEntityTurkey> type, Level world) {
         super(type, world);
         setAdult(true);
+        selectType(); // Ensure type is set when spawned
     }
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new PanicGoal(this, 1.4D));
-        this.goalSelector.addGoal(2, new EntityAIMateMoC(this, 1.0D));
+        // Removed EntityAIMateMoC - now uses inherited doBreeding() system
         this.goalSelector.addGoal(3, new TemptGoal(this, 1.0D, TEMPTATION_ITEMS, false));
         this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 1.0D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
@@ -67,10 +74,7 @@ public class MoCEntityTurkey extends MoCEntityTameableAnimal {
         return TEMPTATION_ITEMS.test(stack);
     }
 
-    @Override
-    public AgeableMob getBreedOffspring(ServerLevel world, AgeableMob entity) {
-        return MoCEntities.TURKEY.get().create(world);
-    }
+    // Removed getBreedOffspring - now uses doBreeding() system from MoCEntityTameableAnimal
 
     @Override
     public void selectType() {
@@ -81,7 +85,7 @@ public class MoCEntityTurkey extends MoCEntityTameableAnimal {
 
     @Override
     public ResourceLocation getTexture() {
-        if (getTypeMoC() == 1 && !this.isBaby()) {
+        if (getTypeMoC() == 1 && this.getIsAdult()) {
             return MoCreatures.proxy.getModelTexture("turkey_male.png");
         } else {
             return MoCreatures.proxy.getModelTexture("turkey_female.png");
@@ -123,8 +127,19 @@ public class MoCEntityTurkey extends MoCEntityTameableAnimal {
         } else if (this.isMale() == ((MoCEntityTurkey) otherAnimal).isMale()) {
             return false;
         } else {
-            return this.isInLove() && ((Animal)otherAnimal).isInLove();
+            return true; // Compatible if different genders of same species
         }
+    }
+
+    @Override
+    public String getOffspringClazz(IMoCTameable mate) {
+        return "Turkey";
+    }
+
+    @Override
+    public int getOffspringTypeInt(IMoCTameable mate) {
+        // Randomly choose male (1) or female (2)
+        return this.random.nextInt(2) + 1;
     }
 
     @Override
@@ -132,20 +147,19 @@ public class MoCEntityTurkey extends MoCEntityTameableAnimal {
         ItemStack itemstack = player.getItemInHand(hand);
 
         if (!itemstack.isEmpty()) {
-            if (this.isFood(itemstack) && this.getMoCAge() == 0 && this.canFallInLove()) {
+            if (this.isFood(itemstack) && this.getIsAdult() && !this.getHasEaten()) {
                 this.usePlayerItem(player, hand, itemstack);
-                this.setInLove(player);
-
-                // Extend mating period for Males
-                if (this.getTypeMoC() == 1) {
-                    this.setInLoveTime(1800);
-                }
+                this.setHasEaten(true); // Ready to breed using doBreeding() system
                 return InteractionResult.SUCCESS;
             }
 
-            if (this.isBaby() && this.isFood(itemstack)) {
+            if (!this.getIsAdult() && this.isFood(itemstack)) {
                 this.usePlayerItem(player, hand, itemstack);
-                this.ageUp((int) ((float) (-this.getMoCAge() / 20) * 0.1F), true);
+                // Age up baby turkeys when fed
+                this.setMoCAge(this.getMoCAge() + 10);
+                if (this.getMoCAge() >= this.getMoCMaxAge()) {
+                    this.setAdult(true);
+                }
                 return InteractionResult.SUCCESS;
             }
         }
@@ -179,6 +193,11 @@ public class MoCEntityTurkey extends MoCEntityTameableAnimal {
     @Override
     public boolean isMyHealFood(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem() == Items.PUMPKIN_SEEDS;
+    }
+
+    @Override
+    public int getMoCMaxAge() {
+        return 35;
     }
 
     @Override
@@ -223,5 +242,107 @@ public class MoCEntityTurkey extends MoCEntityTameableAnimal {
     @Override
     public boolean isMale() {
         return getTypeMoC() == 1;
+    }
+
+    @Override
+    public float getSizeFactor() {
+        if (!this.getIsAdult()) {
+            return 0.5f + (this.getMoCAge() * 0.01f);
+        }
+        return 1f;
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.addAdditionalSaveData(nbttagcompound);
+        nbttagcompound.putInt("GestationTime", this.gestationTime);
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag nbttagcompound) {
+        super.readAdditionalSaveData(nbttagcompound);
+        this.gestationTime = nbttagcompound.getInt("GestationTime");
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        
+        // Custom breeding system (similar to horses)
+        if (!this.level().isClientSide() && this.readytoBreed()) {
+            this.doTurkeyBreeding();
+        }
+    }
+
+    /**
+     * Custom breeding system for turkeys based on the horse breeding system
+     */
+    private void doTurkeyBreeding() {
+        // Check for too many turkeys nearby
+        int nearbyTurkeys = 0;
+        List<Entity> list = this.level().getEntities(this, this.getBoundingBox().inflate(8D, 3D, 8D), 
+            entity -> entity != this && entity instanceof MoCEntityTurkey);
+        nearbyTurkeys = list.size();
+        
+        if (nearbyTurkeys > 1) return;
+
+        // Look for nearby compatible mate
+        List<Entity> nearbyMates = this.level().getEntities(this, this.getBoundingBox().inflate(4D, 2D, 4D),
+            entity -> entity != this && entity instanceof MoCEntityTurkey);
+        
+        for (Entity potentialMate : nearbyMates) {
+            if (!(potentialMate instanceof MoCEntityTurkey) || potentialMate == this) continue;
+            
+            MoCEntityTurkey mate = (MoCEntityTurkey) potentialMate;
+            
+            // Check if both are ready to breed
+            if (!this.readytoBreed() || !mate.readytoBreed()) continue;
+            
+            // Check compatibility (different genders)
+            if (!this.compatibleMate(mate)) continue;
+
+            this.gestationTime++;
+
+            // Show hearts during breeding process
+            if (this.gestationTime % 3 == 0) {
+                MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(() -> 
+                    new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), 
+                    new MoCMessageHeart(this.getId()));
+            }
+
+            // After 50 ticks (~2.5 seconds), create baby
+            if (this.gestationTime <= 50) continue;
+
+            // Create baby turkey
+            MoCEntityTurkey baby = MoCEntities.TURKEY.get().create(this.level());
+            if (baby != null) {
+                baby.setPos(this.getX(), this.getY(), this.getZ());
+                this.level().addFreshEntity(baby);
+                MoCTools.playCustomSound(this, SoundEvents.CHICKEN_EGG);
+                
+                // Set baby properties
+                baby.setAdult(false);
+                baby.setMoCAge(1);
+                baby.setTamed(true);
+                baby.setOwnerId(this.getOwnerId());
+                baby.setTypeMoC(this.getOffspringTypeInt(mate));
+
+                // Set owner if available
+                UUID ownerId = this.getOwnerId();
+                if (ownerId != null && this.level() instanceof ServerLevel) {
+                    Player entityplayer = ((ServerLevel)this.level()).getServer().getPlayerList().getPlayer(ownerId);
+                    if (entityplayer != null) {
+                        MoCTools.tameWithName(entityplayer, baby);
+                    }
+                }
+            }
+
+            // Reset breeding state
+            this.setHasEaten(false);
+            this.gestationTime = 0;
+            mate.setHasEaten(false);
+            mate.gestationTime = 0;
+            break;
+        }
     }
 }
