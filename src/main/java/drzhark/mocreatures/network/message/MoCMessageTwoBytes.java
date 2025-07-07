@@ -40,9 +40,12 @@ public class MoCMessageTwoBytes {
 
     public static void onMessage(MoCMessageTwoBytes message, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            Entity ent = Minecraft.getInstance().player.level().getEntity(message.entityId);
-            if (ent instanceof MoCEntityGolem) {
-                ((MoCEntityGolem) ent).saveGolemCube(message.slot, message.value);
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.level != null) {
+                Entity ent = minecraft.level.getEntity(message.entityId);
+                if (ent instanceof MoCEntityGolem) {
+                    ((MoCEntityGolem) ent).saveGolemCube(message.slot, message.value);
+                }
             }
         });
         ctx.get().setPacketHandled(true);

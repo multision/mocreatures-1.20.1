@@ -91,10 +91,16 @@ public class MoCEntityGolem extends MoCEntityMob {
 
     // These methods will be called by NetworkHooks when spawning the entity
     public void writeSpawnData(FriendlyByteBuf data) {
+        if (this.golemCubes == null) {
+            this.initGolemCubes();
+        }
         for (int i = 0; i < 23; i++) data.writeByte(this.golemCubes[i]);
     }
 
     public void readSpawnData(FriendlyByteBuf data) {
+        if (this.golemCubes == null) {
+            this.golemCubes = new byte[23];
+        }
         for (int i = 0; i < 23; i++) this.golemCubes[i] = data.readByte();
     }
 
@@ -150,7 +156,7 @@ public class MoCEntityGolem extends MoCEntityMob {
                     MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GOLEM_DYING.get(), 3F);
                     if (!this.level().isClientSide()) {
                         ServerLevel serverWorld = (ServerLevel) this.level();
-                        MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, serverWorld.dimension())), new MoCMessageAnimation(this.getId(), 1));
+                        MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageAnimation(this.getId(), 1));
                     }
                 }
 
@@ -167,7 +173,7 @@ public class MoCEntityGolem extends MoCEntityMob {
                 this.tCounter = 1;
                 if (!this.level().isClientSide()) {
                     ServerLevel serverWorld = (ServerLevel) this.level();
-                    MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, serverWorld.dimension())), new MoCMessageAnimation(this.getId(), 0));
+                    MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageAnimation(this.getId(), 0));
                 }
             }
 
@@ -189,7 +195,7 @@ public class MoCEntityGolem extends MoCEntityMob {
         List<Integer> usedBlocks = usedCubes();
         if (!usedBlocks.isEmpty() && MoCTools.mobGriefing(this.level()) && MoCreatures.proxy.golemDestroyBlocks) {
             for (Integer usedBlock : usedBlocks) {
-                Block block = Block.stateById(generateBlock(this.golemCubes[usedBlock])).getBlock();
+                Block block = generateBlock(this.golemCubes[usedBlock]).getBlock();
                 ItemEntity entityitem = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), new ItemStack(block, 1));
                 entityitem.setDefaultPickUpDelay();
                 this.level().addFreshEntity(entityitem);
@@ -297,7 +303,7 @@ public class MoCEntityGolem extends MoCEntityMob {
 
         if (this.golemCubes[i + 1] != 30 && (i == 10 || i == 13)) x = i + 1;
         MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GOLEM_SHOOT.get(), 3F);
-        MoCTools.throwStone(this, entity, Block.stateById(generateBlock(this.golemCubes[x])), 10D, 0.4D);
+        MoCTools.throwStone(this, entity, generateBlock(this.golemCubes[x]), 10D, 0.4D);
         saveGolemCube((byte) x, (byte) 30);
         this.tCounter = 0;
     }
@@ -365,7 +371,7 @@ public class MoCEntityGolem extends MoCEntityMob {
         }
 
         if (x != -1 && this.golemCubes[x] != 30) {
-            Block block = Block.stateById(generateBlock(this.golemCubes[x])).getBlock();
+            Block block = generateBlock(this.golemCubes[x]).getBlock();
             saveGolemCube((byte) x, (byte) 30);
             MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GOLEM_HURT.get(), 3F);
             if ((MoCTools.mobGriefing(this.level())) && (MoCreatures.proxy.golemDestroyBlocks)) {
@@ -458,9 +464,8 @@ public class MoCEntityGolem extends MoCEntityMob {
      */
     public void saveGolemCube(byte slot, byte value) {
         this.golemCubes[slot] = value;
-        if (!this.level().isClientSide() && MoCreatures.proxy.worldInitDone) {
-            ServerLevel serverWorld = (ServerLevel) this.level();
-            MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, serverWorld.dimension())), new MoCMessageTwoBytes(this.getId(), slot, value));
+        if (!this.level().isClientSide()) {
+            MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageTwoBytes(this.getId(), slot, value));
         }
     }
 
@@ -625,70 +630,69 @@ public class MoCEntityGolem extends MoCEntityMob {
         return -1;
     }
 
-
     /**
-     * Provides the blockID originated from the golem's block
+     * Provides the BlockState originated from the golem's block
      */
-    private int generateBlock(int golemBlock) {
+    private BlockState generateBlock(int golemBlock) {
         switch (golemBlock) {
             case 0:
-                return 1;
+                return Blocks.STONE.defaultBlockState();
             case 1:
-                return 3;
+                return Blocks.DIRT.defaultBlockState();
             case 2:
-                return 4;
+                return Blocks.COBBLESTONE.defaultBlockState();
             case 3:
-                return 5;
+                return Blocks.OAK_PLANKS.defaultBlockState();
             case 4:
-                return 12;
+                return Blocks.SAND.defaultBlockState();
             case 5:
-                return 13;
+                return Blocks.GRAVEL.defaultBlockState();
             case 6:
-                return 17;
+                return Blocks.OAK_LOG.defaultBlockState();
             case 7:
-                return 41;
+                return Blocks.GOLD_BLOCK.defaultBlockState();
             case 8:
-                return 20;
+                return Blocks.GLASS.defaultBlockState();
             case 9:
-                return 35;
+                return Blocks.BLUE_WOOL.defaultBlockState();
             case 10:
-                return 18;
+                return Blocks.OAK_LEAVES.defaultBlockState();
             case 11:
-                return 42;
+                return Blocks.IRON_BLOCK.defaultBlockState();
             case 12:
-                return 45;
-            case 13: //unused
-                return 2;
+                return Blocks.BRICKS.defaultBlockState();
+            case 13: // unused
+                return Blocks.GRASS_BLOCK.defaultBlockState();
             case 14:
-                return 49;
+                return Blocks.OBSIDIAN.defaultBlockState();
             case 15:
-                return 57;
+                return Blocks.DIAMOND_BLOCK.defaultBlockState();
             case 16:
-                return 58;
+                return Blocks.CRAFTING_TABLE.defaultBlockState();
             case 17:
-                return 51;
+                return Blocks.FIRE.defaultBlockState();
             case 18:
-                return 79;
+                return Blocks.ICE.defaultBlockState();
             case 19:
-                return 81;
+                return Blocks.CACTUS.defaultBlockState();
             case 20:
-                return 82;
+                return Blocks.CLAY.defaultBlockState();
             case 21:
-                return 133;
+                return Blocks.EMERALD_BLOCK.defaultBlockState();
             case 22:
-                return 86;
+                return Blocks.PUMPKIN.defaultBlockState();
             case 23:
-                return 87;
+                return Blocks.NETHERRACK.defaultBlockState();
             case 24:
-                return 56;
+                return Blocks.DIAMOND_ORE.defaultBlockState();
             case 25:
-                return 89;
+                return Blocks.GLOWSTONE.defaultBlockState();
             case 26:
-                return 98;
+                return Blocks.STONE_BRICKS.defaultBlockState();
             case 27:
-                return 112;
+                return Blocks.NETHER_BRICKS.defaultBlockState();
             default:
-                return 2;
+                return Blocks.GRASS_BLOCK.defaultBlockState();
         }
     }
 
