@@ -1,10 +1,9 @@
-package drzhark.mocreatures.command;
+package drzhark.mocreatures.network.command;
 
 import drzhark.mocreatures.MoCreatures;
-import drzhark.mocreatures.network.command.CommandMoCPets;
-import drzhark.mocreatures.network.command.CommandMoCSpawn;
-import drzhark.mocreatures.network.command.CommandMoCTP;
-import drzhark.mocreatures.network.command.CommandMoCreatures;
+import drzhark.mocreatures.network.command.multision.CommandSpawnMoCHorse;
+import drzhark.mocreatures.network.command.multision.MoCDebugSpawnCommand;
+import drzhark.mocreatures.network.command.multision.ReloadSpawnConfigCommand;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -29,10 +28,14 @@ public class MoCCommandHandler {
             // Register commands from the network/command package
             LOGGER.info("Registering MoCreatures commands");
             
-            // Legacy/old commands that have been updated
-            MoCWyvernCommand.register(dispatcher);
-            CommandSpawnMoCHorse.register(dispatcher);
+            // Main MoCreatures commands
+            CommandMoCreatures.register(dispatcher);
+            CommandMoCPets.register(dispatcher);
+            CommandMoCSpawn.register(dispatcher);
+            CommandMoCTP.register(dispatcher);
 
+            // Commands brought over from 1.16.5 and new to 1.20.1 (Mainly for debugging)
+            CommandSpawnMoCHorse.register(dispatcher);
             ReloadSpawnConfigCommand.register(dispatcher);
             
             // Debug commands

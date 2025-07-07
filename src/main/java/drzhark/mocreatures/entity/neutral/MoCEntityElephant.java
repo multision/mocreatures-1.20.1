@@ -372,7 +372,7 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
                 // Handle different chest configurations
                 if (getStorage() == 1) {
                     player.openMenu(new SimpleMenuProvider(
-                        (id, inventory, p) -> ChestMenu.threeRows(id, inventory, this.localelephantchest),
+                        (id, inventory, p) -> new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x2, id, inventory, this.localelephantchest, 2),
                         Component.translatable("container.elephant_chest")
                     ));
                 } else if (getStorage() == 2) {

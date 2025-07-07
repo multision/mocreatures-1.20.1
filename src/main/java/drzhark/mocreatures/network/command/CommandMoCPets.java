@@ -6,6 +6,8 @@ package drzhark.mocreatures.network.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import drzhark.mocreatures.MoCreatures;
+import drzhark.mocreatures.entity.tameable.IMoCTameable;
+import drzhark.mocreatures.entity.tameable.MoCPetData;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.nbt.CompoundTag;
@@ -20,13 +22,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class CommandMoCPets {
-
-    /*
-    private static final List<String> commands = new ArrayList<>();
-
-    static {
-        commands.add("/mocpets");
-    }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("mocpets")
@@ -77,7 +72,6 @@ public class CommandMoCPets {
             // Search for unloaded tamed entities
             MoCPetData ownerPetData = MoCreatures.instance.mapData.getPetData(player.getUUID());
             if (ownerPetData != null) {
-                MoCreatures.instance.mapData.forceSave(); // Force save to get correct information
                 for (int i = 0; i < ownerPetData.getTamedList().size(); i++) {
                     CompoundTag nbt = ownerPetData.getTamedList().getCompound(i);
                     if (nbt.contains("PetId") && !foundIds.contains(nbt.getInt("PetId"))) {
@@ -107,16 +101,20 @@ public class CommandMoCPets {
                 }
             }
             
+            final int finalLoadedCount = loadedCount;
+            final int finalUnloadedCount = unloadedCount;
+            final int finalTotalCount = ownerPetData != null ? ownerPetData.getTamedList().size() : 0;
+            
             if (tamedList.size() > 0) {
                 sendPageHelp(source, (byte) 10, tamedList, page);
-                source.sendSuccess(() -> Component.literal("Loaded tamed count: " + loadedCount + 
-                        ", Unloaded count: " + unloadedCount + 
-                        ", Total count: " + (ownerPetData != null ? ownerPetData.getTamedList().size() : 0)), 
+                source.sendSuccess(() -> Component.literal("Loaded tamed count: " + finalLoadedCount + 
+                        ", Unloaded count: " + finalUnloadedCount + 
+                        ", Total count: " + finalTotalCount), 
                         false);
             } else {
-                source.sendSuccess(() -> Component.literal("Loaded tamed count: " + loadedCount + 
-                        (MoCreatures.isServer() ? "" : ", Unloaded Count: " + unloadedCount + 
-                        ", Total count: " + (loadedCount + unloadedCount))),
+                source.sendSuccess(() -> Component.literal("Loaded tamed count: " + finalLoadedCount + 
+                        ", Unloaded Count: " + finalUnloadedCount + 
+                        ", Total count: " + (finalLoadedCount + finalUnloadedCount)),
                         false);
             }
             
@@ -130,13 +128,13 @@ public class CommandMoCPets {
     
     private static void sendPageHelp(CommandSourceStack sender, byte pageLimit, ArrayList<String> list, int page) {
         int totalPages = (list.size() - 1) / pageLimit;
-        page = Math.max(0, Math.min(page - 1, totalPages));
+        final int finalPage = Math.max(0, Math.min(page - 1, totalPages));
         
-        int start = page * pageLimit;
-        int end = Math.min((page + 1) * pageLimit, list.size());
+        int start = finalPage * pageLimit;
+        int end = Math.min((finalPage + 1) * pageLimit, list.size());
         
         sender.sendSuccess(() -> Component.literal("--- Showing MoCreatures Help Info " + 
-                (page + 1) + " of " + (totalPages + 1) + " (/mocpets <page>) ---"), 
+                (finalPage + 1) + " of " + (totalPages + 1) + " (/mocpets <page>) ---"), 
                 false);
         
         for (int i = start; i < end; i++) {
@@ -144,6 +142,4 @@ public class CommandMoCPets {
             sender.sendSuccess(() -> Component.literal(tamedInfo), false);
         }
     }
-
-     */
 }

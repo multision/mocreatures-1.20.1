@@ -574,7 +574,7 @@ public class MoCEntityWyvern extends MoCEntityTameableAnimal {
             }
             if (!this.level().isClientSide()) {
                 player.openMenu(new SimpleMenuProvider(
-                    (id, inventory, p) -> ChestMenu.threeRows(id, inventory, this.localchest),
+                    (id, inventory, p) -> new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x1, id, inventory, this.localchest, 1),
                     Component.translatable("container.wyvern_chest")
                 ));
             }

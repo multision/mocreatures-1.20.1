@@ -1,4 +1,4 @@
-package drzhark.mocreatures.command;
+package drzhark.mocreatures.network.command.multision;
 
 import java.util.Arrays;
 import java.util.Collection;

@@ -22,6 +22,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.util.ITeleporter;
+
+import java.util.function.Function;
 
 @SuppressWarnings("removal")
 public class CommandMoCTP {
@@ -104,9 +107,10 @@ public class CommandMoCTP {
                         if (entity.level().dimension() == player.level().dimension()) {
                             entity.setPos(player.getX(), player.getY(), player.getZ());
                         } else if (!player.level().isClientSide()) {
-                            // This needs a proper implementation to transfer entity across dimensions
-                            // In modern Forge we can use Entity.changeDimension() method
-                            //MoCTools.teleportEntity(entity, player.serverLevel(), player.getX(), player.getY(), player.getZ());
+                            // Cross-dimension teleportation using changeDimension
+                            ServerLevel targetLevel = player.serverLevel();
+                            entity.changeDimension(targetLevel, new PetTeleporter(
+                                player.getX(), player.getY(), player.getZ()));
                         }
                         
                         source.sendSuccess(() -> Component.literal(name + 
@@ -119,5 +123,29 @@ public class CommandMoCTP {
             }
         }
         return false;
+    }
+
+    /**
+     * Simple teleporter implementation for cross-dimension pet teleportation
+     */
+    private static class PetTeleporter implements ITeleporter {
+        private final double x, y, z;
+        
+        public PetTeleporter(double x, double y, double z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+        
+        @Override
+        public Entity placeEntity(Entity entity, ServerLevel currentWorld, ServerLevel destWorld, 
+                                  float yaw, Function<Boolean, Entity> repositionEntity) {
+            Entity newEntity = repositionEntity.apply(false);
+            if (newEntity != null) {
+                newEntity.setPos(x, y, z);
+                newEntity.setYRot(yaw);
+            }
+            return newEntity;
+        }
     }
 }

@@ -18,17 +18,11 @@ import java.util.List;
 
 public class CommandMoCreatures {
 
-    /*private static final List<String> commands = new ArrayList<>();
-    private static final List<String> aliases = new ArrayList<>();
-    private static final List<String> tabCompletionStrings = new ArrayList<>();
+    private static final List<String> commands = new ArrayList<>();
 
     static {
-        commands.add("/moc attackdolphins <boolean>");
         commands.add("/moc attackhorses <boolean>");
         commands.add("/moc attackwolves <boolean>");
-        commands.add("/moc canspawn <boolean>");
-        commands.add("/moc caveogrechance <float>");
-        commands.add("/moc caveogrestrength <float>");
         commands.add("/moc debug <boolean>");
         commands.add("/moc destroydrops <boolean>");
         commands.add("/moc enablehunters <boolean>");
@@ -36,66 +30,16 @@ public class CommandMoCreatures {
         commands.add("/moc elephantbulldozer <boolean>");
         commands.add("/moc enableownership <boolean>");
         commands.add("/moc enableresetownerscroll <boolean>");
-        commands.add("/moc fireogrechance <int>");
-        commands.add("/moc fireogrestrength <float>");
-        commands.add("/moc frequency <entity> <int>");
         commands.add("/moc golemdestroyblocks <boolean>");
-        commands.add("/moc tamed");
-        commands.add("/moc tamed <playername>");
-        commands.add("/moc maxchunk <entity> <int>");
-        commands.add("/moc maxspawn <entity> <int>");
-        commands.add("/moc maxtamedperop <int>");
-        commands.add("/moc maxtamedperplayer <int>");
-        commands.add("/moc minspawn <entity> <int>");
-        commands.add("/moc motherwyverneggdropchance <int>");
         commands.add("/moc ogreattackrange <int>");
         commands.add("/moc ogrestrength <float>");
         commands.add("/moc ostricheggdropchance <int>");
         commands.add("/moc rareitemdropchance <int>");
-        commands.add("/moc spawnhorse <int>");
-        commands.add("/moc spawnwyvern <int>");
-        commands.add("/moc tamedcount <playername>");
-        commands.add("/moc tp <petid> <playername>");
-        commands.add("/moc <command> value");
+        commands.add("/moc maxtamedperop <int>");
+        commands.add("/moc maxtamedperplayer <int>");
+        commands.add("/moc motherwyverneggdropchance <int>");
         commands.add("/moc wyverneggdropchance <int>");
-        commands.add("/moc zebrachance <int>");
-        
-        aliases.add("moc");
-        
-        tabCompletionStrings.add("attackdolphins");
-        tabCompletionStrings.add("attackhorses");
-        tabCompletionStrings.add("attackwolves");
-        tabCompletionStrings.add("canspawn");
-        tabCompletionStrings.add("caveogrechance");
-        tabCompletionStrings.add("caveogrestrength");
-        tabCompletionStrings.add("debug");
-        tabCompletionStrings.add("destroydrops");
-        tabCompletionStrings.add("easybreeding");
-        tabCompletionStrings.add("elephantbulldozer");
-        tabCompletionStrings.add("enableownership");
-        tabCompletionStrings.add("enableresetownerscroll");
-        tabCompletionStrings.add("fireogrechance");
-        tabCompletionStrings.add("fireogrestrength");
-        tabCompletionStrings.add("forcedespawns");
-        tabCompletionStrings.add("frequency");
-        tabCompletionStrings.add("golemdestroyblocks");
-        tabCompletionStrings.add("tamed");
-        tabCompletionStrings.add("maxchunk");
-        tabCompletionStrings.add("maxspawn");
-        tabCompletionStrings.add("maxtamedperop");
-        tabCompletionStrings.add("maxtamedperplayer");
-        tabCompletionStrings.add("minspawn");
-        tabCompletionStrings.add("motherwyverneggdropchance");
-        tabCompletionStrings.add("ogreattackrange");
-        tabCompletionStrings.add("ogreattackstrength");
-        tabCompletionStrings.add("ostricheggdropchance");
-        tabCompletionStrings.add("rareitemdropchance");
-        tabCompletionStrings.add("spawnhorse");
-        tabCompletionStrings.add("spawnwyvern");
-        tabCompletionStrings.add("tamedcount");
-        tabCompletionStrings.add("tp");
-        tabCompletionStrings.add("wyverneggdropchance");
-        tabCompletionStrings.add("zebrachance");
+        commands.add("/moc help");
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -104,7 +48,7 @@ public class CommandMoCreatures {
             .requires(source -> source.hasPermission(2));
             
         // Boolean settings
-        for (String setting : List.of("attackdolphins", "attackhorses", "attackwolves", "canspawn", 
+        for (String setting : List.of("attackhorses", "attackwolves", 
                 "debug", "destroydrops", "enablehunters", "easybreeding", "elephantbulldozer", 
                 "enableownership", "enableresetownerscroll", "golemdestroyblocks")) {
             mocCommand.then(Commands.literal(setting)
@@ -118,21 +62,19 @@ public class CommandMoCreatures {
         }
         
         // Float settings
-        for (String setting : List.of("caveogrechance", "caveogrestrength", "fireogrestrength", "ogrestrength")) {
-            mocCommand.then(Commands.literal(setting)
-                .then(Commands.argument("value", FloatArgumentType.floatArg(0))
-                    .executes(context -> {
-                        float value = FloatArgumentType.getFloat(context, "value");
-                        return setFloatSetting(context.getSource(), setting, value);
-                    })
-                )
-            );
-        }
+        mocCommand.then(Commands.literal("ogrestrength")
+            .then(Commands.argument("value", FloatArgumentType.floatArg(0))
+                .executes(context -> {
+                    float value = FloatArgumentType.getFloat(context, "value");
+                    return setFloatSetting(context.getSource(), "ogrestrength", value);
+                })
+            )
+        );
         
         // Integer settings
-        for (String setting : List.of("fireogrechance", "motherwyverneggdropchance", "ogreattackrange", 
+        for (String setting : List.of("ogreattackrange", 
                 "ostricheggdropchance", "rareitemdropchance", "maxtamedperop", "maxtamedperplayer",
-                "wyverneggdropchance", "zebrachance")) {
+                "motherwyverneggdropchance", "wyverneggdropchance")) {
             mocCommand.then(Commands.literal(setting)
                 .then(Commands.argument("value", IntegerArgumentType.integer(0))
                     .executes(context -> {
@@ -143,22 +85,7 @@ public class CommandMoCreatures {
             );
         }
         
-        // Entity-specific settings
-        for (String setting : List.of("frequency", "maxchunk", "maxspawn", "minspawn")) {
-            mocCommand.then(Commands.literal(setting)
-                .then(Commands.argument("entity", StringArgumentType.word())
-                    .then(Commands.argument("value", IntegerArgumentType.integer(0))
-                        .executes(context -> {
-                            String entity = StringArgumentType.getString(context, "entity");
-                            int value = IntegerArgumentType.getInteger(context, "value");
-                            return setEntitySetting(context.getSource(), setting, entity, value);
-                        })
-                    )
-                )
-            );
-        }
-        
-        // Special commands
+        // Help command
         mocCommand.then(Commands.literal("help")
             .executes(context -> {
                 return showHelp(context.getSource());
@@ -179,22 +106,57 @@ public class CommandMoCreatures {
     
     private static int setBooleanSetting(CommandSourceStack source, String setting, boolean value) {
         try {
-            MoCConfig config = MoCreatures.proxy.getConfig();
             boolean result = false;
             
-            // This is a simplified version - will need proper implementation
             switch (setting) {
                 case "debug":
                     MoCreatures.proxy.debug = value;
                     result = true;
                     break;
-                // Add other cases for the other boolean settings
+                case "attackhorses":
+                    MoCreatures.proxy.attackHorses = value;
+                    result = true;
+                    break;
+                case "attackwolves":
+                    MoCreatures.proxy.attackWolves = value;
+                    result = true;
+                    break;
+                case "destroydrops":
+                    MoCreatures.proxy.destroyDrops = value;
+                    result = true;
+                    break;
+                case "enablehunters":
+                    MoCreatures.proxy.enableHunters = value;
+                    result = true;
+                    break;
+                case "easybreeding":
+                    MoCreatures.proxy.easyHorseBreeding = value;
+                    result = true;
+                    break;
+                case "elephantbulldozer":
+                    MoCreatures.proxy.elephantBulldozer = value;
+                    result = true;
+                    break;
+                case "enableownership":
+                    MoCreatures.proxy.enableOwnership = value;
+                    result = true;
+                    break;
+                case "enableresetownerscroll":
+                    MoCreatures.proxy.enableResetOwnership = value;
+                    result = true;
+                    break;
+                case "golemdestroyblocks":
+                    MoCreatures.proxy.golemDestroyBlocks = value;
+                    result = true;
+                    break;
                 default:
-                    source.sendFailure(Component.literal("Setting not implemented yet: " + setting));
+                    source.sendFailure(Component.literal("Unknown boolean setting: " + setting));
                     return 0;
             }
             
             if (result) {
+                // Save the configuration after changing it
+                MoCreatures.proxy.mocSettingsConfig.save();
                 source.sendSuccess(() -> Component.literal("Successfully set " + setting + " to " + value), true);
                 return 1;
             } else {
@@ -208,21 +170,84 @@ public class CommandMoCreatures {
     }
     
     private static int setFloatSetting(CommandSourceStack source, String setting, float value) {
-        // Placeholder for implementation
-        source.sendFailure(Component.literal("Setting not implemented yet: " + setting));
-        return 0;
+        try {
+            boolean result = false;
+            
+            switch (setting) {
+                case "ogrestrength":
+                    MoCreatures.proxy.ogreStrength = value;
+                    result = true;
+                    break;
+                default:
+                    source.sendFailure(Component.literal("Unknown float setting: " + setting));
+                    return 0;
+            }
+            
+            if (result) {
+                // Save the configuration after changing it
+                MoCreatures.proxy.mocSettingsConfig.save();
+                source.sendSuccess(() -> Component.literal("Successfully set " + setting + " to " + value), true);
+                return 1;
+            } else {
+                source.sendFailure(Component.literal("Failed to set " + setting));
+                return 0;
+            }
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("Error: " + e.getMessage()));
+            return 0;
+        }
     }
     
     private static int setIntSetting(CommandSourceStack source, String setting, int value) {
-        // Placeholder for implementation
-        source.sendFailure(Component.literal("Setting not implemented yet: " + setting));
-        return 0;
+        try {
+            boolean result = false;
+            
+            switch (setting) {
+                case "ogreattackrange":
+                    MoCreatures.proxy.ogreAttackRange = (short) value;
+                    result = true;
+                    break;
+                case "ostricheggdropchance":
+                    MoCreatures.proxy.ostrichEggDropChance = value;
+                    result = true;
+                    break;
+                case "rareitemdropchance":
+                    MoCreatures.proxy.rareItemDropChance = value;
+                    result = true;
+                    break;
+                case "maxtamedperop":
+                    MoCreatures.proxy.maxOPTamed = value;
+                    result = true;
+                    break;
+                case "maxtamedperplayer":
+                    MoCreatures.proxy.maxTamed = value;
+                    result = true;
+                    break;
+                case "motherwyverneggdropchance":
+                    MoCreatures.proxy.motherWyvernEggDropChance = value;
+                    result = true;
+                    break;
+                case "wyverneggdropchance":
+                    MoCreatures.proxy.wyvernEggDropChance = value;
+                    result = true;
+                    break;
+                default:
+                    source.sendFailure(Component.literal("Unknown integer setting: " + setting));
+                    return 0;
+            }
+            
+            if (result) {
+                // Save the configuration after changing it
+                MoCreatures.proxy.mocSettingsConfig.save();
+                source.sendSuccess(() -> Component.literal("Successfully set " + setting + " to " + value), true);
+                return 1;
+            } else {
+                source.sendFailure(Component.literal("Failed to set " + setting));
+                return 0;
+            }
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("Error: " + e.getMessage()));
+            return 0;
+        }
     }
-    
-    private static int setEntitySetting(CommandSourceStack source, String setting, String entity, int value) {
-        // Placeholder for implementation
-        source.sendFailure(Component.literal("Entity setting not implemented yet: " + setting + " for " + entity));
-        return 0;
-    }
-    */
 }

@@ -38,7 +38,7 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 0.5D, 120));
+        this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 0.15D, 120));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -66,11 +66,6 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
 
     public void setGlowing(boolean flag) {
         this.entityData.set(GLOWS, flag);
-    }
-
-    @Override
-    public float getSpeed() {
-        return 0.02F;
     }
 
     @Override

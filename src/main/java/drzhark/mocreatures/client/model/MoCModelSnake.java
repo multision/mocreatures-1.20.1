@@ -99,7 +99,7 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
         float fsep = -1.6F;
 
         for (int i = 0; i < BODY_PARTS; i++) {
-            // Determine “fport” fraction to decide width factor
+            // Determine "fport" fraction to decide width factor
             float fport = (i + 1F) / BODY_PARTS;
             float factor;
             if (fport < fsegm) {
@@ -116,13 +116,13 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
                 factor = -0.20F;       // back narrower
             }
 
-            // Alternate texture‐offset column (j = 0 or 4) every other segment
+            // Alternate texture-offset column (j = 0 or 4) every other segment
             int j = (i % 2 == 0) ? 0 : 4;
 
             // Compute flength for segment i
             float flength = (((BODY_PARTS / 2F) - i) * fsep);
 
-            // Create “bodySnake[i]”
+            // Create "bodySnake[i]"
             root.addOrReplaceChild(
                     "bodySnake" + i,
                     CubeListBuilder.create()
@@ -211,7 +211,7 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
                 PartPose.offset(0F, 23F, flengthHead)
         );
 
-        // “Wing” blocks appear on a cobra (type 6) — 5 pairs of blocks along segments 1–5
+        // "Wing" blocks appear on a cobra (type 6) — 5 pairs of blocks along segments 1–5
         // Wing1 at segment index 1:
         float z1 = (((BODY_PARTS / 2F) - 1) * fsep);
         root.addOrReplaceChild(
@@ -329,22 +329,29 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
         this.picked    = entity.pickedUp();
         this.limbSwing = limbSwing;
 
-        // HEAD pitch/yaw
+        // HEAD pitch/yaw - exactly like 1.16.5 setRotationAngles
         float rAX = headPitch / 57.29578F;
         float rAY = netHeadYaw / 57.29578F;
         this.head.xRot = rAX;
         this.head.yRot = rAY;
 
-        // Distribute head's pitch into the first five segments (X‐rot only)
+        // Distribute head's pitch/yaw into the first five segments - exactly like 1.16.5
         this.bodySnake[0].xRot = rAX * 0.95F;
         this.bodySnake[1].xRot = rAX * 0.90F;
         this.bodySnake[2].xRot = rAX * 0.85F;
         this.bodySnake[3].xRot = rAX * 0.80F;
         this.bodySnake[4].xRot = rAX * 0.75F;
 
+        this.bodySnake[0].yRot = 0.0F + (rAY * 0.85F);
+        this.bodySnake[1].yRot = 0.0F + (rAY * 0.65F);
+        this.bodySnake[2].yRot = 0.0F + (rAY * 0.45F);
+        this.bodySnake[3].yRot = 0.0F + (rAY * 0.25F);
+        this.bodySnake[4].yRot = 0.0F + (rAY * 0.10F);
+
         // Tongue flick offset
         float f8 = (Mth.cos(tongueOff * 10F) / 40F);
 
+        // Mouth/nose/tongue rotations - exactly like 1.16.5
         this.nose.xRot   = this.head.xRot - mouthOff;
         this.lNose.xRot  = this.head.xRot + mouthOff;
         this.tongue1.xRot = this.head.xRot + f8;
@@ -352,13 +359,6 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
         this.tongue0.xRot = this.lNose.xRot;
         this.teethUR.xRot = this.head.xRot - mouthOff;
         this.teethUL.xRot = this.head.xRot - mouthOff;
-
-        // Y‐rot distribution down first five segments
-        this.bodySnake[0].yRot = rAY * 0.85F;
-        this.bodySnake[1].yRot = rAY * 0.65F;
-        this.bodySnake[2].yRot = rAY * 0.45F;
-        this.bodySnake[3].yRot = rAY * 0.25F;
-        this.bodySnake[4].yRot = rAY * 0.10F;
 
         // Synchronize nose/tongue orientation to head
         this.nose.yRot    = this.head.yRot;
@@ -369,39 +369,37 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
         this.teethUR.yRot = this.head.yRot;
         this.teethUL.yRot = this.head.yRot;
 
-        // Cobra‐“wings” (type 6) simply copy segment rotations:
+        // Cobra-"wings" (type 6) - exactly like 1.16.5
         if (typeI == 6) {
-            // wing1 at segment 1
             this.wing1L.xRot = this.bodySnake[1].xRot;
             this.wing1L.yRot = this.bodySnake[1].yRot;
             this.wing1R.xRot = this.bodySnake[1].xRot;
             this.wing1R.yRot = this.bodySnake[1].yRot;
-            // wing2 at segment 2
+
             this.wing2L.xRot = this.bodySnake[2].xRot;
             this.wing2L.yRot = this.bodySnake[2].yRot;
             this.wing2R.xRot = this.bodySnake[2].xRot;
             this.wing2R.yRot = this.bodySnake[2].yRot;
-            // wing3 at segment 3
+
             this.wing3L.xRot = this.bodySnake[3].xRot;
             this.wing3L.yRot = this.bodySnake[3].yRot;
             this.wing3R.xRot = this.bodySnake[3].xRot;
             this.wing3R.yRot = this.bodySnake[3].yRot;
-            // wing4 at segment 4
+
             this.wing4L.xRot = this.bodySnake[4].xRot;
             this.wing4L.yRot = this.bodySnake[4].yRot;
             this.wing4R.xRot = this.bodySnake[4].xRot;
             this.wing4R.yRot = this.bodySnake[4].yRot;
-            // wing5 at segment 5
+
             this.wing5L.xRot = this.bodySnake[4].xRot;
             this.wing5L.yRot = this.bodySnake[4].yRot;
             this.wing5R.xRot = this.bodySnake[4].xRot;
             this.wing5R.yRot = this.bodySnake[4].yRot;
         }
 
-        // Rattlesnake tail‐lift (type 7)
+        // Rattlesnake tail-lift (type 7) - exactly like 1.16.5
         if (typeI == 7) {
             if (nearPlayer || rattleOff != 0.0F) {
-                // tail pitches upward toward player
                 this.tail.xRot = ((Mth.cos(netHeadYaw * 10F) * 20F) + 90F) / 57.29578F;
             } else {
                 this.tail.xRot = 0.0F;
@@ -410,7 +408,7 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
     }
 
     /**
-     * Main render loop: apply the same “push/pop” transforms that 1.16.5 did per‐segment, then render each piece.
+     * Main render loop: exact copy of 1.16.5 render method logic
      */
     @Override
     public void renderToBuffer(
@@ -423,15 +421,18 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
             float blue,
             float alpha
     ) {
-        // The 1.16.5 code used:
-        //   float A = 0.4F; float w = 1.5F; float t = limbSwing / 2;
-        //   float sidef = 0.5F * sin(w*t - 0.3F*i) - (movInt/20F)*sin(0.8F*t - 0.2F*i);
-        //   sidef *= sideperf;  translate(sidef, 0, 0), then render bodySnake[i], then head/nose/teeth/tongue if i==0,
-        //   then wings if type==6 & i in [1..5], then tail if type==7 & i==bodyparts-1.
-        //
-        // We'll replicate that exactly.
+        float sidef;
 
-        float A = 0.4F;
+        // Exact copy of 1.16.5 wave calculation comments and variables
+        // y = A * sin(w * t - k *x)
+        // w1 = speed of wave propagation +/- as needed
+        // t = time
+        // k = number of waves
+        // A = amplitude of wave (how much will it depart from center
+        // x = position? :)A 1.3k 0.5w -3.5
+
+        @SuppressWarnings("unused")
+        float A = 0.4F;//0.8F;
         float w = 1.5F;
         float t = this.limbSwing / 2F;
 
@@ -441,54 +442,71 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
 
             poseStack.pushPose();
 
-            // Resting animation: nothing special done (commented out in original)
+            // Exact copy of 1.16.5 animation logic
             if (this.isResting) {
-                // (No active transform was applied in 1.16.5; kept as placeholder.)
-            }
-            // Climbing animation on the front half
-            else if (this.climbing && i < BODY_PARTS / 2) {
-                yOff = (i - (BODY_PARTS / 2F)) * 0.08F;
-                poseStack.translate(0.0F, yOff / 3.0F, -yOff * 1.2F);
-            }
-            // Raise head if near player or picked up
-            else if ((this.nearPlayer || this.picked) && i < BODY_PARTS / 3) {
-                yOff = (i - (BODY_PARTS / 3F)) * 0.09F;
-                float zOff = (i - (BODY_PARTS / 3F)) * 0.065F;
-                poseStack.translate(0.0F, yOff / 1.5F, -zOff * this.f6);
+                // Exact copy of 1.16.5 resting logic (commented out)
+                /* if (i > (bodyparts/3) && (i <2*bodyparts/3)) {
+                       direction = -1;
+                   } else {
+                       direction = 1;
+                   }*/
 
-                if (i < BODY_PARTS / 6) {
-                    sideperf = 0.0F;
-                } else {
-                    sideperf = ((i - 7) / (BODY_PARTS / 3F));
-                    if (sideperf > 1.0F) {
-                        sideperf = 1.0F;
+                //this shortens the snake while resting
+                //TODO reactivate ?
+                //poseStack.translate(0.0F, 0.0F, -0.05F*i);
+            } else
+                //climbing animation - exact copy of 1.16.5
+                if (this.climbing && i < BODY_PARTS / 2) {
+                    yOff = (i - ((float) BODY_PARTS / 2)) * 0.08F;
+                    poseStack.translate(0.0F, yOff / 3.0F, -yOff * 1.2F);
+                } else
+                    //raises head of snakes near player - exact copy of 1.16.5
+                    if (this.nearPlayer || this.picked)//&& !(picked && fsize<0.6F))//&& !picked)
+                    {
+                        if (i < BODY_PARTS / 3) {
+                            yOff = (i - ((float) BODY_PARTS / 3)) * 0.09F;
+                            float zOff = (i - ((float) BODY_PARTS / 3)) * 0.065F;
+                            // if (picked) { yOff = yOff*-1F; //zOff = zOff*-1F; }
+                            poseStack.translate(0.0F, yOff / 1.5F, -zOff * this.f6);
+                        }
+
+                        if (i < BODY_PARTS / 6) {
+                            sideperf = 0.0F;
+                        } else {
+                            sideperf = ((i - 7) / (BODY_PARTS / 3F));
+                            if (sideperf > 1.0F) {
+                                sideperf = 1.0F;
+                            }
+                        }
                     }
-                }
-            }
 
-            // Raise tail of rattlesnakes when near player & not picked
-            if (this.typeI == 7 && this.nearPlayer && i > (5 * BODY_PARTS / 6) && !this.picked) {
-                yOff = 0.55F + ((i - BODY_PARTS) * 0.08F);
+            //raises tail of rattlesnakes - exact copy of 1.16.5
+            if (this.typeI == 7 && this.nearPlayer && i > (5 * BODY_PARTS / 6) && !this.picked)//&& not picked
+            {
+                yOff = 0.55F + ((i - BODY_PARTS)) * 0.08F;
                 poseStack.translate(0.0F, -yOff / 1.5F, 0.0F);
             }
 
-            // If “picked” and segment in back half, lift it slightly
-            if (this.picked && i > BODY_PARTS / 2) {
-                yOff = (i - (BODY_PARTS / 2F)) * 0.08F;
+            //TODO reactivate once strangling is working - exact copy of 1.16.5
+            if (this.picked && i > BODY_PARTS / 2)//&& big to bring down the tail
+            {
+                yOff = ((i - ((float) BODY_PARTS / 2))) * 0.08F;
                 poseStack.translate(0.0F, yOff / 1.5F, -yOff);
             }
 
-            // The main side‐to‐side wave:
+            // The main side-to-side wave - exact copy of 1.16.5
             {
-                float sidef = 0.5F * Mth.sin(w * t - 0.3F * i) - (movInt / 20F) * Mth.sin(0.8F * t - 0.2F * i);
-                sidef *= sideperf;
+                sidef = 0.5F * Mth.sin(w * t - 0.3F * i) - (this.movInt / 20F) * Mth.sin(0.8F * t - 0.2F * i);
+                sidef = sidef * sideperf;
+                //poseStack.translate(0.0F, 0.0F, -0.05F*i);
+
                 poseStack.translate(sidef, 0.0F, 0.0F);
             }
 
             // Render this body segment
             this.bodySnake[i].render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-            // i == 0 ⇒ also render head, nose, teeth, tongue
+            // i == 0 ⇒ also render head, nose, teeth, tongue - exact copy of 1.16.5
             if (i == 0) {
                 this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                 this.nose.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
@@ -496,7 +514,7 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
                 this.teethUR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                 this.teethUL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
-                // Tongue logic:
+                // Tongue logic - exact copy of 1.16.5
                 if (this.tongueOff != 0.0F) {
                     if (this.mouthOff != 0.0F || this.tongueOff < 2.0F || this.tongueOff > 7.0F) {
                         this.tongue1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
@@ -508,8 +526,9 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
                 }
             }
 
-            // Cobra “hood” wings (type 6), shown on segments 1..5
-            if (this.typeI == 6 && this.nearPlayer) {
+            //if cobra //() nearplayer && - exact copy of 1.16.5
+            if (this.typeI == 6 && this.nearPlayer)//cobra
+            {
                 if (i == 1) {
                     this.wing1L.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                     this.wing1R.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
@@ -532,7 +551,6 @@ public class MoCModelSnake<T extends MoCEntitySnake> extends EntityModel<T> {
                 }
             }
 
-            // Rattlesnake tail piece on last segment if type 7
             if (i == BODY_PARTS - 1 && this.typeI == 7) {
                 this.tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
             }

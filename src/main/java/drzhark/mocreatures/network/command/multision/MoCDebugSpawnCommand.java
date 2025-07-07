@@ -1,4 +1,4 @@
-package drzhark.mocreatures.command;
+package drzhark.mocreatures.network.command.multision;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;

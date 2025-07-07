@@ -1544,8 +1544,27 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
             if (this.localChest == null) this.localChest = new MoCAnimalChest("HorseChest", getInventorySize());
             // only open this chest on server side
             if (!this.level().isClientSide) {
+                MoCAnimalChest.Size chestSize = this.localChest.getSize();
                 player.openMenu(new SimpleMenuProvider(
-                    (id, inventory, p) -> ChestMenu.threeRows(id, inventory, this.localChest),
+                    (id, inventory, p) -> {
+                        // Use the appropriate ChestMenu constructor based on chest size
+                        switch (chestSize) {
+                            case tiny:
+                                return new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x1, id, inventory, this.localChest, 1);
+                            case small:
+                                return new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x2, id, inventory, this.localChest, 2);
+                            case medium:
+                                return new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x3, id, inventory, this.localChest, 3);
+                            case large:
+                                return new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x4, id, inventory, this.localChest, 4);
+                            case huge:
+                                return new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x5, id, inventory, this.localChest, 5);
+                            case gigantic:
+                                return new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x6, id, inventory, this.localChest, 6);
+                            default:
+                                return new ChestMenu(net.minecraft.world.inventory.MenuType.GENERIC_9x3, id, inventory, this.localChest, 3);
+                        }
+                    },
                     Component.translatable("container.horse_chest")
                 ));
             }
