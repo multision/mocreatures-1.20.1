@@ -1203,17 +1203,26 @@ public class MoCTools {
         throwStone(throwerEntity, (int) targetEntity.getX(), (int) targetEntity.getY(), (int) targetEntity.getZ(), state, speedMod, height);
     }
 
-    public static void throwStone(Entity throwerEntity, int x, int y, int z, BlockState state, double speedMod, double height) {
-        MoCEntityThrowableRock etrock = MoCEntityThrowableRock.build(throwerEntity.level(), throwerEntity, throwerEntity.getX(), throwerEntity.getY() + 0.5D, throwerEntity.getZ());
-        throwerEntity.level().addFreshEntity(etrock);
+    public static void throwStone(Entity throwerEntity, double x, double y, double z, BlockState state, double speedMod, double height) {
+        MoCEntityThrowableRock etrock = MoCEntityThrowableRock.build(
+            throwerEntity.level(), throwerEntity, 
+            throwerEntity.getX(), throwerEntity.getY() + 0.5D, throwerEntity.getZ()
+        );
+        if (etrock == null) return;
+    
         etrock.setState(state);
         etrock.setBehavior(0);
-
+        etrock.setNoGravity(false);
+    
         double dx = (x - throwerEntity.getX()) / speedMod;
         double dy = (y - throwerEntity.getY()) / speedMod + height;
         double dz = (z - throwerEntity.getZ()) / speedMod;
         etrock.setDeltaMovement(dx, dy, dz);
+        etrock.hasImpulse = true;
+    
+        throwerEntity.level().addFreshEntity(etrock);
     }
+    
 
     /**
      * Calculates the moving speed of the entity

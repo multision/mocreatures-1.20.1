@@ -10,6 +10,7 @@ import drzhark.mocreatures.init.MoCEntities;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -44,7 +45,7 @@ public class MoCEntityThrowableRock extends Entity implements IEntityAdditionalS
 
     public MoCEntityThrowableRock(EntityType<? extends MoCEntityThrowableRock> type, Level world) {
         super(type, world);
-        this.noPhysics = true;
+        this.noPhysics = false;
     }
 
     public static MoCEntityThrowableRock build(Level world, Entity entitythrower, double posX, double posY, double posZ) {
@@ -211,6 +212,26 @@ public class MoCEntityThrowableRock extends Entity implements IEntityAdditionalS
             double explodingSpeed = this.acceleration / 5;
             this.setDeltaMovement(this.getDeltaMovement().x / explodingSpeed, this.getDeltaMovement().y / explodingSpeed, this.getDeltaMovement().z / explodingSpeed);
         }
+
+        if (getBehavior() == 0) {
+            // Simulate projectile gravity and slowdown
+            Vec3 motion = this.getDeltaMovement();
+        
+            // Apply gravity
+            if (!this.isNoGravity()) {
+                motion = motion.add(0.0D, -0.04D, 0.0D);
+            }
+        
+            // Apply friction
+            motion = motion.scale(0.98F); // basic air drag
+        
+            // Apply to entity
+            this.setDeltaMovement(motion);
+        
+            // Move by updated motion
+            this.move(MoverType.SELF, motion);
+        }
+        
 
         this.move(MoverType.SELF, this.getDeltaMovement());
     }
