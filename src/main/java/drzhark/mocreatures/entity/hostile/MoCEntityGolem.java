@@ -42,10 +42,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -215,22 +217,35 @@ public class MoCEntityGolem extends MoCEntityMob {
     protected void acquireRock(int type) {
         if (this.level().isClientSide()) return;
 
-        BlockPos blockPos = MoCTools.getRandomSurfaceBlockPos(this, 12);
-        BlockState blockState = this.level().getBlockState(blockPos);
-        Block block = blockState.getBlock();
-
+        BlockPos blockPos = this.blockPosition(); // default to golem position
+        BlockState blockState = returnRandomCheapBlock(); // default to cheap block
         boolean canDestroyBlock = MoCTools.mobGriefing(this.level()) && MoCreatures.proxy.golemDestroyBlocks;
-        if (block instanceof AirBlock || blockState.getDestroySpeed(this.level(), blockPos) < 0 || blockState.getDestroySpeed(this.level(), blockPos) > 50)
-            canDestroyBlock = false; // skip air and unbreakable rocks
+        
         if (canDestroyBlock) {
-            BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(this.level(), blockPos, blockState, FakePlayerFactory.get((ServerLevel) this.level(), MoCreatures.MOCFAKEPLAYER));
-            if (!event.isCanceled()) this.level().destroyBlock(blockPos, false); // destroys the original rock
-        } else blockState = returnRandomCheapBlock(); // get cheap rocks
+            // Use our custom method that returns both position and state
+            Object[] result = destroyRandomBlockAndGetPosition(12D);
+            
+            if (result != null) {
+                // Block was successfully broken, use the exact position and state
+                blockPos = (BlockPos) result[0];
+                blockState = (BlockState) result[1];
+            } else {
+                canDestroyBlock = false;
+            }
+        }
+        
+        if (!canDestroyBlock) {
+            blockPos = this.blockPosition(); // use golem position as fallback
+            blockState = returnRandomCheapBlock(); // get cheap rocks
+        }
 
         MoCEntityThrowableRock tRock = MoCEntityThrowableRock.build(this.level(), this, blockPos.getX(), blockPos.getY() + 1, blockPos.getZ());
+        
+        // CRITICAL: Set state and behavior BEFORE adding to world so spawn packet has correct data
         tRock.setState(blockState);
         tRock.setBehavior(type); // 2: rock follows the golem / 3: rock gets around the golem
-        this.level().addFreshEntity(tRock); // spawns the new TRock
+        
+        this.level().addFreshEntity(tRock); // spawn with correct state already set
     }
 
     /**
@@ -248,6 +263,45 @@ public class MoCEntityGolem extends MoCEntityMob {
             default:
                 return Blocks.DIRT.defaultBlockState();
         }
+    }
+
+    /**
+     * Custom block breaking method for golem that returns both position and state
+     * Returns an array where [0] = BlockPos, [1] = BlockState, or null if no block found
+     */
+    @Nullable
+    private Object[] destroyRandomBlockAndGetPosition(double distance) {
+        int l = (int) (distance * distance * distance);
+        Level level = this.level();
+
+        for (int i = 0; i < l; i++) {
+            int x = (int) (this.getX() + level.random.nextInt((int) distance) - (distance / 2));
+            int y = (int) (this.getY() + level.random.nextInt((int) distance) - (distance / 2));
+            int z = (int) (this.getZ() + level.random.nextInt((int) distance) - (distance / 2));
+            BlockPos pos = new BlockPos(Mth.floor(x), Mth.floor(y), Mth.floor(z));
+            BlockState stateAbove = level.getBlockState(pos.above());
+            BlockState stateTarget = level.getBlockState(pos);
+
+            if (pos.getY() == (int) this.getY() - 1D && pos.getX() == Mth.floor(this.getX()) && pos.getZ() == Mth.floor(this.getZ())) {
+                continue;
+            }
+
+            if (!stateTarget.isAir() && stateTarget.getBlock() != Blocks.WATER && stateTarget.getBlock() != Blocks.BEDROCK && stateAbove.isAir()) {
+                if (MoCTools.mobGriefing(level)) {
+                    BlockEvent.BreakEvent event = null;
+                    if (!level.isClientSide) {
+                        event = new BlockEvent.BreakEvent(level, pos, stateTarget, FakePlayerFactory.get((ServerLevel) level, MoCreatures.MOCFAKEPLAYER));
+                    }
+                    if (event != null && !event.isCanceled()) {
+                        level.removeBlock(pos, false);
+                        // Return both position and state
+                        return new Object[]{pos, stateTarget};
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -269,6 +323,7 @@ public class MoCEntityGolem extends MoCEntityMob {
                     ItemEntity entityitem = new ItemEntity(this.level(), this.getX(), this.getY(), this.getZ(), new ItemStack(state.getBlock(), 1));
                     entityitem.setDefaultPickUpDelay();
                     entityitem.lifespan = 1200;
+                    this.level().addFreshEntity(entityitem);
                 }
             }
         }
@@ -464,7 +519,7 @@ public class MoCEntityGolem extends MoCEntityMob {
      */
     public void saveGolemCube(byte slot, byte value) {
         this.golemCubes[slot] = value;
-        if (!this.level().isClientSide()) {
+        if (!this.level().isClientSide() && MoCreatures.proxy.worldInitDone) {
             MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with( () -> new PacketDistributor.TargetPoint(this.getX(), this.getY(), this.getZ(), 64, this.level().dimension())), new MoCMessageTwoBytes(this.getId(), slot, value));
         }
     }

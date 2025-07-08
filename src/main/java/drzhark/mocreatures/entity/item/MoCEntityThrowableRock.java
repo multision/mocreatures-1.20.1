@@ -109,8 +109,7 @@ public class MoCEntityThrowableRock extends Entity implements IEntityAdditionalS
         nbttagcompound = MoCTools.getEntityData(this);
         setBehavior(nbttagcompound.getInt("Behavior"));
         setMasterID(nbttagcompound.getInt("MasterID"));
-        BlockState iblockstate;
-        iblockstate = Block.stateById(nbttagcompound.getShort("BlockID") & 65535);
+        BlockState iblockstate = Block.stateById(nbttagcompound.getShort("BlockID") & 65535);
         this.setState(iblockstate);
     }
 
