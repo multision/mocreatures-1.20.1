@@ -139,7 +139,7 @@ public class MoCreatures {
      * Set debug mode
      */
     public static void setDebug(boolean debug) {
-        debug = debug;
+        MoCreatures.debug = debug;
         if (debug) {
             LOGGER.info("Mo'Creatures debug mode enabled");
         }

@@ -34,6 +34,11 @@ public class MoCDebugSpawnCommand {
                             .executes(MoCDebugSpawnCommand::testSpawn)))
                     .then(Commands.literal("check")
                         .executes(MoCDebugSpawnCommand::checkSpawnConditions)))
+                .then(Commands.literal("debug")
+                    .then(Commands.literal("on")
+                        .executes(MoCDebugSpawnCommand::enableDebug))
+                    .then(Commands.literal("off")
+                        .executes(MoCDebugSpawnCommand::disableDebug)))
         );
     }
 
@@ -175,18 +180,29 @@ public class MoCDebugSpawnCommand {
         Holder<net.minecraft.world.level.biome.Biome> biome = level.getBiome(pos);
         net.minecraft.world.level.biome.MobSpawnSettings spawnSettings = biome.value().getMobSettings();
         
-        java.util.List<net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData> creatures = 
-            spawnSettings.getMobs(net.minecraft.world.entity.MobCategory.CREATURE).unwrap();
-            
         final int[] mocCreatureCount = {0};
-        for (net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData spawner : creatures) {
-            String entityName = spawner.type.getDescriptionId();
-            if (entityName.contains("mocreatures")) {
-                mocCreatureCount[0]++;
-                final String finalEntityName = entityName;
-                final int finalWeight = spawner.getWeight().asInt();
-                source.sendSuccess(() -> Component.literal("Found MoCreatures spawn: " + finalEntityName + 
-                    " (weight: " + finalWeight + ")"), false);
+        
+        // Check all mob categories
+        for (net.minecraft.world.entity.MobCategory category : net.minecraft.world.entity.MobCategory.values()) {
+            java.util.List<net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData> spawners = 
+                spawnSettings.getMobs(category).unwrap();
+            
+            if (!spawners.isEmpty()) {
+                boolean foundMocInCategory = false;
+                for (net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData spawner : spawners) {
+                    String entityName = spawner.type.getDescriptionId();
+                    if (entityName.contains("mocreatures")) {
+                        if (!foundMocInCategory) {
+                            final String finalCategoryName = category.getName();
+                            source.sendSuccess(() -> Component.literal("=== " + finalCategoryName.toUpperCase() + " Category ==="), false);
+                            foundMocInCategory = true;
+                        }
+                        mocCreatureCount[0]++;
+                        final String finalEntityName = entityName;
+                        final int finalWeight = spawner.getWeight().asInt();
+                        source.sendSuccess(() -> Component.literal("  " + finalEntityName + " (weight: " + finalWeight + ")"), false);
+                    }
+                }
             }
         }
         
@@ -202,6 +218,22 @@ public class MoCDebugSpawnCommand {
             source.sendSuccess(() -> Component.literal("⚠ Issue: No MoCreatures spawns found in this biome!"), false);
         }
         
+        return 1;
+    }
+    
+    private static int enableDebug(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        CommandSourceStack source = context.getSource();
+        MoCreatures.proxy.debug = true;
+        MoCreatures.setDebug(true);
+        source.sendSuccess(() -> Component.literal("Mo'Creatures debug mode enabled"), false);
+        return 1;
+    }
+    
+    private static int disableDebug(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        CommandSourceStack source = context.getSource();
+        MoCreatures.proxy.debug = false;
+        MoCreatures.setDebug(false);
+        source.sendSuccess(() -> Component.literal("Mo'Creatures debug mode disabled"), false);
         return 1;
     }
 } 

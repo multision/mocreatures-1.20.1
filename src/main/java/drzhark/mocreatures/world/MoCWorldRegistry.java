@@ -86,33 +86,57 @@ public class MoCWorldRegistry {
         String biomeName = biomeRL.toString();
         int spawnsAdded = 0;
         
+        // Debug: Check if this is a wyvern lair biome
+        boolean isWyvernLair = biomeName.contains("wyvernlair");
+        if (isWyvernLair && MoCreatures.proxy.debug) {
+            MoCreatures.LOGGER.info("Processing Wyvern Lair biome: {}", biomeName);
+        }
+        
         // Limit the number of spawn attempts to prevent excessive processing
-        int maxSpawnChecks = 50; // Reasonable limit to prevent server freeze
+        int maxSpawnChecks = 150; // Increased to accommodate all entities in cache (123+ entities)
         int spawnChecks = 0;
         
         // Only process entities that are actually in the cache and have valid spawn data
         for (Map.Entry<String, EntityType<?>> entry : MoCSpawnRegistryCache.ENTITIES.entrySet()) {
+            String creatureName = entry.getKey();
+            EntityType<?> entityType = entry.getValue();
+            
+            if (entityType == null) continue;
+            
+            // Quick pre-check: only do expensive processing if entity has spawn data
+            BiomeSpawnConfig.CreatureSpawnData spawnData = BiomeSpawnConfig.getSpawnData(creatureName);
+            if (spawnData == null || !spawnData.enabled || spawnData.weight <= 0) {
+                continue;
+            }
+            
             // Safety check to prevent infinite loops during world generation
             if (++spawnChecks > maxSpawnChecks) {
                 MoCreatures.LOGGER.warn("Reached maximum spawn checks ({}) for biome {}, stopping to prevent server freeze", maxSpawnChecks, biomeName);
                 break;
             }
             
-            String creatureName = entry.getKey();
-            EntityType<?> entityType = entry.getValue();
+            // Debug: Log for specific entities in wyvern lair
+            boolean isWyvernEntity = creatureName.equals("bunny") || creatureName.equals("snake") || 
+                                   creatureName.equals("filch_lizard") || creatureName.equals("wyvern") ||
+                                   creatureName.equals("firefly") || creatureName.equals("dragonfly") || 
+                                   creatureName.equals("grasshopper");
             
-            if (entityType == null) continue;
+            if (isWyvernLair && isWyvernEntity && MoCreatures.proxy.debug) {
+                MoCreatures.LOGGER.info("  Checking entity: {}", creatureName);
+            }
             
             try {
-                // Quick check for spawn data first - avoid expensive operations if not needed
-                BiomeSpawnConfig.CreatureSpawnData spawnData = BiomeSpawnConfig.getSpawnData(creatureName);
-                if (spawnData == null || !spawnData.enabled || spawnData.weight <= 0) {
+                // Only test biome if we have valid spawn data (already checked above)
+                if (!BiomeSpawnConfig.testBiome(creatureName, biome, biomeRL)) {
+                    if (isWyvernLair && isWyvernEntity && MoCreatures.proxy.debug) {
+                        MoCreatures.LOGGER.info("    Biome test failed for entity: {}", creatureName);
+                    }
                     continue;
                 }
                 
-                // Only test biome if we have valid spawn data
-                if (!BiomeSpawnConfig.testBiome(creatureName, biome, biomeRL)) {
-                    continue;
+                if (isWyvernLair && isWyvernEntity && MoCreatures.proxy.debug) {
+                    MoCreatures.LOGGER.info("    SUCCESS: Adding {} to spawn list with weight {}, category {}", 
+                        creatureName, spawnData.weight, spawnData.category);
                 }
                 
                 // Convert category string to MobCategory
@@ -131,14 +155,20 @@ public class MoCWorldRegistry {
                 spawnsAdded++;
                 
             } catch (Exception e) {
-                // Silent fail during world generation to prevent log spam
-                continue;
+                if (isWyvernLair && isWyvernEntity && MoCreatures.proxy.debug) {
+                    MoCreatures.LOGGER.error("    Exception processing entity {}: {}", creatureName, e.getMessage());
+                }
+                MoCreatures.LOGGER.debug("Error processing entity {} for biome {}: {}", creatureName, biomeName, e.getMessage());
             }
         }
         
-        // Only log if we actually added spawns, and only at debug level
+        if (isWyvernLair && MoCreatures.proxy.debug) {
+            MoCreatures.LOGGER.info("Finished processing Wyvern Lair biome: {} - Added {} spawns total", biomeName, spawnsAdded);
+        }
+        
+        // Early return if we're using the new system
         if (spawnsAdded > 0) {
-            MoCreatures.LOGGER.debug("Added {} MoCreatures spawns for biome {}", spawnsAdded, biomeName);
+            return;
         }
     }
     
