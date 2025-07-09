@@ -58,7 +58,7 @@ public class MoCConfig {
     
     // Magical creatures
     public static int entSpawnWeight = 5;
-    public static int wyvernSpawnWeight = 12;
+    public static int wyvernSpawnWeight = 16;
     
     // Monsters
     
