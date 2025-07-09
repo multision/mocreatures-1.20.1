@@ -340,28 +340,44 @@ public class MoCEntityGolem extends MoCEntityMob {
      */
     private void shootBlock(Entity entity) {
         if (entity == null) return;
-
+    
+        // Collect available arm cubes
         List<Integer> armBlocks = new ArrayList<>();
         for (int i = 9; i < 15; i++) {
             if (this.golemCubes[i] != 30) armBlocks.add(i);
         }
         if (armBlocks.isEmpty()) return;
-
-        int j = this.random.nextInt(armBlocks.size());
-        int i = armBlocks.get(j);
-        int x = i;
-
-        if (i == 9 || i == 12) {
-            if (this.golemCubes[i + 2] != 30) x = i + 2;
-            else if (this.golemCubes[i + 1] != 30) x = i + 1;
+    
+        // Pick a cube and resolve to the outermost available segment
+        int baseIndex = armBlocks.get(this.random.nextInt(armBlocks.size()));
+        int x = baseIndex;
+    
+        // Follow same logic as 1.16.5 — prefer deeper segments
+        if ((baseIndex == 9 || baseIndex == 12)) {
+            if (this.golemCubes[baseIndex + 2] != 30) {
+                x = baseIndex + 2;
+            } else if (this.golemCubes[baseIndex + 1] != 30) {
+                x = baseIndex + 1;
+            }
+        } else if ((baseIndex == 10 || baseIndex == 13) && this.golemCubes[baseIndex + 1] != 30) {
+            x = baseIndex + 1;
         }
-
-        if (this.golemCubes[i + 1] != 30 && (i == 10 || i == 13)) x = i + 1;
+    
+        if (this.golemCubes[x] == 30) return; // sanity check
+    
+        BlockState shootState = generateBlock(this.golemCubes[x]);
+    
+        // Throw with sound and state
         MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GOLEM_SHOOT.get(), 3F);
-        MoCTools.throwStone(this, entity, generateBlock(this.golemCubes[x]), 10D, 0.4D);
+        MoCTools.throwStone(this, entity, shootState, 10D, 0.3D);
+    
+        // Remove the thrown cube from the golem
         saveGolemCube((byte) x, (byte) 30);
+    
+        // Reset throw timer
         this.tCounter = 0;
     }
+    
 
     private boolean canShoot() {
         int x = 0;
