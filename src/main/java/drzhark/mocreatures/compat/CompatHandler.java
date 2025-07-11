@@ -19,7 +19,7 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = MoCConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CompatHandler {
 
-    static {
+    /*static {
         try {
             File file = new File(Minecraft.getInstance().gameDirectory, "config" + File.separator + "mia" + File.separator + "mocreatures.cfg");
             if (Files.exists(file.toPath())) {
@@ -65,7 +65,7 @@ public class CompatHandler {
             System.out.println("MIA config files modified successfully!");
         } catch (Exception ignored) {
         }
-    }
+    }*/
 
 //    @SubscribeEvent //TODO TheidenHD
 //    public static void registerRecipes(RegistryEvent.Register<IRecipe> event) {
