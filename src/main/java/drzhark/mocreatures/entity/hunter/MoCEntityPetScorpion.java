@@ -497,7 +497,7 @@ public class MoCEntityPetScorpion extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public boolean canBeCollidedWith() {
+    public boolean isPushable() {
         return !this.isVehicle();
     }
 

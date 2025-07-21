@@ -797,11 +797,6 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public boolean canBeCollidedWith() {
-        return !this.isVehicle();
-    }
-
-    @Override
     public double getPassengersRidingOffset() {
         double yOff = 0F;
         boolean sit = (this.sitCounter != 0);

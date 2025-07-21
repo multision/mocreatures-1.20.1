@@ -202,11 +202,6 @@ public class MoCEntityMole extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public boolean canBeCollidedWith() {
-        return (getState() != 2);
-    }
-
-    @Override
     public boolean isPushable() {
         return (getState() != 2);
     }

@@ -115,7 +115,7 @@ public class MoCEntityThrowableRock extends Entity implements IEntityAdditionalS
     }
 
     @Override
-    public boolean canBeCollidedWith() {
+    public boolean isPushable() {
         return !this.isRemoved();
     }
 

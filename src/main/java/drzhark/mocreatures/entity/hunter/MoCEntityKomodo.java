@@ -296,7 +296,7 @@ public class MoCEntityKomodo extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public boolean canBeCollidedWith() {
+    public boolean isPushable() {
         return !this.isVehicle();
     }
 

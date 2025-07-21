@@ -295,8 +295,13 @@ public class MoCEntityOstrich extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public boolean canBeCollidedWith() {
+    public boolean isPushable() {
         return !this.isVehicle();
+    }
+
+    @Override
+    public double getPassengersRidingOffset() {
+        return (this.getBbHeight() * 0.75D) - 0.4D;
     }
 
     @Override
