@@ -116,8 +116,6 @@ public class MoCreatures {
             debug = proxy.debug;
             LOGGER.info("Mo'Creatures debug mode: {}", debug);
             
-            MoCEventHooksTerrain.buildWorldGenSpawnLists();
-            
             // Initialize the POI registry
             MoCPOI.init();
         });
