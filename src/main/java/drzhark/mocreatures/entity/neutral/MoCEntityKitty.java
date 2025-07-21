@@ -47,6 +47,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -150,7 +151,8 @@ public class MoCEntityKitty extends MoCEntityTameableAnimal {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
-        switch (this.level().random.nextInt(3)) {
+        RandomSource random = worldIn.getRandom();
+        switch (random.nextInt(3)) {
             case 0: // NEUTRAL
                 setTemper(0);
                 break;
