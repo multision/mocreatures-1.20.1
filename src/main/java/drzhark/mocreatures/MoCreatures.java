@@ -76,7 +76,6 @@ public class MoCreatures {
         final IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         eventBus.addListener(this::setup);
         MinecraftForge.EVENT_BUS.register(new MoCEventHooks());
-        MinecraftForge.EVENT_BUS.register(new MoCEventHooksTerrain());
 
         // Register the Wyvern dimension handler
         MinecraftForge.EVENT_BUS.register(MoCWyvernDimensionHandler.class);

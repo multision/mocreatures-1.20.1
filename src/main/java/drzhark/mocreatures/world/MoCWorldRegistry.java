@@ -149,7 +149,7 @@ public class MoCWorldRegistry {
                 
                 // Add the spawn
                 builder.getMobSpawnSettings().getSpawner(category).add(
-                    new MobSpawnSettings.SpawnerData(entityType, spawnData.weight, spawnData.minCount, spawnData.maxCount)
+                    new MobSpawnSettings.SpawnerData(entityType, (int) (spawnData.weight * MoCreatures.proxy.spawnMultiplier), spawnData.minCount, spawnData.maxCount)
                 );
                 
                 spawnsAdded++;
