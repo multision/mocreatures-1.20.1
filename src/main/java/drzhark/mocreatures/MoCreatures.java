@@ -9,7 +9,6 @@ import drzhark.mocreatures.config.biome.BiomeSpawnConfig;
 import drzhark.mocreatures.entity.MoCEntityData;
 import drzhark.mocreatures.entity.tameable.MoCPetMapData;
 import drzhark.mocreatures.event.MoCEventHooks;
-import drzhark.mocreatures.event.MoCEventHooksTerrain;
 import drzhark.mocreatures.init.MoCBlocks;
 import drzhark.mocreatures.init.MoCCreativeTabs;
 import drzhark.mocreatures.init.MoCEntities;

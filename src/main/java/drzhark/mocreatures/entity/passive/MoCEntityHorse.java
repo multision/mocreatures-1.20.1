@@ -1688,7 +1688,7 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
 
     @Override
     public boolean isMovementCeased() {
-        return this.getIsSitting() || this.isVehicle() || this.standCounter != 0 || this.shuffleCounter != 0 || this.getVanishC() != 0;
+        return this.getIsSitting() || this.standCounter != 0 || this.shuffleCounter != 0 || this.getVanishC() != 0;
     }
 
     /**
@@ -1967,11 +1967,36 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
                 nightmareEffect();
 
             /*
-             * Buckling
+             * Buckling logic from 1.16.5 - not sure if it works
              */
             if ((this.sprintCounter > 0 && this.sprintCounter < 150) && isUnicorned() && this.isVehicle()) {
                 MoCTools.buckleMobs(this, 2D, this.level());
                 MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_HORSE_MAD.get());
+            }
+
+            // Bucking logic for untamed horses
+            if (this.isVehicle() && !this.getIsTamed()) {
+                Entity passenger = this.getFirstPassenger();
+                if (passenger instanceof Player) {
+                    // 1 in 50 chance per tick to buck off (adjust as desired)
+                    if (this.random.nextInt(50) == 0) {
+                        passenger.stopRiding();
+                        // Optionally, teleport the player a bit away to avoid remounting instantly
+                        double offsetX = this.random.nextGaussian() * 0.5D;
+                        double offsetZ = this.random.nextGaussian() * 0.5D;
+                        passenger.teleportTo(this.getX() + offsetX, this.getY() + 0.5D, this.getZ() + offsetZ);
+                        MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_HORSE_MAD.get());
+                        
+                        this.ejectPassengers();
+                        this.refreshDimensions();
+                        this.jumpFromGround();
+                    }
+                    // 1 in 400 chance per tick to tame (adjust as desired)
+                    if (this.random.nextInt(400) == 0) {
+                        MoCTools.tameWithName((Player) passenger, this);
+                        // Optionally, play a heart effect or sound
+                    }
+                }
             }
 
             if (isFlyer() && !getIsTamed() && this.random.nextInt(100) == 0 && !isMovementCeased() && !getIsSitting())
