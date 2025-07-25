@@ -11,12 +11,14 @@ import drzhark.mocreatures.entity.neutral.MoCEntityOstrich;
 import drzhark.mocreatures.entity.neutral.MoCEntityWyvern;
 import drzhark.mocreatures.entity.tameable.IMoCTameable;
 import drzhark.mocreatures.init.MoCEntities;
+import drzhark.mocreatures.init.MoCItems;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -26,6 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
+import net.minecraft.world.item.ItemStack;
 
 public class MoCEntityEgg extends Mob {
 
@@ -60,6 +63,29 @@ public class MoCEntityEgg extends Mob {
 
     public ResourceLocation getTexture() {
         return MoCreatures.proxy.getModelTexture("egg.png");
+    }
+
+    // Egg stealing logic
+    @Override
+    public void playerTouch(Player player) {
+        int type = this.eggType;
+        if (type == 30) {
+            type = 31;
+        }
+        
+        ItemStack eggStack = new ItemStack(MoCItems.MOC_EGG.get(), 1);
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("EggType", type);
+        eggStack.setTag(tag);
+
+        if (this.lCounter > 10 && player.getInventory().add(eggStack)) {
+
+            this.playSound(SoundEvents.ITEM_PICKUP, 0.2F, (this.random.nextFloat() - this.random.nextFloat()) * 0.7F + 1.0F);
+            if (!this.level().isClientSide) {
+                player.awardStat(Stats.ITEM_PICKED_UP.get(MoCItems.MOC_EGG.get()));
+                this.discard();
+            }
+        }
     }
 
     @Override

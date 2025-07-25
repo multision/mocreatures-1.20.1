@@ -1978,10 +1978,10 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
             if (this.isVehicle() && !this.getIsTamed()) {
                 Entity passenger = this.getFirstPassenger();
                 if (passenger instanceof Player) {
-                    // 1 in 50 chance per tick to buck off (adjust as desired)
+                    // 1 in 50 chance per tick to buck off (maybe add option to MoCSettings)
                     if (this.random.nextInt(50) == 0) {
                         passenger.stopRiding();
-                        // Optionally, teleport the player a bit away to avoid remounting instantly
+                        // Teleport the player a bit away to avoid remounting instantly
                         double offsetX = this.random.nextGaussian() * 0.5D;
                         double offsetZ = this.random.nextGaussian() * 0.5D;
                         passenger.teleportTo(this.getX() + offsetX, this.getY() + 0.5D, this.getZ() + offsetZ);
@@ -1991,10 +1991,10 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
                         this.refreshDimensions();
                         this.jumpFromGround();
                     }
-                    // 1 in 400 chance per tick to tame (adjust as desired)
+                    // 1 in 400 chance per tick to tame (maybe add option to MoCSettings)
                     if (this.random.nextInt(400) == 0) {
                         MoCTools.tameWithName((Player) passenger, this);
-                        // Optionally, play a heart effect or sound
+                        // Heart effect played in MoCTools.tameWithName
                     }
                 }
             }
