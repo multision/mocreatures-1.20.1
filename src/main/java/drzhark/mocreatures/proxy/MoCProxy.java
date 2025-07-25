@@ -742,7 +742,7 @@ public class MoCProxy {
         this.verboseEntityNames = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "VerboseEntityNames", false, "Enables displaying a verbose name of type on pets.").getBoolean(false);
         this.weaponEffects = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "WeaponEffects", true, "Applies weapon effects when attacking with silver weapons.").getBoolean(true);
         this.wyvernEggDropChance = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "WyvernEggDropChance", 5, "Percentage chance of a wyvern to drop an egg when killed.").getInt(5);
-        this.wyvernDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation("mocreatures:wyvernlair"));
+        this.wyvernDimension = ResourceKey.create(Registries.DIMENSION, new ResourceLocation("mocreatures:wyvernlairworld"));
 
         // Custom ID settings
         this.allowInstaSpawn = this.mocSettingsConfig.get(CATEGORY_MOC_ID_SETTINGS, "AllowInstaSpawn", false, "Used for debugging purposes.").getBoolean(false);

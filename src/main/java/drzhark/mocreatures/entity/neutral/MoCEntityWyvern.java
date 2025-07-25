@@ -62,6 +62,7 @@ import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 import java.util.Random;
+import net.minecraft.util.RandomSource;
 
 public class MoCEntityWyvern extends MoCEntityTameableAnimal {
 
@@ -144,7 +145,26 @@ public class MoCEntityWyvern extends MoCEntityTameableAnimal {
         return super.finalizeSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
     }
 
-    public static boolean getCanSpawnHere(EntityType<MoCEntityAnimal> type, LevelAccessor world, MobSpawnType reason, BlockPos pos, Random randomIn) {
+    public static boolean getCanSpawnHere(EntityType<MoCEntityWyvern> type, LevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource randomIn) {
+        if (reason == MobSpawnType.SPAWN_EGG) {
+            return true;
+        }
+        
+        // Check if we're in the wyvern dimension - if so, be more permissive
+        if (world instanceof ServerLevelAccessor serverLevel && 
+            serverLevel.getLevel().dimension().location().toString().contains("wyvernlairworld")) {
+            // In wyvern dimension, allow spawning on any solid block
+            BlockState iblockstate = world.getBlockState(pos.below());
+            boolean canSpawn = iblockstate.isValidSpawn(world, pos, type) && world.getBlockState(pos).isAir();
+            
+            if (MoCreatures.proxy.debug) {
+                MoCreatures.LOGGER.info("Wyvern spawn check in wyvern dimension at {}: {}", pos, canSpawn);
+            }
+            
+            return canSpawn;
+        }
+        
+        // For other dimensions, use standard animal spawn rules
         BlockState iblockstate = world.getBlockState(pos.below());
         return iblockstate.isValidSpawn(world, pos, type);
     }

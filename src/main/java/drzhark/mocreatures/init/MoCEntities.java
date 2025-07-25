@@ -567,8 +567,8 @@ public class MoCEntities {
                 (entityType, world, spawnType, pos, random) -> {
                     if (spawnType == MobSpawnType.SPAWN_EGG)
                         return true;
-                    // Use Wyvern's specific spawn method like in 1.16.5
-                    return MoCEntityAnimal.checkAnimalSpawnRules(entityType, world, spawnType, pos, random);
+                    // Use Wyvern's specific spawn method
+                    return MoCEntityWyvern.getCanSpawnHere(entityType, world, spawnType, pos, random);
                 });
 
         // ===== MONSTERS =====

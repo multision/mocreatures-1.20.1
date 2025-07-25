@@ -41,7 +41,7 @@ public class WyvernIslandFeature extends Feature<NoneFeatureConfiguration> {
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
         // Only generate in wyvern dimension
         ResourceKey<?> dimensionType = context.level().getLevel().dimension();
-        if (!dimensionType.location().toString().contains("wyvernlair")) {
+        if (!dimensionType.location().toString().contains("wyvernlairworld")) {
             return false;
         }
         

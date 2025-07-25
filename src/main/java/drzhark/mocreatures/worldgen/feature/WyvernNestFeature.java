@@ -54,7 +54,7 @@ public class WyvernNestFeature extends Feature<NoneFeatureConfiguration> {
         
         // Check dimension - allow both wyvern dimension and overworld
         ResourceKey<?> dimensionType = level.getLevel().dimension();
-        boolean isWyvernDimension = dimensionType.location().toString().contains("wyvernlair");
+        boolean isWyvernDimension = dimensionType.location().toString().contains("wyvernlairworld");
         
         if (MoCreatures.proxy.debug) {
             MoCreatures.LOGGER.info("Dimension check: " + dimensionType.location() + ", isWyvernDimension: " + isWyvernDimension);
