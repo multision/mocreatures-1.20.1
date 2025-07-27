@@ -83,7 +83,7 @@ public class MoCRendererRegistry {
         event.registerEntityRenderer(MoCEntities.EGG.get(), ctx ->
             new MoCRenderEgg(ctx, new MoCModelEgg<>(ctx.bakeLayer(MoCModelRegistry.EGG)), 0.0F));
         event.registerEntityRenderer(MoCEntities.KITTY.get(), ctx ->
-            new MoCRenderKitty(ctx, new MoCModelKitty<>(ctx.bakeLayer(MoCModelRegistry.KITTY), 0.0f, 15f), 0.4F));
+            new MoCRenderKitty(ctx, new MoCModelKitty<>(ctx.bakeLayer(MoCModelRegistry.KITTY)), 0.4F));
         event.registerEntityRenderer(MoCEntities.KITTY_BED.get(), ctx ->
             new MoCRenderKittyBed(ctx, 
                     new MoCModelKittyBed<>(ctx.bakeLayer(MoCModelRegistry.KITTY_BED)), 

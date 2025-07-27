@@ -32,8 +32,8 @@ public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
     public ModelPart leftLeg;
     
     // Store constructor params to pass to factory
-    private float inflation;
-    private float yOffset;
+    private static float inflation = 0.0F;
+    private static float yOffset = 15f;
 
     public static final ModelLayerLocation LAYER_LOCATION = 
         new ModelLayerLocation(new ResourceLocation("mocreatures", "kitty"), "main");
@@ -48,30 +48,13 @@ public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
     /**
      * Constructor matching original, delegates to createLayerDefinition
      */
-    public MoCModelKitty(float inflation) {
-        this(inflation, 0.0F);
-    }
-
-    /**
-     * Constructor matching original, stores parameters and loads model from ModelLayerLocation
-     */
-    public MoCModelKitty(float inflation, float yOffset) {
-        this.inflation = inflation;
-        this.yOffset = yOffset;
-        
+    public MoCModelKitty(float limbSwing) {
         // In a real implementation, this would be done via EntityRenderers.register
         // For now, we directly create the parts
-        ModelPart root = createBodyLayer(inflation, yOffset).bakeRoot();
+        ModelPart root = createBodyLayer().bakeRoot();
         setupParts(root);
     }
 
-    public MoCModelKitty(ModelPart root, float inflation, float yOffset) {
-        this.inflation = inflation;
-        this.yOffset = yOffset;
-        
-        setupParts(root);
-    }
-    
     /**
      * Constructor for use with EntityRendererProvider, loads from baked model
      */
@@ -107,88 +90,81 @@ public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
      * Static factory method for creating layer definition
      */
     public static LayerDefinition createBodyLayer() {
-        return createBodyLayer(0.0F, 0.0F);
-    }
-    
-    /**
-     * Creates model definition with inflation and yOffset matching the original constructor
-     */
-    public static LayerDefinition createBodyLayer(float inflation, float yOffset) {
         MeshDefinition meshdefinition = new MeshDefinition();
         PartDefinition partdefinition = meshdefinition.getRoot();
         
-        // Head parts
+        // Head parts - using original setRotationPoint values converted to PartPose
         partdefinition.addOrReplaceChild("head_0", 
             CubeListBuilder.create()
                 .texOffs(16, 0)
                 .addBox(-2F, -5F, -3F, 1, 1, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_1", 
             CubeListBuilder.create()
                 .texOffs(16, 0)
                 .mirror(true)
                 .addBox(1.0F, -5F, -3F, 1, 1, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_2", 
             CubeListBuilder.create()
                 .texOffs(20, 0)
                 .addBox(-2.5F, -4F, -3F, 2, 1, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_3", 
             CubeListBuilder.create()
                 .texOffs(20, 0)
                 .mirror(true)
                 .addBox(0.5F, -4F, -3F, 2, 1, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_4", 
             CubeListBuilder.create()
                 .texOffs(40, 0)
                 .addBox(-4F, -1.5F, -5F, 3, 3, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_5", 
             CubeListBuilder.create()
                 .texOffs(40, 0)
                 .mirror(true)
                 .addBox(1.0F, -1.5F, -5F, 3, 3, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_6", 
             CubeListBuilder.create()
                 .texOffs(21, 6)
                 .addBox(-1F, -1F, -5F, 2, 2, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_7", 
             CubeListBuilder.create()
                 .texOffs(50, 0)
                 .addBox(-2.5F, 0.5F, -1F, 5, 4, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_8", 
             CubeListBuilder.create()
                 .texOffs(60, 0)
                 .addBox(-1.5F, -2F, -4.1F, 3, 1, 1, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
         partdefinition.addOrReplaceChild("head_9", 
             CubeListBuilder.create()
                 .texOffs(1, 1)
                 .addBox(-2.5F, -3F, -4F, 5, 4, 4, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
-        // Body
+        // Body - using original setRotationPoint values
         partdefinition.addOrReplaceChild("body", 
             CubeListBuilder.create()
                 .texOffs(20, 0)
                 .addBox(-2.5F, -2F, -0F, 5, 5, 10, new CubeDeformation(inflation)),
-            PartPose.offset(0.0F, 0.0F + yOffset, -2F));
+            PartPose.offset(0.0F, yOffset, -2F));
             
-        // Arms
+        // Arms - using original setRotationPoint values
         partdefinition.addOrReplaceChild("right_arm", 
             CubeListBuilder.create()
                 .texOffs(0, 9)
@@ -202,7 +178,7 @@ public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
                 .addBox(-1F, 0.0F, -1F, 2, 6, 2, new CubeDeformation(inflation)),
             PartPose.offset(1.5F, 3F + yOffset, -1F));
             
-        // Legs
+        // Legs - using original setRotationPoint values
         partdefinition.addOrReplaceChild("right_leg", 
             CubeListBuilder.create()
                 .texOffs(8, 9)
@@ -216,7 +192,7 @@ public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
                 .addBox(-1F, 0.0F, -1F, 2, 6, 2, new CubeDeformation(inflation)),
             PartPose.offset(1.5F, 3F + yOffset, 7F));
             
-        // Tail
+        // Tail - using original setRotationPoint values
         partdefinition.addOrReplaceChild("tail", 
             CubeListBuilder.create()
                 .texOffs(16, 9)
@@ -237,33 +213,28 @@ public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
 
     @Override
     public void setupAnim(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        // Head rotation - using exact degree to radian conversion and limiting range
-        // Clamp values to reduce extreme head movements that cause jitter
-        float clampedYaw = Mth.clamp(netHeadYaw, -45.0F, 45.0F);
-        float clampedPitch = Mth.clamp(headPitch, -30.0F, 30.0F);
-        
-        // Convert to radians using precise conversion (π/180)
-        this.headParts[9].yRot = (float)(clampedYaw * Math.PI / 180.0);
-        this.headParts[9].xRot = (float)(clampedPitch * Math.PI / 180.0);
+        // Head rotation - using exact degree to radian conversion from original
+        this.headParts[9].yRot = netHeadYaw / 57.29578F;
+        this.headParts[9].xRot = headPitch / 57.29578F;
         
         for (int i = 0; i < 9; i++) {
             this.headParts[i].yRot = this.headParts[9].yRot;
             this.headParts[i].xRot = this.headParts[9].xRot;
         }
         
-        // Arms swing with walking animation
+        // Arms swing with walking animation - using original values
         this.rightArm.xRot = Mth.cos((limbSwing * 0.6662F) + 3.141593F) * 2.0F * limbSwingAmount * 0.5F;
         this.leftArm.xRot = Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F;
         this.rightArm.zRot = 0.0F;
         this.leftArm.zRot = 0.0F;
         
-        // Legs walk animation
+        // Legs walk animation - using original values
         this.rightLeg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
         this.leftLeg.xRot = Mth.cos((limbSwing * 0.6662F) + 3.141593F) * 1.4F * limbSwingAmount;
         this.rightLeg.yRot = 0.0F;
         this.leftLeg.yRot = 0.0F;
         
-        // Swinging animation
+        // Swinging animation - using original values
         if (this.isSwinging) {
             this.rightArm.xRot = -2F + this.swingProgress;
             this.rightArm.yRot = 2.25F - (this.swingProgress * 2.0F);
@@ -273,7 +244,7 @@ public class MoCModelKitty<T extends MoCEntityKitty> extends EntityModel<T> {
         
         this.leftArm.yRot = 0.0F;
         
-        // Tail default position and swing based on leg movement
+        // Tail default position and swing based on leg movement - using original values
         this.tail.xRot = -0.5F;
         this.tail.zRot = this.leftLeg.xRot * 0.625F;
     }

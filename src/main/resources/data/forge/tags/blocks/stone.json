@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "mocreatures:wyvstone",
+    "mocreatures:deep_wyvstone",
+    "mocreatures:cobbled_wyvstone",
+    "mocreatures:cobbled_deep_wyvstone",
+    "mocreatures:mossy_cobbled_wyvstone",
+    "mocreatures:mossy_cobbled_deep_wyvstone",
+    "mocreatures:silver_sandstone",
+    "mocreatures:carved_silver_sandstone",
+    "mocreatures:smooth_silver_sandstone"
+  ]
+} 

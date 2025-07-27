@@ -7,6 +7,7 @@ import drzhark.mocreatures.init.MoCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -52,7 +53,8 @@ public class MoCBlockGrass extends GrassBlock implements BonemealableBlock {
                     BlockState stateAbove = world.getBlockState(blockpos.above());
                     BlockState targetState = world.getBlockState(blockpos);
 
-                    if (targetState.is(MoCBlocks.wyvdirt.get()) &&
+                    // Use tag-based check instead of hardcoded block check
+                    if (targetState.is(BlockTags.DIRT) &&
                             world.getMaxLocalRawBrightness(blockpos.above()) >= 4 &&
                             stateAbove.getLightBlock(world, blockpos.above()) <= 2) {
                         world.setBlockAndUpdate(blockpos, MoCBlocks.wyvgrass.get().defaultBlockState());
@@ -86,7 +88,8 @@ public class MoCBlockGrass extends GrassBlock implements BonemealableBlock {
                             (random.nextInt(3) - 1) * random.nextInt(3) / 2,
                             random.nextInt(3) - 1);
 
-                    if (!world.getBlockState(spawnPos.below()).is(MoCBlocks.wyvgrass.get()) ||
+                    // Use tag-based check instead of hardcoded block check
+                    if (!world.getBlockState(spawnPos.below()).is(BlockTags.DIRT) ||
                             world.getBlockState(spawnPos).isCollisionShapeFullBlock(world, spawnPos)) {
                         break;
                     }

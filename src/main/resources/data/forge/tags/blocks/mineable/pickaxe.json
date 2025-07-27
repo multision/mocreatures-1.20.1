@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "mocreatures:ancient_silver_block",
+    "mocreatures:wyvstone",
+    "mocreatures:deep_wyvstone",
+    "mocreatures:cobbled_wyvstone",
+    "mocreatures:cobbled_deep_wyvstone",
+    "mocreatures:mossy_cobbled_wyvstone",
+    "mocreatures:mossy_cobbled_deep_wyvstone",
+    "mocreatures:silver_sandstone",
+    "mocreatures:carved_silver_sandstone",
+    "mocreatures:smooth_silver_sandstone",
+    "mocreatures:ancient_ore",
+    "mocreatures:firestone",
+    "mocreatures:wyvern_diamond_ore",
+    "mocreatures:wyvern_emerald_ore",
+    "mocreatures:wyvern_gold_ore",
+    "mocreatures:wyvern_iron_ore",
+    "mocreatures:wyvern_lapis_ore"
+  ]
+} 

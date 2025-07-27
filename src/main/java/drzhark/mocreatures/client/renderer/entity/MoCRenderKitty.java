@@ -17,39 +17,16 @@ import com.mojang.math.Axis;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.lang.reflect.Field;
-
 import org.joml.Matrix4f;
 
 @OnlyIn(Dist.CLIENT)
 public class MoCRenderKitty extends MoCRenderMoC<MoCEntityKitty, MoCModelKitty<MoCEntityKitty>> {
 
     public MoCModelKitty kitty;
-    private Field isSittingField;
-    private Field isSwingingField;
-    private Field swingProgressField;
-    private Field kittystateField;
 
     public MoCRenderKitty(EntityRendererProvider.Context renderManagerIn, MoCModelKitty modelkitty, float f) {
         super(renderManagerIn, modelkitty, f);
         this.kitty = modelkitty;
-
-        // Try to get fields via reflection
-        try {
-            isSittingField = MoCModelKitty.class.getDeclaredField("isSitting");
-            isSittingField.setAccessible(true);
-
-            isSwingingField = MoCModelKitty.class.getDeclaredField("isSwinging");
-            isSwingingField.setAccessible(true);
-
-            swingProgressField = MoCModelKitty.class.getDeclaredField("swingProgress");
-            swingProgressField.setAccessible(true);
-
-            kittystateField = MoCModelKitty.class.getDeclaredField("kittystate");
-            kittystateField.setAccessible(true);
-        } catch (Exception e) {
-            // Fields not found, we'll use direct setting approach
-        }
     }
 
     @Override
@@ -129,33 +106,24 @@ public class MoCRenderKitty extends MoCRenderMoC<MoCEntityKitty, MoCModelKitty<M
     protected void onMaBack(MoCEntityKitty entitykitty, PoseStack poseStack) {
         poseStack.mulPose(Axis.ZN.rotationDegrees(90F));
         if (!entitykitty.level().isClientSide() && (entitykitty.getVehicle() != null)) {
-            poseStack.translate(-1.5F, 1.2F, -0.2F);
+            poseStack.translate(-1.5F, 0.2F, -0.2F);
         } else {
-            poseStack.translate(0.1F, 1.2F, -0.2F);
+            poseStack.translate(0.1F, 0.2F, -0.2F);
         }
     }
 
     protected void onTheSide(MoCEntityKitty entityliving, PoseStack poseStack) {
         poseStack.mulPose(Axis.ZN.rotationDegrees(90F));
-        poseStack.translate(1.2F, 1.5F, -0.2F);
+        poseStack.translate(0.2F, 0.0F, -0.2F);
     }
 
     @Override
     protected void scale(MoCEntityKitty entitykitty, PoseStack poseStack, float f) {
-        // Fix model positioning - translate down to match entity position
-        poseStack.translate(0.0F, 1.0F, 0.0F);
-
-        // Update model state from entity
-        try {
-            if (isSittingField != null) {
-                isSittingField.set(this.kitty, entitykitty.getIsSitting());
-                isSwingingField.set(this.kitty, entitykitty.getIsSwinging());
-                swingProgressField.set(this.kitty, entitykitty.attackAnim);
-                kittystateField.set(this.kitty, entitykitty.getKittyState());
-            }
-        } catch (Exception e) {
-            // Ignore reflection errors
-        }
+        // Update model state from entity - direct field access like original
+        this.kitty.isSitting = entitykitty.getIsSitting();
+        this.kitty.isSwinging = entitykitty.getIsSwinging();
+        this.kitty.swingProgress = entitykitty.attackAnim;
+        this.kitty.kittystate = entitykitty.getKittyState();
 
         if (!entitykitty.getIsAdult()) {
             stretch(entitykitty, poseStack);
@@ -176,7 +144,7 @@ public class MoCRenderKitty extends MoCRenderMoC<MoCEntityKitty, MoCModelKitty<M
 
     protected void rotateAnimal(MoCEntityKitty entitykitty, PoseStack poseStack) {
         poseStack.mulPose(Axis.XN.rotationDegrees(90F));
-        poseStack.translate(0.0F, 1.5F, -1.5F);
+        poseStack.translate(0.0F, 0.5F, 0.0F);
     }
 
     protected void stretch(MoCEntityKitty entitykitty, PoseStack poseStack) {
@@ -186,6 +154,6 @@ public class MoCRenderKitty extends MoCRenderMoC<MoCEntityKitty, MoCModelKitty<M
 
     protected void upsideDown(MoCEntityKitty entitykitty, PoseStack poseStack) {
         poseStack.mulPose(Axis.ZN.rotationDegrees(180F));
-        poseStack.translate(0F, 2.75F, 0F);
+        poseStack.translate(-0.35F, 0F, -0.55F);
     }
 }
