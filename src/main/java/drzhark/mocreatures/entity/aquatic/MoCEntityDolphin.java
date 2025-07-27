@@ -39,6 +39,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import net.minecraft.util.RandomSource;
 
 public class MoCEntityDolphin extends MoCEntityTameableAquatic {
 
@@ -528,7 +529,7 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
                 
                 // Use deterministic random for consistent behavior
                 long seed = this.getId() + this.tickCount;
-                Random syncRandom = new Random(seed);
+                RandomSource syncRandom = RandomSource.create(seed);
                 
                 if (syncRandom.nextInt(buckingChance) == 0) {
                     // Server-side dismount with proper position sync to prevent rubberband

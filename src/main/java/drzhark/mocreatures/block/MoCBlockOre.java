@@ -13,8 +13,6 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.Random;
-
 public class MoCBlockOre extends Block {
 
     public MoCBlockOre(BlockBehaviour.Properties properties) {
@@ -25,18 +23,18 @@ public class MoCBlockOre extends Block {
 
     @Override
     public int getExpDrop(BlockState state, LevelReader level, RandomSource randomSource, BlockPos pos, int fortuneLevel, int silkTouchLevel) {
-        return silkTouchLevel == 0 ? getExperience(new Random()) : 0;
+        return silkTouchLevel == 0 ? getExperience(randomSource) : 0;
     }
 
-    private int getExperience(Random rand) {
+    private int getExperience(RandomSource rand) {
         if (this == MoCBlocks.ancientOre.get()) {
-            return Mth.nextInt((RandomSource) rand, 2, 5);
+            return Mth.nextInt(rand, 2, 5);
         } else if (this == MoCBlocks.wyvernDiamondOre.get()) {
-            return Mth.nextInt((RandomSource) rand, 4, 8);
+            return Mth.nextInt(rand, 4, 8);
         } else if (this == MoCBlocks.wyvernEmeraldOre.get()) {
-            return Mth.nextInt((RandomSource) rand, 4, 8);
+            return Mth.nextInt(rand, 4, 8);
         } else if (this == MoCBlocks.wyvernLapisOre.get()) {
-            return Mth.nextInt((RandomSource) rand, 3, 6);
+            return Mth.nextInt(rand, 3, 6);
         } else {
             return 0;
         }

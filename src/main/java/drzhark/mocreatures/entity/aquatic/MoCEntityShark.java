@@ -14,14 +14,21 @@ import drzhark.mocreatures.init.MoCLootTables;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomSwimmingGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
@@ -35,12 +42,19 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
         // TODO: Make hitboxes adjust depending on size
         //setAge(60 + this.random.nextInt(100));
         setMoCAge(160);
+        
+        this.moveControl = new SharkMoveControl(this);
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new WaterBoundPathNavigation(this, level);
     }
 
     @Override
     protected void registerGoals() {
+        this.goalSelector.addGoal(1, new SharkSwimGoal(this));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, false));
-        this.goalSelector.addGoal(5, new EntityAIWanderMoC2(this, 1.0D, 30));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new EntityAITargetNonTamedMoC<>(this, Player.class, false));
         //this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, false));
@@ -131,6 +145,12 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
     @Override
     public void aiStep() {
         super.aiStep();
+        
+        if (!this.isEyeInFluid(FluidTags.WATER)) {
+            this.yBodyRot = this.getYRot();
+            this.setXRot(this.getXRot());
+        }
+
         if (!this.level().isClientSide()) {
             if (!getIsAdult() && (this.random.nextInt(50) == 0)) {
                 setMoCAge(getMoCAge() + 1);
@@ -160,7 +180,7 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
 
     @Override
     public float getSpeed() {
-        return 0.12F;
+        return 0.55F;
     }
 
     @Override
@@ -191,5 +211,69 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
     @Override
     protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return this.getBbHeight() * 0.61F;
+    }
+
+    @Override
+    public void travel(Vec3 p_27490_) {
+        if (this.isEffectiveAi() && this.isInWater()) {
+            this.moveRelative(0.01F, p_27490_);
+            this.move(MoverType.SELF, this.getDeltaMovement());
+            this.setDeltaMovement(this.getDeltaMovement().scale(0.9D));
+            if (this.getTarget() == null) {
+                this.setDeltaMovement(this.getDeltaMovement().add(0.0D, -0.005D, 0.0D));
+            }
+        } else {
+            super.travel(p_27490_);
+        }
+    }
+
+    static class SharkMoveControl extends MoveControl {
+        private final MoCEntityShark shark;
+
+        SharkMoveControl(MoCEntityShark shark) {
+            super(shark);
+            this.shark = shark;
+        }
+
+        public void tick() {
+            if (this.shark.isEyeInFluid(FluidTags.WATER)) {
+                this.shark.setDeltaMovement(this.shark.getDeltaMovement().add(0.0D, 0.005D, 0.0D));
+            }
+
+            if (this.operation == MoveControl.Operation.MOVE_TO && !this.shark.getNavigation().isDone()) {
+                float f = (float) (this.speedModifier * this.shark.getAttributeValue(Attributes.MOVEMENT_SPEED));
+                this.shark.setSpeed(Mth.lerp(0.125F, this.shark.getSpeed(), f));
+                double d0 = this.wantedX - this.shark.getX();
+                double d1 = this.wantedY - this.shark.getY();
+                double d2 = this.wantedZ - this.shark.getZ();
+                if (d1 != 0.0D) {
+                    double d3 = Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+                    this.shark.setDeltaMovement(this.shark.getDeltaMovement().add(0.0D,
+                            (double) this.shark.getSpeed() * (d1 / d3) * 0.1D, 0.0D));
+                }
+
+                if (d0 != 0.0D || d2 != 0.0D) {
+                    float f1 = (float) (Mth.atan2(d2, d0) * (double) (180F / (float) Math.PI)) - 90.0F;
+                    this.shark.setYRot(this.rotlerp(this.shark.getYRot(), f1, 90.0F));
+                    this.shark.yBodyRot = this.shark.getYRot();
+                }
+
+            } else {
+                this.shark.setSpeed(0.0F);
+            }
+        }
+    }
+
+    static class SharkSwimGoal extends RandomSwimmingGoal {
+        private final MoCEntityShark shark;
+
+        public SharkSwimGoal(MoCEntityShark shark) {
+            super(shark, 1.0D, 40);
+            this.shark = shark;
+        }
+
+        public boolean canUse() {
+            return super.canUse();
+        }
     }
 }

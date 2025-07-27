@@ -880,7 +880,7 @@ public class MoCTools {
         int j = Mth.floor(entity.getBoundingBox().minY);
         int k = Mth.floor(entity.getZ());
 
-        Random random = (Random) entity.level().random;
+        RandomSource random = entity.level().getRandom();
 
         for (int l = 0; l < animalchest.getContainerSize(); l++) {
             ItemStack itemstack = animalchest.getItem(l);
