@@ -64,25 +64,25 @@ public class MoCBlocks {
             new MoCBlockRock(BlockBehaviour.Properties.of().strength(1.2F).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 
     public static final RegistryObject<Block> ancientOre = register("ancient_ore", () ->
-            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE)));
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> firestone = register("firestone", () ->
             new MoCBlockFirestone(BlockBehaviour.Properties.of().strength(3.0F).lightLevel(state -> 7).mapColor(MapColor.COLOR_ORANGE)));
 
     public static final RegistryObject<Block> wyvernDiamondOre = register("wyvern_diamond_ore", () ->
-            new MoCBlockOre(BlockBehaviour.Properties.of().strength(4.5F, 5.0F).mapColor(MapColor.STONE)));
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> wyvernEmeraldOre = register("wyvern_emerald_ore", () ->
-            new MoCBlockOre(BlockBehaviour.Properties.of().strength(4.5F, 5.0F).mapColor(MapColor.STONE)));
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> wyvernGoldOre = register("wyvern_gold_ore", () ->
-            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE)));
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> wyvernIronOre = register("wyvern_iron_ore", () ->
-            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE)));
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(3.0F, 5.0F).mapColor(MapColor.STONE).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> wyvernLapisOre = register("wyvern_lapis_ore", () ->
-            new MoCBlockOre(BlockBehaviour.Properties.of().strength(1.5F, 5.0F).mapColor(MapColor.STONE)));
+            new MoCBlockOre(BlockBehaviour.Properties.of().strength(1.5F, 5.0F).mapColor(MapColor.STONE).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> wyvgrass = register("wyvgrass", () ->
             new MoCBlockGrass(BlockBehaviour.Properties.of().strength(0.7F).mapColor(MapColor.COLOR_CYAN)));

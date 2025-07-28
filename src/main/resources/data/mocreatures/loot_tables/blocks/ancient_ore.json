@@ -28,6 +28,11 @@
             }
           ]
         }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
       ]
     },
     {
@@ -55,7 +60,8 @@
                   "chance": 0.3
                 }
               ]
-            },{
+            },
+            {
               "type": "minecraft:item",
               "name": "minecraft:coal",
               "conditions": [
@@ -64,7 +70,8 @@
                   "chance": 0.2
                 }
               ]
-            },{
+            },
+            {
               "type": "minecraft:item",
               "name": "mocreatures:ancientsilverscrap",
               "conditions": [
@@ -73,7 +80,8 @@
                   "chance": 0.2
                 }
               ]
-            },{
+            },
+            {
               "type": "minecraft:item",
               "name": "minecraft:skeleton_skull",
               "conditions": [
@@ -82,12 +90,13 @@
                   "chance": 0.02
                 }
               ]
-            },{
+            },
+            {
               "type": "minecraft:item",
               "name": "minecraft:bone"
-          }
-        ]
-      }
+            }
+          ]
+        }
       ],
       "conditions": [
         {

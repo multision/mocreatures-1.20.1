@@ -42,5 +42,39 @@ public class MoCTagProvider extends BlockTagsProvider {
         // Add MoC leaves to the minecraft:leaves tag
         this.tag(BlockTags.LEAVES)
             .add(MoCBlocks.wyvwoodLeaves.get());
+
+        // Mining tool requirements - what can mine these blocks
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE)
+            .add(MoCBlocks.ancientOre.get())
+            .add(MoCBlocks.wyvernDiamondOre.get())
+            .add(MoCBlocks.wyvernEmeraldOre.get())
+            .add(MoCBlocks.wyvernGoldOre.get())
+            .add(MoCBlocks.wyvernIronOre.get())
+            .add(MoCBlocks.wyvernLapisOre.get());
+
+        // Mining level requirements based on actual hardness values
+        // Ancient ore (3.0F hardness) - requires iron pickaxe
+        this.tag(BlockTags.NEEDS_IRON_TOOL)
+            .add(MoCBlocks.ancientOre.get());
+
+        // Wyvern diamond ore (3.0F hardness) - requires iron pickaxe
+        this.tag(BlockTags.NEEDS_IRON_TOOL)
+            .add(MoCBlocks.wyvernDiamondOre.get());
+
+        // Wyvern emerald ore (3.0F hardness) - requires iron pickaxe  
+        this.tag(BlockTags.NEEDS_IRON_TOOL)
+            .add(MoCBlocks.wyvernEmeraldOre.get());
+
+        // Wyvern gold ore (3.0F hardness) - requires iron pickaxe
+        this.tag(BlockTags.NEEDS_IRON_TOOL)
+            .add(MoCBlocks.wyvernGoldOre.get());
+
+        // Wyvern iron ore (3.0F hardness) - requires iron pickaxe
+        this.tag(BlockTags.NEEDS_IRON_TOOL)
+            .add(MoCBlocks.wyvernIronOre.get());
+
+        // Wyvern lapis ore (1.5F hardness) - requires stone pickaxe
+        this.tag(BlockTags.NEEDS_STONE_TOOL)
+            .add(MoCBlocks.wyvernLapisOre.get());
     }
 }

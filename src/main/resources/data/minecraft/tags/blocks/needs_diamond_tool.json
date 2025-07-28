@@ -1,7 +1,6 @@
 {
-  "replace": false,
   "values": [
     "mocreatures:wyvern_diamond_ore",
     "mocreatures:wyvern_emerald_ore"
   ]
-} 
+}

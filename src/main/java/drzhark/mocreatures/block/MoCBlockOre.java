@@ -16,9 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class MoCBlockOre extends Block {
 
     public MoCBlockOre(BlockBehaviour.Properties properties) {
-        super(properties
-                .strength(3.0F, 3.0F)
-                .sound(SoundType.STONE));
+        super(properties.sound(SoundType.STONE));
     }
 
     @Override
