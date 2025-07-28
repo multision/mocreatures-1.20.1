@@ -5,6 +5,7 @@ package drzhark.mocreatures.entity.aquatic;
 
 import drzhark.mocreatures.MoCreatures;
 import drzhark.mocreatures.entity.MoCEntityAquatic;
+import drzhark.mocreatures.entity.ai.EntityAIHunt;
 import drzhark.mocreatures.entity.ai.EntityAITargetNonTamedMoC;
 import drzhark.mocreatures.entity.ai.EntityAIWanderMoC2;
 import drzhark.mocreatures.entity.item.MoCEntityEgg;
@@ -18,10 +19,13 @@ import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomSwimmingGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.navigation.WaterBoundPathNavigation;
+import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.resources.ResourceLocation;
@@ -56,15 +60,30 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
         this.goalSelector.addGoal(1, new SharkSwimGoal(this));
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, false));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new EntityAITargetNonTamedMoC<>(this, Player.class, false));
-        //this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, false));
-        //this.targetSelector.addGoal(3, new EntityAIHunt<>(this, Player.class, false));
+        
+        // Target players in water (but chase even if they're in boats - just don't attack)
+        // Reduced targetChance to 5 for more frequent targeting checks
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 5, true, false, (player) -> {
+            if (player == null) return false;
+            // Target players in water, or within reasonable distance even if not in water
+            return !getIsTamed() && isReadyToHunt() && (player.isInWater() || distanceTo(player) < 16.0F);
+        }));
+        
+        // Target squids - more persistent targeting
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Squid.class, 5, true, false, (squid) -> {
+            return squid != null && !getIsTamed() && isReadyToHunt();
+        }));
+        
+        // Target dolphins only if config allows
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, MoCEntityDolphin.class, 5, true, false, (dolphin) -> {
+            return dolphin != null && !getIsTamed() && isReadyToHunt() && MoCreatures.proxy.attackDolphins;
+        }));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         return MoCEntityTameableAquatic.createMobAttributes()
             .add(Attributes.MAX_HEALTH, 30.0D)
-            .add(Attributes.MOVEMENT_SPEED, 0.55D)
+            .add(Attributes.MOVEMENT_SPEED, 1.0D)
             .add(Attributes.ATTACK_DAMAGE, 5.0D)
             .add(Attributes.FOLLOW_RANGE, 32.0D);
     }
@@ -77,6 +96,27 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
     @Override
     public int getExperienceReward() {
         return 5;
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        
+        // Keep body rotation aligned when not in water
+        if (!this.isEyeInFluid(FluidTags.WATER)) {
+            this.yBodyRot = this.getYRot();
+            this.setXRot(this.getXRot());
+        }
+
+        // Age progression for sharks
+        if (!this.level().isClientSide()) {
+            if (!getIsAdult() && (this.random.nextInt(50) == 0)) {
+                setMoCAge(getMoCAge() + 1);
+                if (getMoCAge() >= getMaxAge()) {
+                    setAdult(true);
+                }
+            }
+        }
     }
 
     @Override
@@ -98,109 +138,23 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
     }
 
     @Override
+    public boolean doHurtTarget(Entity entityIn) {
+        // Don't attack players in boats, but we can still chase them
+        if (entityIn instanceof Player player && player.getVehicle() instanceof Boat) {
+            return false;
+        }
+        
+        return super.doHurtTarget(entityIn);
+    }
+
+    @Override
     protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.SHARK;
     }
 
-    protected Entity findPlayerToAttack() {
-        if ((this.level().getDifficulty().getId() > 0) && (getMoCAge() >= 100)) {
-            Player entityplayer = this.level().getNearestPlayer(this, 16D);
-            if ((entityplayer != null) && entityplayer.isInWater() && !getIsTamed()) {
-                return entityplayer;
-            }
-        }
-        return null;
-    }
-
-    public LivingEntity FindTarget(Entity entity, double d) {
-        double d1 = -1D;
-        LivingEntity entityliving = null;
-        List<Entity> list = this.level().getEntitiesOfClass(Entity.class, this.getBoundingBox().inflate(d), ent -> ent != this);
-        for (Entity o : list) {
-            // Check if the entity is not something we want to target
-            if (!(o instanceof LivingEntity) || 
-                o instanceof MoCEntityAquatic || 
-                o instanceof MoCEntityEgg ||
-                o instanceof Player || 
-                (o instanceof Wolf && !MoCreatures.proxy.attackWolves) || 
-                (o instanceof MoCEntityHorse && !MoCreatures.proxy.attackHorses)) {
-                continue;
-            }
-            
-            // Handle dolphins
-            if (o instanceof MoCEntityDolphin) {
-                getIsTamed();
-            }
-            
-            // Calculate distance and check visibility
-            double d2 = o.distanceToSqr(entity.getX(), entity.getY(), entity.getZ());
-            if (((d < 0.0D) || (d2 < (d * d))) && ((d1 == -1D) || (d2 < d1)) && ((LivingEntity) o).hasLineOfSight(entity)) {
-                d1 = d2;
-                entityliving = (LivingEntity) o;
-            }
-        }
-        return entityliving;
-    }
-
-    @Override
-    public void aiStep() {
-        super.aiStep();
-        
-        if (!this.isEyeInFluid(FluidTags.WATER)) {
-            this.yBodyRot = this.getYRot();
-            this.setXRot(this.getXRot());
-        }
-
-        if (!this.level().isClientSide()) {
-            if (!getIsAdult() && (this.random.nextInt(50) == 0)) {
-                setMoCAge(getMoCAge() + 1);
-                if (getMoCAge() >= 200) {
-                    setAdult(true);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void remove(Entity.RemovalReason reason) {
-        if (!this.level().isClientSide() && getIsTamed() && (getHealth() > 0)) {
-        } else {
-            super.remove(reason);
-        }
-    }
-
-    public boolean isMyHealFood(Item item1) {
-        return false;
-    }
-
-    @Override
-    protected boolean usesNewAI() {
-        return true;
-    }
-
-    @Override
-    public float getSpeed() {
-        return 0.55F;
-    }
-
-    @Override
-    public boolean isMovementCeased() {
-        return !isInWater();
-    }
-
-    @Override
-    protected double minDivingDepth() {
-        return 1D;
-    }
-
-    @Override
-    protected double maxDivingDepth() {
-        return 6.0D;
-    }
-
-    @Override
-    public int getMaxAge() {
-        return 200;
+    // This method enables hunting behavior - sharks will hunt when adult and difficulty > peaceful
+    public boolean isReadyToHunt() {
+        return getIsAdult() && this.level().getDifficulty().getId() > 0;
     }
 
     @Override
@@ -225,6 +179,36 @@ public class MoCEntityShark extends MoCEntityTameableAquatic {
         } else {
             super.travel(p_27490_);
         }
+    }
+
+    @Override
+    protected boolean usesNewAI() {
+        return true;
+    }
+
+    @Override
+    public float getSpeed() {
+        return 1.0F;
+    }
+
+    @Override
+    public boolean isMovementCeased() {
+        return !isInWater();
+    }
+
+    @Override
+    protected double minDivingDepth() {
+        return 1D;
+    }
+
+    @Override
+    protected double maxDivingDepth() {
+        return 6.0D;
+    }
+
+    @Override
+    public int getMaxAge() {
+        return 200;
     }
 
     static class SharkMoveControl extends MoveControl {

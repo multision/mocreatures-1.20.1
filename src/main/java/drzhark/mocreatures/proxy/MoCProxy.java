@@ -53,6 +53,7 @@ public class MoCProxy {
     public boolean armorSetEffects;
     public boolean attackHorses;
     public boolean attackWolves;
+    public boolean attackDolphins;
     public boolean debug;
     public boolean destroyDrops;
     public boolean displayPetHealth;
@@ -707,6 +708,7 @@ public class MoCProxy {
         this.armorSetEffects = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "ArmorSetEffects", true, "Applies potion effects when wearing full scorpion armor sets.").getBoolean(true);
         this.attackHorses = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AttackHorses", false, "When enabled, tamed horses can be attacked.").getBoolean(false);
         this.attackWolves = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AttackWolves", false, "When enabled, tamed wolves can be attacked.").getBoolean(false);
+        this.attackDolphins = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "AttackDolphins", false, "When enabled, sharks will attack dolphins.").getBoolean(false);
         this.debug = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "DebugMode", false, "When enabled, enables debugging logs.").getBoolean(false);
         this.destroyDrops = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "DestroyDrops", true, "When enabled, if tamed entities find drops, they will destroy them.").getBoolean(true);
         this.easterEggs = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "EasterEggs", false, "Spawns certain entities on Easter.").getBoolean(false);
