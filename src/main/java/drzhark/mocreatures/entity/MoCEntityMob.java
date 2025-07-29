@@ -189,6 +189,12 @@ public abstract class MoCEntityMob extends Monster implements IMoCEntity {
 
     public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, ServerLevel world, MobSpawnType reason, BlockPos pos, Random randomIn) {
         boolean willSpawn = Monster.checkAnyLightMonsterSpawnRules(type, world, reason, pos, (RandomSource) randomIn);
+        
+        // Add light level check from BiomeSpawnConfig
+        if (willSpawn) {
+            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity(world, pos, type);
+        }
+        
         boolean debug = MoCreatures.proxy.debug;
         if (willSpawn && debug) {
             MoCreatures.LOGGER.info("Mob: {} at: {} State: {} biome: {}", type.getDescription(), pos,

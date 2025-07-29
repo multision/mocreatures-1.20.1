@@ -644,6 +644,11 @@ public boolean isPushedByFluid(FluidType type) {
         // Ensure it's not too deep and is actually in water
         boolean willSpawn = isInWater && pos.getY() >= world.getSeaLevel() - 12;
         
+        // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
+        if (willSpawn && world instanceof Level) {
+            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world, pos, type);
+        }
+        
         boolean debug = MoCreatures.proxy.debug;
         if (debug) {
             MoCreatures.LOGGER.info(

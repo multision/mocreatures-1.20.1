@@ -122,4 +122,18 @@ public class MoCSpawnRegistryCache {
         ENTITIES.put("crab", MoCEntities.CRAB.get());
         ENTITIES.put("snail", MoCEntities.SNAIL.get());
     }
+    
+    /**
+     * Get the creature name from an entity type by looking up the reverse mapping
+     * @param entityType The entity type to look up
+     * @return The creature name, or null if not found
+     */
+    public static String getCreatureName(EntityType<?> entityType) {
+        for (Map.Entry<String, EntityType<?>> entry : ENTITIES.entrySet()) {
+            if (entry.getValue() == entityType) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
 }

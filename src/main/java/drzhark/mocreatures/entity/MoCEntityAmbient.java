@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import net.minecraft.util.RandomSource;
 
 public abstract class MoCEntityAmbient extends PathfinderMob implements IMoCEntity {
 
@@ -258,8 +259,14 @@ public abstract class MoCEntityAmbient extends PathfinderMob implements IMoCEnti
      * Custom spawn rule check; replace with registerSpawnPlacement in your entity
      * registry if you prefer. Here, just a utility method.
      */
-    public static boolean getCanSpawnHere(EntityType<MoCEntityAmbient> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, Random randomIn) {
+    public static boolean getCanSpawnHere(EntityType<MoCEntityAmbient> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource randomIn) {
         boolean willSpawn = world.canSeeSky(pos);
+        
+        // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
+        if (willSpawn && world.getLevel() instanceof Level) {
+            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world.getLevel(), pos, type);
+        }
+        
         if (willSpawn && MoCreatures.proxy.debug) {
             BlockState bs = world.getBlockState(pos);
             MoCreatures.LOGGER.info("Ambient: " + type.getDescription() + " at: " + pos +
