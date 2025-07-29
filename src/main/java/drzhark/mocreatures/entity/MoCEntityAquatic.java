@@ -625,41 +625,33 @@ public boolean isPushedByFluid(FluidType type) {
         return 0F;
     }
 
-    // === CUSTOM SPAWN CHECK ===
-    public static boolean getCanSpawnHere(
-            EntityType<MoCEntityAquatic> type,
-            LevelAccessor world,
-            MobSpawnType reason,
-            BlockPos pos,
-            RandomSource randomIn
-    ) {
+    /**
+     * Vanilla-style aquatic spawn rules with light level check integration
+     */
+    public static boolean checkSurfaceWaterAnimalSpawnRules(EntityType<MoCEntityAquatic> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {
         // Always allow spawn eggs
         if (reason == MobSpawnType.SPAWN_EGG) {
             return true;
         }
         
-        // Check if the spawn position is in water
-        boolean isInWater = world.getFluidState(pos).is(FluidTags.WATER);
-        
-        // Ensure it's not too deep and is actually in water
-        boolean willSpawn = isInWater && pos.getY() >= world.getSeaLevel() - 12;
+        // Use vanilla surface water animal spawn rules
+        boolean willSpawn = net.minecraft.world.entity.animal.WaterAnimal.checkSurfaceWaterAnimalSpawnRules(type, world, reason, pos, random);
         
         // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
-        if (willSpawn && world instanceof Level) {
-            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world, pos, type);
+        if (willSpawn && world.getLevel() instanceof Level) {
+            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world.getLevel(), pos, type);
         }
         
-        boolean debug = MoCreatures.proxy.debug;
-        if (debug) {
+        if (MoCreatures.proxy.debug && willSpawn) {
             MoCreatures.LOGGER.info(
-                    "Aquatic: {} at {} State: {} biome: {} isInWater: {}",
+                    "Aquatic: {} at {} State: {} biome: {}",
                     type.getDescription(),
                     pos,
                     world.getBlockState(pos),
-                    MoCTools.biomeName((Level) world, pos),
-                    isInWater
+                    MoCTools.biomeName((Level) world.getLevel(), pos)
             );
         }
+        
         return willSpawn;
     }
 

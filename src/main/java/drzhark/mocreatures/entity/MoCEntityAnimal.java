@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import net.minecraft.util.RandomSource;
 
 public abstract class MoCEntityAnimal extends Animal implements IMoCEntity {
 
@@ -500,21 +501,6 @@ public void faceLocation(double x, double y, double z, float maxTurn) {
         } else {
             nav.moveTo(path, 1D);
         }
-    }
-
-    public static boolean getCanSpawnHere(EntityType<MoCEntityAnimal> type, LevelAccessor world, MobSpawnType reason, BlockPos pos, Random randomIn) {
-        BlockState blockBelow = world.getBlockState(pos.below());
-        boolean willSpawn = world.getBrightness(LightLayer.SKY, pos) > 8 && blockBelow.isValidSpawn(world, pos, type);
-        
-        // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
-        if (willSpawn && world instanceof Level) {
-            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world, pos, type);
-        }
-        
-        if (MoCreatures.proxy.debug && willSpawn) {
-            MoCreatures.LOGGER.info("Animal: " + type.getDescription() + " at: " + pos + " State: " + world.getBlockState(pos) + " biome: " + MoCTools.biomeName((Level) world, pos));
-        }
-        return willSpawn;
     }
 
     @Override
@@ -1008,5 +994,29 @@ public void faceLocation(double x, double y, double z, float maxTurn) {
         }
         
         return super.checkSpawnRules(world, reason);
+    }
+
+    /**
+     * Vanilla-style animal spawn rules with light level check integration
+     */
+    public static boolean checkAnimalSpawnRules(EntityType<MoCEntityAnimal> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {
+        // Always allow spawn eggs
+        if (reason == MobSpawnType.SPAWN_EGG) {
+            return true;
+        }
+        
+        // Use vanilla animal spawn rules
+        boolean willSpawn = Animal.checkAnimalSpawnRules(type, world, reason, pos, random);
+        
+        // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
+        if (willSpawn && world.getLevel() instanceof Level) {
+            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world.getLevel(), pos, type);
+        }
+        
+        if (MoCreatures.proxy.debug && willSpawn) {
+            MoCreatures.LOGGER.info("Animal: " + type.getDescription() + " at: " + pos + " State: " + world.getBlockState(pos) + " biome: " + MoCTools.biomeName((Level) world.getLevel(), pos));
+        }
+        
+        return willSpawn;
     }
 }

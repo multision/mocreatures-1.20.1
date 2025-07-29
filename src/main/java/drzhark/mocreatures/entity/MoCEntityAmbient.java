@@ -256,10 +256,15 @@ public abstract class MoCEntityAmbient extends PathfinderMob implements IMoCEnti
     }
 
     /**
-     * Custom spawn rule check; replace with registerSpawnPlacement in your entity
-     * registry if you prefer. Here, just a utility method.
+     * Vanilla-style ambient spawn rules with light level check integration
      */
-    public static boolean getCanSpawnHere(EntityType<MoCEntityAmbient> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource randomIn) {
+    public static boolean checkMobSpawnRules(EntityType<MoCEntityAmbient> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {
+        // Always allow spawn eggs
+        if (reason == MobSpawnType.SPAWN_EGG) {
+            return true;
+        }
+        
+        // Use vanilla ambient spawn rules (can see sky)
         boolean willSpawn = world.canSeeSky(pos);
         
         // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
@@ -267,11 +272,11 @@ public abstract class MoCEntityAmbient extends PathfinderMob implements IMoCEnti
             willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world.getLevel(), pos, type);
         }
         
-        if (willSpawn && MoCreatures.proxy.debug) {
-            BlockState bs = world.getBlockState(pos);
-            MoCreatures.LOGGER.info("Ambient: " + type.getDescription() + " at: " + pos +
-                    " State: " + bs + " biome: " + MoCTools.biomeName(world.getLevel(), pos));
+        if (MoCreatures.proxy.debug && willSpawn) {
+            BlockState blockState = world.getBlockState(pos);
+            MoCreatures.LOGGER.info("Ambient: {} at: {} State: {} biome: {}", type.getDescription(), pos, blockState, MoCTools.biomeName((Level) world.getLevel(), pos));
         }
+        
         return willSpawn;
     }
 

@@ -1,4 +1,6 @@
 itemGroup.MoCreaturesTab=Mo' Creatures: Nostalgia Edition
+key.categories.mocreatures=Mo' Creatures
+key.mocreatures.dive=Mo' Creatures Tauchen
 
 # BLOCKS
 tile.mocreatures.ancient_ore.name=Altes Erz

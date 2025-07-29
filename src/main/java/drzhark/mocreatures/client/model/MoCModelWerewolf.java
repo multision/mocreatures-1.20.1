@@ -559,6 +559,8 @@ public class MoCModelWerewolf<T extends MoCEntityWerewolf> extends EntityModel<T
             this.Abdomen.xRot     = 15F / radianF;
             this.LLegA.setPos(3F, 9.5F, 3F);
 
+            this.RArmA.setPos(-4F, -4F, -2F);
+            this.RArmA.xRot       = 0.6320364F;
             this.LArmA.setPos(4F, -4F, -2F);
             this.LArmA.xRot       = 0.6320364F;
 
@@ -580,6 +582,8 @@ public class MoCModelWerewolf<T extends MoCEntityWerewolf> extends EntityModel<T
             this.Abdomen.xRot     = 75F / radianF;
             this.LLegA.setPos(3F, 9.5F, 7F);
 
+            this.RArmA.setPos(-4F, 4.5F, -6F);
+            this.RArmA.xRot       = 0.6320364F;
             this.LArmA.setPos(4F, 4.5F, -6F);
             this.LArmA.xRot       = 0.6320364F;
 

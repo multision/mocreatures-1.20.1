@@ -187,19 +187,28 @@ public abstract class MoCEntityMob extends Monster implements IMoCEntity {
     public void setOwnerPetId(int petId) {
     }
 
-    public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, ServerLevel world, MobSpawnType reason, BlockPos pos, Random randomIn) {
-        boolean willSpawn = Monster.checkAnyLightMonsterSpawnRules(type, world, reason, pos, (RandomSource) randomIn);
-        
-        // Add light level check from BiomeSpawnConfig
-        if (willSpawn) {
-            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity(world, pos, type);
+    /**
+     * Vanilla-style mob spawn rules with light level check integration
+     */
+    public static boolean checkMobSpawnRules(EntityType<? extends MoCEntityMob> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {
+        // Always allow spawn eggs
+        if (reason == MobSpawnType.SPAWN_EGG) {
+            return true;
         }
         
-        boolean debug = MoCreatures.proxy.debug;
-        if (willSpawn && debug) {
+        // Use vanilla monster spawn rules
+        boolean willSpawn = Mob.checkMobSpawnRules(type, world, reason, pos, random);
+        
+        // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
+        if (willSpawn && world.getLevel() instanceof Level) {
+            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world.getLevel(), pos, type);
+        }
+        
+        if (MoCreatures.proxy.debug && willSpawn) {
             MoCreatures.LOGGER.info("Mob: {} at: {} State: {} biome: {}", type.getDescription(), pos,
-                    world.getBlockState(pos), MoCTools.biomeName(world, pos));
+                    world.getBlockState(pos), MoCTools.biomeName((Level) world.getLevel(), pos));
         }
+        
         return willSpawn;
     }
 
