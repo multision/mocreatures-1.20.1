@@ -118,4 +118,9 @@ public class MoCEntityBee extends MoCEntityInsect {
     public boolean isFlyer() {
         return true;
     }
+    
+    @Override
+    public boolean shouldRenderTransparent() {
+        return true; // Bees have transparent wings when flying
+    }
 }

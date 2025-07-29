@@ -162,4 +162,9 @@ public class MoCEntityJellyFish extends MoCEntityTameableAquatic {
     protected float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return this.getBbHeight() * 0.85F;
     }
+    
+    @Override
+    public boolean shouldRenderTransparent() {
+        return true; // Jellyfish is always transparent
+    }
 }

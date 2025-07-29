@@ -137,4 +137,9 @@ public class MoCEntityButterfly extends MoCEntityInsect {
     public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.1F;
     }
+    
+    @Override
+    public boolean shouldRenderTransparent() {
+        return true; // Butterflies have transparent wings when flying
+    }
 }

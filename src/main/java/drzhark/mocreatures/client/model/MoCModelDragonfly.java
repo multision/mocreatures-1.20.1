@@ -18,7 +18,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class MoCModelDragonfly<T extends MoCEntityDragonfly> extends EntityModel<T> {
+public class MoCModelDragonfly<T extends MoCEntityDragonfly> extends EntityModel<T> implements IPartialTransparencyModel<T> {
 
     @SuppressWarnings("removal")
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
@@ -199,8 +199,24 @@ public class MoCModelDragonfly<T extends MoCEntityDragonfly> extends EntityModel
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer,
                                int packedLight, int packedOverlay,
                                float red, float green, float blue, float alpha) {
-
-        // Render all opaque parts first:
+        // Render opaque parts first
+        renderOpaqueParts(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        
+        // Render transparent parts with blending
+        poseStack.pushPose();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.clearColor(getTransparencyColor()[0], getTransparencyColor()[1], getTransparencyColor()[2], getTransparencyValue());
+        
+        renderTransparentParts(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        
+        RenderSystem.disableBlend();
+        poseStack.popPose();
+    }
+    
+    @Override
+    public void renderOpaqueParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Render all opaque parts:
         this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         this.Abdomen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         this.FrontLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
@@ -210,22 +226,24 @@ public class MoCModelDragonfly<T extends MoCEntityDragonfly> extends EntityModel
         this.MidLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         this.Mouth.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         this.Thorax.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-
-        // Now render wings with blending enabled:
-        poseStack.pushPose();
-        RenderSystem.enableBlend();
-        // Use default blend function (SRC_ALPHA, ONE_MINUS_SRC_ALPHA):
-        RenderSystem.defaultBlendFunc();
-        // Apply an alpha of 0.6 (as in your old code)
-        RenderSystem.clearColor(0.8F, 0.8F, 0.8F, 0.6F);
-
-        // Note: we still pass the same VertexConsumer; transparency is handled by the blend state.
+    }
+    
+    @Override
+    public void renderTransparentParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Render wings with transparency
         this.WingRearRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         this.WingFrontRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         this.WingFrontLeft.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         this.WingRearLeft.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-
-        RenderSystem.disableBlend();
-        poseStack.popPose();
+    }
+    
+    @Override
+    public float getTransparencyValue() {
+        return 0.6F; // 60% transparency for wings
+    }
+    
+    @Override
+    public boolean shouldRenderPartialTransparency() {
+        return true; // Dragonflies always have transparent wings
     }
 }

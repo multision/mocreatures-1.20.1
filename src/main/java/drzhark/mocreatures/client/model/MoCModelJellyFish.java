@@ -22,7 +22,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Ported from 1.16.5 MoCModelJellyFish to Minecraft 1.20.1.
  */
 @OnlyIn(Dist.CLIENT)
-public class MoCModelJellyFish<T extends MoCEntityJellyFish> extends EntityModel<T> {
+public class MoCModelJellyFish<T extends MoCEntityJellyFish> extends EntityModel<T> implements IPartialTransparencyModel<T> {
 
     @SuppressWarnings("removal")
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
@@ -249,46 +249,72 @@ public class MoCModelJellyFish<T extends MoCEntityJellyFish> extends EntityModel
     @Override
     public void renderToBuffer(PoseStack matrixStackIn, VertexConsumer bufferIn, int packedLightIn, int packedOverlayIn,
                                float red, float green, float blue, float alpha) {
+        // Apply jellyfish-specific transformations
         matrixStackIn.pushPose();
+        
+        // Apply water-based positioning and rotation
+        // Note: The renderer will apply scale(1.0F, -1.0F, 1.0F) and translate(0.0D, -1.501F, 0.0D)
+        // So we need to account for that in our positioning
         if (outOfWater) {
-            matrixStackIn.translate(0F, 0.6F, -0.3F);
+            // When out of water, adjust for the renderer's transformations to place on ground
+            matrixStackIn.translate(0F, -2.201F, 0F);
         } else {
-            matrixStackIn.translate(0F, 0.2F, 0F);
+            // When in water, adjust for the renderer's transformations
+            matrixStackIn.translate(0F, -0.2F, 0F);
             matrixStackIn.mulPose(Axis.XP.rotationDegrees(this.limbSwingAmount * -60F));
         }
-        RenderSystem.enableBlend();
-        if (!glowing || outOfWater) {
-            float transparency = 0.7F;
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.clearColor(0.8F, 0.8F, 0.8F, transparency);
-        } else {
-            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        
+        // Render opaque parts first (none for jellyfish)
+        renderOpaqueParts(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
+        
+        // Render transparent parts with blending
+        if (shouldRenderPartialTransparency()) {
+            renderTransparentParts(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, getTransparencyValue());
         }
-
-        this.Top.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Head.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.HeadSmall.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Body.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BodyCenter.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.BodyBottom.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Side1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Side2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Side3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Side4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LegSmall1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LegC1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LegC2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.LegC3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg1.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg2.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg3.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg4.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg5.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg6.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg7.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg8.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        this.Leg9.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
-        RenderSystem.disableBlend();
+        
         matrixStackIn.popPose();
+    }
+    
+    @Override
+    public void renderOpaqueParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Jellyfish has no opaque parts - everything is transparent
+    }
+    
+    @Override
+    public void renderTransparentParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Render all jellyfish parts with transparency
+        this.Top.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.HeadSmall.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Body.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.BodyCenter.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.BodyBottom.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Side1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Side2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Side3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Side4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LegSmall1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LegC1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LegC2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.LegC3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg1.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg2.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg3.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg4.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg5.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg6.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg7.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg8.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.Leg9.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+    }
+    
+    @Override
+    public float getTransparencyValue() {
+        return 0.7F; // 70% transparency for jellyfish
+    }
+    
+    @Override
+    public boolean shouldRenderPartialTransparency() {
+        return true; // Jellyfish is always transparent
     }
 }

@@ -130,4 +130,9 @@ public class MoCEntityGrasshopper extends MoCEntityInsect {
     public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.15F;
     }
+    
+    @Override
+    public boolean shouldRenderTransparent() {
+        return true; // Grasshoppers have transparent wings when flying
+    }
 }

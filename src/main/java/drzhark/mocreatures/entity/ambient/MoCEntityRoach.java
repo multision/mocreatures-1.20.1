@@ -92,4 +92,9 @@ public class MoCEntityRoach extends MoCEntityInsect {
     protected ResourceLocation getDefaultLootTable() {
         return MoCLootTables.ROACH;
     }
+    
+    @Override
+    public boolean shouldRenderTransparent() {
+        return true; // Roaches have transparent wings when flying
+    }
 }

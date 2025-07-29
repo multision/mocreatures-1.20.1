@@ -22,7 +22,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class MoCModelFly<T extends MoCEntityFly> extends EntityModel<T> {
+public class MoCModelFly<T extends MoCEntityFly> extends EntityModel<T> implements IPartialTransparencyModel<T> {
 
     @SuppressWarnings("removal")
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
@@ -99,30 +99,53 @@ public class MoCModelFly<T extends MoCEntityFly> extends EntityModel<T> {
             float blue,
             float alpha
     ) {
-        // Draw legs and body parts
-        this.frontLegs.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        this.rearLegs.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        this.midLegs.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        this.head.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        this.tail.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        this.abdomen.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        this.thorax.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-
-        if (!this.flying) {
-            // Folded wings when not flying
-            this.foldedWings.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        } else {
-            // Open wings with transparency
+        // Render opaque parts first
+        renderOpaqueParts(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        
+        // Render transparent parts with blending if needed
+        if (shouldRenderPartialTransparency()) {
             poseStack.pushPose();
             RenderSystem.enableBlend();
-            float transparency = 0.6F;
             RenderSystem.defaultBlendFunc();
-            RenderSystem.clearColor(0.8F, 0.8F, 0.8F, transparency);
-            this.leftWing.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-            this.rightWing.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            RenderSystem.clearColor(getTransparencyColor()[0], getTransparencyColor()[1], getTransparencyColor()[2], getTransparencyValue());
+            
+            renderTransparentParts(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            
             RenderSystem.disableBlend();
             poseStack.popPose();
+        } else {
+            // Render folded wings as opaque when not flying
+            this.foldedWings.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
         }
+    }
+    
+    @Override
+    public void renderOpaqueParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Draw legs and body parts
+        this.frontLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rearLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.midLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.abdomen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.thorax.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+    }
+    
+    @Override
+    public void renderTransparentParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Render open wings with transparency
+        this.leftWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.rightWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+    }
+    
+    @Override
+    public float getTransparencyValue() {
+        return 0.6F; // 60% transparency for wings
+    }
+    
+    @Override
+    public boolean shouldRenderPartialTransparency() {
+        return this.flying; // Only when flying
     }
 
     /**

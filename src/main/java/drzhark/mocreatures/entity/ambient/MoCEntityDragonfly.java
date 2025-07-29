@@ -111,4 +111,9 @@ public class MoCEntityDragonfly extends MoCEntityInsect {
         }
         return 0.12F;
     }
+    
+    @Override
+    public boolean shouldRenderTransparent() {
+        return true; // Dragonflies always have transparent wings
+    }
 }

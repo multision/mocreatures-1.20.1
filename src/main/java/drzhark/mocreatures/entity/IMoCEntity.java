@@ -91,4 +91,12 @@ public interface IMoCEntity {
     boolean isFlyer();
 
     boolean getIsFlying();
+    
+    /**
+     * Returns true if this entity should render with transparency (partial or full model).
+     * This is separate from ghost states and vanishing effects.
+     */
+    default boolean shouldRenderTransparent() {
+        return false;
+    }
 }

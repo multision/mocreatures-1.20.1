@@ -93,4 +93,9 @@ public class MoCEntityFly extends MoCEntityInsect {
         }
         return 0.12F;
     }
+    
+    @Override
+    public boolean shouldRenderTransparent() {
+        return true; // Flies have transparent wings when flying
+    }
 }

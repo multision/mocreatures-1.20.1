@@ -25,7 +25,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class MoCModelRoach<T extends MoCEntityRoach> extends EntityModel<T> {
+public class MoCModelRoach<T extends MoCEntityRoach> extends EntityModel<T> implements IPartialTransparencyModel<T> {
 
     @SuppressWarnings("removal")
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
@@ -220,38 +220,61 @@ public class MoCModelRoach<T extends MoCEntityRoach> extends EntityModel<T> {
                                int packedLight,
                                int packedOverlay,
                                float red, float green, float blue, float alpha) {
-
-        // Always render head, legs, thorax, abdomen, tails
-        head.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        thorax.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        frontLegs.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        midLegs.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        rearLegs.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        abdomen.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        tailL.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        tailR.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-
-        if (!flying) {
-            lShellClosed.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-            rShellClosed.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-        } else {
-            lShellOpen.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-            rShellOpen.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-
-            // Render semi‐transparent wings
+        // Render opaque parts first
+        renderOpaqueParts(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+        
+        // Render transparent parts with blending if needed
+        if (shouldRenderPartialTransparency()) {
             poseStack.pushPose();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            RenderSystem.clearColor(0.8F, 0.8F, 0.8F, 0.6F);
-
-            leftWing.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-            rightWing.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-
+            RenderSystem.clearColor(getTransparencyColor()[0], getTransparencyColor()[1], getTransparencyColor()[2], getTransparencyValue());
+            
+            renderTransparentParts(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+            
             RenderSystem.disableBlend();
             poseStack.popPose();
             // Reset shader color to opaque white
             RenderSystem.clearColor(1F, 1F, 1F, 1F);
         }
+    }
+    
+    @Override
+    public void renderOpaqueParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Always render head, legs, thorax, abdomen, tails
+        head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        thorax.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        frontLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        midLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        rearLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        abdomen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        tailL.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        tailR.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        if (!flying) {
+            lShellClosed.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            rShellClosed.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            lShellOpen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            rShellOpen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+    }
+    
+    @Override
+    public void renderTransparentParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Render wings with transparency
+        leftWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        rightWing.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+    }
+    
+    @Override
+    public float getTransparencyValue() {
+        return 0.6F; // 60% transparency for wings
+    }
+    
+    @Override
+    public boolean shouldRenderPartialTransparency() {
+        return this.flying; // Only when flying
     }
 
     @Override

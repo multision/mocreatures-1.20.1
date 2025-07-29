@@ -19,7 +19,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
-public class MoCModelCricket<T extends MoCEntityCricket> extends EntityModel<T> {
+public class MoCModelCricket<T extends MoCEntityCricket> extends EntityModel<T> implements IPartialTransparencyModel<T> {
 
     @SuppressWarnings("removal")
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
@@ -273,5 +273,46 @@ public class MoCModelCricket<T extends MoCEntityCricket> extends EntityModel<T> 
             RenderSystem.disableBlend();
             poseStack.popPose();
         }
+    }
+    
+    @Override
+    public void renderOpaqueParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        this.head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.antenna.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.antennaB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.thorax.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.abdomen.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tailA.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.tailB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.frontLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        this.midLegs.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+        if (!this.flying) {
+            this.thighLeft.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.thighRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.legLeft.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.legRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        } else {
+            this.thighLeftB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.thighRightB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.legLeftB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+            this.legRightB.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        }
+    }
+    
+    @Override
+    public void renderTransparentParts(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        // Crickets don't have wings, so no transparent parts to render
+        // This method is required by the interface but not used for crickets
+    }
+    
+    @Override
+    public float getTransparencyValue() {
+        return 0.6F; // Default transparency value (not used for crickets)
+    }
+    
+    @Override
+    public boolean shouldRenderPartialTransparency() {
+        return false; // Crickets don't have transparent parts
     }
 }
