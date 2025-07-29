@@ -503,6 +503,21 @@ public void faceLocation(double x, double y, double z, float maxTurn) {
         }
     }
 
+    public static boolean getCanSpawnHere(EntityType<MoCEntityAnimal> type, LevelAccessor world, MobSpawnType reason, BlockPos pos, Random randomIn) {
+        BlockState blockBelow = world.getBlockState(pos.below());
+        boolean willSpawn = world.getBrightness(LightLayer.SKY, pos) > 8 && blockBelow.isValidSpawn(world, pos, type);
+        
+        // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
+        if (willSpawn && world instanceof Level) {
+            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world, pos, type);
+        }
+        
+        if (MoCreatures.proxy.debug && willSpawn) {
+            MoCreatures.LOGGER.info("Animal: " + type.getDescription() + " at: " + pos + " State: " + world.getBlockState(pos) + " biome: " + MoCTools.biomeName((Level) world, pos));
+        }
+        return willSpawn;
+    }
+
     @Override
     public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
