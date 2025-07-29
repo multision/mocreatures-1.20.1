@@ -2021,7 +2021,12 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
 
                 if (!flag && !readyForParenting((MoCEntityHorse) horsemate)) return;
 
-                this.gestationTime++; // Always increment, instead of taking a 1% chance
+                if (MoCreatures.proxy.originalHorseBreeding) {
+                    // 1% chance per tick to increment gestation time, following the old one day cycle breeding method.
+                    if (this.random.nextInt(100) == 0) this.gestationTime++;
+                } else {
+                    this.gestationTime++;
+                }
 
                 if (this.gestationTime % 3 == 0) {
                     MoCMessageHandler.INSTANCE.send(PacketDistributor.NEAR.with(() -> 
@@ -2029,7 +2034,11 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
                         new MoCMessageHeart(this.getId()));
                 }
 
-                if (this.gestationTime <= 300) continue; // Instead of RNG delay, it takes ~15 seconds to breed.
+                if (MoCreatures.proxy.originalHorseBreeding) {
+                    if (this.gestationTime <= 50) continue; // The old RNG based delay
+                } else {
+                    if (this.gestationTime <= 300) continue; // it takes ~15 seconds to breed.
+                }
 
                 MoCEntityHorse baby = MoCEntities.WILDHORSE.get().create(this.level());
                 baby.setPos(this.getX(), this.getY(), this.getZ());

@@ -62,6 +62,7 @@ public class MoCProxy {
     public boolean easterEggs;
     public boolean easyHorseBreeding;
     public boolean elephantBulldozer;
+    public boolean originalHorseBreeding;
     public boolean enableHunters;
     public boolean enableOwnership;
     public boolean enableResetOwnership;
@@ -713,6 +714,7 @@ public class MoCProxy {
         this.destroyDrops = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "DestroyDrops", true, "When enabled, if tamed entities find drops, they will destroy them.").getBoolean(true);
         this.easterEggs = this.mocSettingsConfig.get(CATEGORY_MOC_GENERAL_SETTINGS, "EasterEggs", false, "Spawns certain entities on Easter.").getBoolean(false);
         this.easyHorseBreeding = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "EasyHorseBreeding", false, "Makes breeding horses easier with one click.").getBoolean(false);
+        this.originalHorseBreeding = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "OriginalHorseBreeding", false, "If set to false, horses take about 15 seconds to breed. If set to true, horses must be left for half a Minecraft day (about 10 minutes) after being fed the proper items. Pegasus and unicorns take about a whole Minecraft day.").getBoolean(false);
         this.elephantBulldozer = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "ElephantBulldozer", true, "When enabled, elephants will destroy all non-solid blocks.").getBoolean(true);
         this.enableHunters = this.mocSettingsConfig.get(CATEGORY_MOC_CREATURE_GENERAL_SETTINGS, "EnableHunters", true, "When disabled, hunters will not attack your pets.").getBoolean(true);
         this.enableOwnership = this.mocSettingsConfig.get(CATEGORY_OWNERSHIP_SETTINGS, "EnableOwnership", true, "Enables ownership for other players.").getBoolean(true);
