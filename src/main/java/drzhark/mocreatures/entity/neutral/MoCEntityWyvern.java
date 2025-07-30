@@ -139,8 +139,13 @@ public class MoCEntityWyvern extends MoCEntityTameableAnimal {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType reason, @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
-        if (worldIn.getLevel().dimension() == MoCreatures.proxy.wyvernDimension) {
+        // Set persistence for wyverns in the wyvern dimension or if they are tamed
+        if (worldIn.getLevel().dimension() == MoCreatures.proxy.wyvernDimension || this.getIsTamed()) {
             this.setPersistenceRequired();
+            if (MoCreatures.proxy.debug) {
+                MoCreatures.LOGGER.info("Wyvern spawn - setting persistence required for entity {} in dimension {}", 
+                    this.getId(), worldIn.getLevel().dimension());
+            }
         }
         return super.finalizeSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
     }
@@ -171,7 +176,27 @@ public class MoCEntityWyvern extends MoCEntityTameableAnimal {
 
     @Override
     public boolean removeWhenFarAway(double distanceToClosestPlayer) {
-        return this.level().dimension() != MoCreatures.proxy.wyvernDimension;
+        // Wyverns should not despawn if they are in the wyvern dimension OR if they are tamed
+        boolean shouldDespawn = this.level().dimension() != MoCreatures.proxy.wyvernDimension && !this.getIsTamed();
+        
+        if (MoCreatures.proxy.debug) {
+            MoCreatures.LOGGER.info("Wyvern despawn check - Dimension: {}, WyvernDimension: {}, IsTamed: {}, ShouldDespawn: {}", 
+                this.level().dimension(), MoCreatures.proxy.wyvernDimension, this.getIsTamed(), shouldDespawn);
+        }
+        
+        return shouldDespawn;
+    }
+
+    @Override
+    public void setTamed(boolean tamed) {
+        super.setTamed(tamed);
+        // Set persistence when wyvern becomes tamed
+        if (tamed) {
+            this.setPersistenceRequired();
+            if (MoCreatures.proxy.debug) {
+                MoCreatures.LOGGER.info("Wyvern tamed - setting persistence required for entity {}", this.getId());
+            }
+        }
     }
 
     public boolean getIsFlying() {
