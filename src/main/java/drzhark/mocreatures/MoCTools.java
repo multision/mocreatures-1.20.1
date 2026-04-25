@@ -265,7 +265,9 @@ public class MoCTools {
     }
 
     public static JukeboxBlockEntity nearJukeBoxRecord(Entity entity, double dist) {
-        AABB aabb = entity.getBoundingBox().inflate(dist, dist / 2D, dist);
+    AABB aabb = entity.getBoundingBox().inflate(dist, dist / 2D, dist);
+
+    try {
         BlockPos.betweenClosedStream(
                 Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ),
                 Mth.floor(aabb.maxX + 1.0D), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ + 1.0D)
@@ -273,14 +275,17 @@ public class MoCTools {
             BlockState state = entity.level().getBlockState(pos);
             if (!state.isAir() && state.getBlock() instanceof JukeboxBlock) {
                 BlockEntity be = entity.level().getBlockEntity(pos);
-                if (be instanceof JukeboxBlockEntity) {
-                    throw new JukeboxFound((JukeboxBlockEntity) be); // internal flow control
+                if (be instanceof JukeboxBlockEntity jukebox) {
+                    throw new JukeboxFound(jukebox); // escape
                 }
             }
         });
-
-        return null;
+    } catch (JukeboxFound found) {
+        return found.jukebox; // RETURN IT HERE
     }
+
+    return null;
+}
 
     // Helper exception to return early from the stream
     private static class JukeboxFound extends RuntimeException {
@@ -288,6 +293,19 @@ public class MoCTools {
 
         JukeboxFound(JukeboxBlockEntity jukebox) {
             this.jukebox = jukebox;
+        }
+    }
+
+    public static void checkForTwistedEntities(Level level) {
+        ServerLevel serverLevel = level.getServer().getLevel(level.dimension());
+        if (serverLevel == null) return;
+
+        for (Entity entity : serverLevel.getAllEntities()) {
+            if (entity instanceof LivingEntity living) {
+                if (living.deathTime > 0 && !living.isPassenger() && !living.isDeadOrDying()) {
+                    living.deathTime = 0;
+                }
+            }
         }
     }
 
