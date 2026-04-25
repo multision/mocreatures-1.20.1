@@ -309,19 +309,6 @@ public class MoCTools {
         }
     }
 
-    public static void checkForTwistedEntities(Level level) {
-        ServerLevel serverLevel = level.getServer().getLevel(level.dimension());
-        if (serverLevel == null) return;
-
-        for (Entity entity : serverLevel.getAllEntities()) {
-            if (entity instanceof LivingEntity living) {
-                if (living.deathTime > 0 && !living.isPassenger() && !living.isDeadOrDying()) {
-                    living.deathTime = 0;
-                }
-            }
-        }
-    }
-
     public static double getSqDistanceTo(Entity entity, double x, double y, double z) {
         double dx = entity.getX() - x;
         double dy = entity.getY() - y;
