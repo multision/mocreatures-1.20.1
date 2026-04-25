@@ -525,6 +525,9 @@ public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityMode
             LLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.4F * limbSwingAmount;
             RLegXRotC = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.4F * limbSwingAmount;
             LLegXRotC = Mth.cos(limbSwing * 0.6662F) * 0.4F * limbSwingAmount;
+
+            leg1A.xRot = RLegXRotC;
+            leg2A.xRot = LLegXRotC;
             
             leg3B.y = leg3A.y + Mth.sin((90F / 57.29578F) + RLegXRot) * 7F;
             leg3B.z = leg3A.z + Mth.cos((270F / 57.29578F) + RLegXRot) * 7F;
