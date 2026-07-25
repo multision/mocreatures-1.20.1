@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import drzhark.mocreatures.entity.hostile.MoCEntityHorseMob;
+import drzhark.mocreatures.entity.passive.MoCEntityHorse;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -12,6 +13,7 @@ import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -296,10 +298,17 @@ public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityMode
         float LLegXRot = Mth.cos(limbSwing * 0.6662F) * 0.8F * limbSwingAmount;
         float HeadXRot = headPitch * (1F / 57.29578F);
 
+        if (entityIn instanceof MoCEntityHorse horse) {
+            this.type = horse.getTypeMoC(); // or whatever your getter is
+            this.shuffling = (this.type == 60) && horse.shuffleCounter > 0;
+        } else {
+            this.shuffling = false;
+        }
+
         if (netHeadYaw > 20F) netHeadYaw = 20F;
         if (netHeadYaw < -20F) netHeadYaw = -20F;
 
-        if (shuffling) {
+        if (this.shuffling) {
             HeadXRot += Mth.cos(ageInTicks * 0.4F) * 0.15F;
         } else if (limbSwingAmount > 0.2F && !floating) {
             HeadXRot += Mth.cos(limbSwing * 0.4F) * 0.15F * limbSwingAmount;
@@ -317,7 +326,7 @@ public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityMode
         body.xRot = 0F;
 
         // Adjust for standing
-        if (standing && !shuffling) {
+        if (standing && !this.shuffling) {
             head.y = -6F;
             head.z = -1F;
             head.xRot = (15F / 57.29578F) + HeadXRot;
@@ -327,7 +336,7 @@ public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityMode
             bag2.y = 5.5F;
             bag2.z = 15F;
             body.xRot = -45F / 57.29578F;
-        } else if (eating && !shuffling) {
+        } else if (eating && !this.shuffling) {
             head.y = 11.0F;
             head.z = -10F;
             head.xRot = 2.18166F;
@@ -525,7 +534,10 @@ public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityMode
             LLegXRot = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.4F * limbSwingAmount;
             RLegXRotC = Mth.cos((limbSwing * 0.6662F) + (float)Math.PI) * 0.4F * limbSwingAmount;
             LLegXRotC = Mth.cos(limbSwing * 0.6662F) * 0.4F * limbSwingAmount;
-            
+
+            leg1A.xRot = RLegXRotC;
+            leg2A.xRot = LLegXRotC;
+
             leg3B.y = leg3A.y + Mth.sin((90F / 57.29578F) + RLegXRot) * 7F;
             leg3B.z = leg3A.z + Mth.cos((270F / 57.29578F) + RLegXRot) * 7F;
             
@@ -552,7 +564,7 @@ public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityMode
         leg4C.xRot = LLegXRotB;
 
         // Type 60 (sprinting/shuffling) adjustments
-        if (type == 60 && shuffling) {
+        if (this.type == 60 && this.shuffling) {
             leg3A.y = 9F;
             leg3A.z = -8F;
             leg4A.y = leg3A.y;
