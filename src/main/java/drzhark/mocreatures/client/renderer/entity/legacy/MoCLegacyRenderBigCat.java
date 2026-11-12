@@ -36,7 +36,7 @@ public class MoCLegacyRenderBigCat extends MobRenderer<MoCEntityBigCat, MoCLegac
 
     public MoCLegacyRenderBigCat(EntityRendererProvider.Context renderManagerIn, MoCLegacyModelBigCat2 modelbigcat2, MoCLegacyModelBigCat1 modelbigcat1, float f) {
         super(renderManagerIn, modelbigcat2, f);
-        this.addLayer(new LayerMoCBigCat(this, renderManagerIn));
+        this.addLayer(new LayerMoCBigCat(this, modelbigcat1));
         this.bigcat1 = modelbigcat2;
     }
 
@@ -145,10 +145,10 @@ public class MoCLegacyRenderBigCat extends MobRenderer<MoCEntityBigCat, MoCLegac
         private final MoCLegacyRenderBigCat mocRenderer;
         private final MoCLegacyModelBigCat1<MoCEntityBigCat> mocModel;
 
-        public LayerMoCBigCat(MoCLegacyRenderBigCat render, EntityRendererProvider.Context context) {
+        public LayerMoCBigCat(MoCLegacyRenderBigCat render, MoCLegacyModelBigCat1<MoCEntityBigCat> maneModel) {
             super(render);
             this.mocRenderer = render;
-            this.mocModel = new MoCLegacyModelBigCat1<>(context.bakeLayer(MoCLegacyModelBigCat1.LAYER_LOCATION));
+            this.mocModel = maneModel;
         }
 
         @Override
@@ -163,7 +163,7 @@ public class MoCLegacyRenderBigCat extends MobRenderer<MoCEntityBigCat, MoCLegac
             } else {
                 resourcelocation = MoCreatures.proxy.getModelTexture("big_cat_lion_legacy_layer_female.png");
             }
-            this.mocModel.setupAnim(entitybigcat, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+            this.mocModel.copyPoseFrom(this.getParentModel());
             VertexConsumer vertexconsumer = buffer.getBuffer(RenderType.entityCutoutNoCull(resourcelocation));
             this.mocModel.renderToBuffer(poseStack, vertexconsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
         }

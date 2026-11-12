@@ -150,14 +150,14 @@ public class MoCEntityEgg extends Mob {
             if (getEggType() > 20 && getEggType() < 29) {
                 MoCEntitySnake snakey = new MoCEntitySnake(MoCEntities.SNAKE.get(), this.level());
                 snakey.setTypeMoC(getEggType() - 20);
-                snakey.setAge(50);
+                initializeHatchling(snakey, 50);
                 spawnEggEntity(snakey, player);
             }
 
             if (getEggType() == 30 || getEggType() == 31 || getEggType() == 32) {
                 MoCEntityOstrich ostrich = new MoCEntityOstrich(MoCEntities.OSTRICH.get(), this.level());
                 ostrich.setTypeMoC(this.level().dimension().location().getPath().contains("nether") || getEggType() == 32 ? 5 : 1);
-                ostrich.setAge(35);
+                initializeHatchling(ostrich, 35);
                 ostrich.setPos(this.getX(), this.getY(), this.getZ());
                 this.level().addFreshEntity(ostrich);
                 if (getEggType() == 31 && player != null) MoCTools.tameWithName(player, ostrich);
@@ -166,14 +166,14 @@ public class MoCEntityEgg extends Mob {
             if (getEggType() == 33) {
                 MoCEntityKomodo komodo = new MoCEntityKomodo(MoCEntities.KOMODO_DRAGON.get(), this.level());
                 komodo.setPos(this.getX(), this.getY(), this.getZ());
-                komodo.setAge(35);
+                initializeHatchling(komodo, 35);
                 this.level().addFreshEntity(komodo);
                 if (player != null) MoCTools.tameWithName(player, komodo);
             }
 
             if (getEggType() > 40 && getEggType() < 46) {
                 MoCEntityPetScorpion scorp = new MoCEntityPetScorpion(MoCEntities.PET_SCORPION.get(), this.level());
-                scorp.setTypeMoC(getEggType() - 40); scorp.setAdult(false);
+                scorp.setTypeMoC(getEggType() - 40); initializeHatchling(scorp, 20);
                 scorp.setPos(this.getX(), this.getY(), this.getZ());
                 this.level().addFreshEntity(scorp);
                 if (player != null) MoCTools.tameWithName(player, scorp);
@@ -181,13 +181,13 @@ public class MoCEntityEgg extends Mob {
 
             if (getEggType() > 49 && getEggType() < 62) {
                 MoCEntityWyvern wyv = new MoCEntityWyvern(MoCEntities.WYVERN.get(), this.level());
-                wyv.setTypeMoC(getEggType() - 49); wyv.setAdult(false); wyv.setAge(30);
+                wyv.setTypeMoC(getEggType() - 49); initializeHatchling(wyv, 30);
                 spawnEggEntity(wyv, player); wyv.setHealth(wyv.getMaxHealth());
             }
 
             if (getEggType() > 61 && getEggType() < 67) {
                 MoCEntityManticorePet mant = new MoCEntityManticorePet(MoCEntities.MANTICORE_PET.get(), this.level());
-                mant.setTypeMoC(getEggType() - 61); mant.setAdult(false); mant.setAge(30);
+                mant.setTypeMoC(getEggType() - 61); initializeHatchling(mant, 30);
                 spawnEggEntity(mant, player); mant.setHealth(mant.getMaxHealth());
             }
 
@@ -198,9 +198,21 @@ public class MoCEntityEgg extends Mob {
 
     private void spawnEggEntity(Mob entity, Player owner) {
         entity.setPos(this.getX(), this.getY(), this.getZ());
-        if (entity instanceof AgeableMob) ((AgeableMob) entity).setAge(-24000);
+        if (entity instanceof drzhark.mocreatures.entity.IMoCEntity creature) {
+            int age = creature.getIsAdult() || creature.getMoCAge() <= 0 ? 30 : creature.getMoCAge();
+            initializeHatchling(entity, age);
+        }
         this.level().addFreshEntity(entity);
         if (owner != null) MoCTools.tameWithName(owner, (IMoCTameable) entity);
+    }
+
+    /** Initialize both age systems before an egg's entity is sent to clients. */
+    public static void initializeHatchling(Mob entity, int age) {
+        if (entity instanceof AgeableMob ageable) ageable.setAge(-24000);
+        if (entity instanceof drzhark.mocreatures.entity.IMoCEntity creature) {
+            creature.setAdult(false);
+            creature.setMoCAge(age);
+        }
     }
 
     private void notifyEggHatching() {

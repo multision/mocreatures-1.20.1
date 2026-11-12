@@ -72,11 +72,11 @@ public class MoCEntityLion extends MoCEntityBigCat {
     @Override
     public boolean hasMane() {
         // Only adult male lions should have manes
-        // Types 2, 3, and 7 are male lions (regular and white lions)
+        // Types 2, 3, 7, and 8 are male lions, including winged white lions
         // Add extra validation to prevent synchronization issues
         return this.getIsAdult() 
             && this.getMoCAge() >= (this.getMoCMaxAge() * 0.8) // At least 80% of max age
-            && (this.getTypeMoC() == 2 || this.getTypeMoC() == 3 || this.getTypeMoC() == 7);
+            && (this.getTypeMoC() == 2 || this.getTypeMoC() == 3 || this.getTypeMoC() == 7 || this.getTypeMoC() == 8);
     }
 
     @Override

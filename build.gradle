@@ -184,3 +184,27 @@ tasks.named('jar', Jar).configure {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
+
+// Keep contributor credits and the changelog available inside the distributed mod.
+tasks.named('processResources', ProcessResources).configure {
+    from('CREDITS.md', 'CHANGELOG.md')
+}
+
+// These client model checks need no game window or additional test dependencies.
+tasks.register('communityRegressionChecks', JavaExec) {
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'drzhark.mocreatures.client.model.LegacyBigCatModelChecks'
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.named('communityRegressionChecks')
+}
+
+// Load test-only fixtures into the dedicated GameTest run, never the release JAR.
+minecraft.runs.gameTestServer {
+    workingDirectory project.file('build/gametest')
+    mods {
+        "${mod_id}" { source sourceSets.test }
+    }
+}

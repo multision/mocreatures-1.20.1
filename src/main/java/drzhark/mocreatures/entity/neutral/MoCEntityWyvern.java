@@ -25,6 +25,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -107,7 +109,19 @@ public class MoCEntityWyvern extends MoCEntityTameableAnimal {
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(4, this.wander = new EntityAIWanderMoC2(this, 1.0D, 80));
         this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        //this.targetSelector.addGoal(1, new EntityAIHunt<>(this, AnimalEntity.class, true));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, true) {
+            @Override
+            public boolean canUse() {
+                return !MoCEntityWyvern.this.isMovementCeased() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return !MoCEntityWyvern.this.isMovementCeased() && super.canContinueToUse();
+            }
+        });
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
+                target -> shouldAttackPlayers()));
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
     }
 
@@ -815,12 +829,11 @@ public class MoCEntityWyvern extends MoCEntityTameableAnimal {
         }
         openMouth();
         
-        // Apply poison effects directly here instead of in applyEnchantments
-        if (entityIn instanceof Player && this.random.nextInt(3) == 0) {
-            ((LivingEntity) entityIn).addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+        boolean hit = super.doHurtTarget(entityIn);
+        if (hit && entityIn instanceof Player player && this.random.nextInt(3) == 0) {
+            player.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
         }
-        
-        return super.doHurtTarget(entityIn);
+        return hit;
     }
 
     @Override

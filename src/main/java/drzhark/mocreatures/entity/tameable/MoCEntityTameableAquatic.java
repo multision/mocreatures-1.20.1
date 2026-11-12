@@ -118,6 +118,19 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
     }
 
     @Override
+    public boolean canAttack(LivingEntity target) {
+        return !(getIsTamed() && target.getUUID().equals(getOwnerId())) && super.canAttack(target);
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        if (target instanceof LivingEntity living && !canAttack(living)) {
+            return false;
+        }
+        return super.doHurtTarget(target);
+    }
+
+    @Override
     public boolean hurt(DamageSource damagesource, float i) {
         Entity entity = damagesource.getEntity();
         if ((this.isVehicle() && entity == this.getVehicle()) || (this.getVehicle() != null && entity == this.getVehicle())) {
@@ -266,18 +279,15 @@ public class MoCEntityTameableAquatic extends MoCEntityAquatic implements IMoCTa
         return null;
     }
 
-    // Fixes despawn issue when chunks unload and duplicated mounts when disconnecting on servers
+    // Keep pets from natural despawning while allowing normal chunk/dimension removal.
     @Override
-    public void remove(Entity.RemovalReason reason) {
-        if (reason == Entity.RemovalReason.DISCARDED) {
-            super.remove(reason);
-            return;
-        }
-        
-        if (!this.level().isClientSide() && getIsTamed() && getHealth() > 0 && !isRiderDisconnecting()) {
-            return;
-        }
-        super.remove(reason);
+    public boolean requiresCustomPersistence() {
+        return getIsTamed() || super.requiresCustomPersistence();
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return !getIsTamed() && super.removeWhenFarAway(distanceToClosestPlayer);
     }
 
     /**

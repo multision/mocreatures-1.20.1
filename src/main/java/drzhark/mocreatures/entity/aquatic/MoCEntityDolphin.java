@@ -430,18 +430,7 @@ public class MoCEntityDolphin extends MoCEntityTameableAquatic {
                 && entitydolphin.getHasEaten() && entitydolphin.getIsAdult();
     }
 
-    @Override
-    public void remove(Entity.RemovalReason reason) {
-        if (reason == Entity.RemovalReason.DISCARDED) {
-            super.remove(reason);
-            return;
-        }
 
-        if (!this.level().isClientSide() && getIsTamed() && (getHealth() > 0)) {
-        } else {
-            super.remove(reason);
-        }
-    }
 
     /*@Override
     public int getMaxSpawnedInChunk() {

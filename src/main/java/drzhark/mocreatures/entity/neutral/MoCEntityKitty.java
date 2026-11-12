@@ -1105,15 +1105,13 @@ public class MoCEntityKitty extends MoCEntityTameableAnimal {
     }
 
     @Override
-    public void remove(Entity.RemovalReason reason) {
-        if (reason == Entity.RemovalReason.DISCARDED) {
-            super.remove(reason);
-            return;
-        }
+    public boolean requiresCustomPersistence() {
+        return getKittyState() > 2 || super.requiresCustomPersistence();
+    }
 
-        if (this.level().isClientSide() || getKittyState() <= 2 || this.getHealth() <= 0) {
-            super.remove(reason);
-        }
+    @Override
+    public boolean removeWhenFarAway(double distance) {
+        return getKittyState() <= 2 && super.removeWhenFarAway(distance);
     }
 
     public void swingArm() {

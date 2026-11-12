@@ -125,3 +125,6 @@ runServer.launch
 /bin
 /run-data
 TRANSPARENCY_SYSTEM.md
+
+# Runtime logs from headless model checks
+/logs/

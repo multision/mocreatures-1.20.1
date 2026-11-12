@@ -31,11 +31,8 @@ public class MoCItemArmor extends ArmorItem {
     @SuppressWarnings("removal")
     @Override
     public void onArmorTick(ItemStack itemStack, Level world, Player player) {
-        if (player.tickCount % 40 == 0) {
-            ItemStack stack = player.getItemBySlot(EquipmentSlot.FEET);
-            if (!stack.isEmpty() && stack.getItem() instanceof MoCItemArmor) {
-                MoCTools.updatePlayerArmorEffects(player);
-            }
+        if (!world.isClientSide && this.getEquipmentSlot() == EquipmentSlot.FEET && player.tickCount % 40 == 0) {
+            MoCTools.updatePlayerArmorEffects(player);
         }
     }
 

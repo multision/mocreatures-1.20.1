@@ -61,21 +61,18 @@ public class MoCEntityOgre extends MoCEntityMob {
     }
 
     @Override
-    public boolean hurt(DamageSource damagesource, float damage) {
-        if (super.hurt(damagesource, damage)) {
-            Entity entity = damagesource.getEntity();
-            if (entity != null && this.isVehicle() && this.hasPassenger(entity)) {
-                return true;
-            }
-            if ((entity != this) && (this.level().getDifficulty().getId() > 0) && entity instanceof LivingEntity) {
-                setTarget((LivingEntity) entity);
-                return true;
-            } else {
-                return false;
-            }
-        } else {
+    public boolean hurt(DamageSource source, float damage) {
+        if (!super.hurt(source, damage)) {
             return false;
         }
+        Entity attacker = source.getEntity();
+        if (attacker instanceof LivingEntity living && attacker != this && !this.hasPassenger(attacker)
+                && this.level().getDifficulty() != net.minecraft.world.Difficulty.PEACEFUL
+                && this.canAttack(living)
+                && !(attacker instanceof Player player && (player.isCreative() || player.isSpectator()))) {
+            setTarget(living);
+        }
+        return true;
     }
 
     @Override

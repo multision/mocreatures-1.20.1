@@ -595,11 +595,13 @@ public class MoCEntityOstrich extends MoCEntityTameableAnimal {
             return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
 
-        if (getIsTamed() && (getTypeMoC() > 1) && !stack.isEmpty() && !getIsRideable() && (stack.getItem() == Items.SADDLE || stack.getItem() instanceof SaddleItem)) {
-            if (!player.getAbilities().instabuild) stack.shrink(1);
-            MoCTools.playCustomSound(this, SoundEvents.CHICKEN_EGG);
-            setRideable(true);
-            return InteractionResult.SUCCESS;
+        if (getIsTamed() && (getTypeMoC() > 1) && !stack.isEmpty() && !getIsRideable() && (stack.getItem() instanceof SaddleItem || stack.is(MoCItems.HORSE_SADDLE.get()))) {
+            if (!this.level().isClientSide()) {
+                if (!player.getAbilities().instabuild) stack.shrink(1);
+                MoCTools.playCustomSound(this, SoundEvents.CHICKEN_EGG);
+                setRideable(true);
+            }
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
 
         if (!getIsFertile() && !stack.isEmpty() && getTypeMoC() == 2 && stack.getItem() == Items.MELON_SEEDS) {

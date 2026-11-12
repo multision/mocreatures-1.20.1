@@ -18,3 +18,13 @@
 * Lead Developer, Codebase Cleanup, Spawn Logic, General Maintenance ~ ACGaming
 * Developer, Sound Artist, Language/Model Adjustments, General Maintenance ~ IcarussOne
 * QA Analyst & Testing, Entity Spawn Rules ~ xJon
+
+**Community patches (1.20.1):**
+
+* Lollizaczek / Lollizak — horse rear-leg animation and zebra shuffle.
+* Dinocraft-cz / Vaniron — zebra-fix integration and distribution.
+* ItsFadedMaybe / Faded — elephant kneeling and stable riding.
+* Clickibait / ClickLarp and Pug — legacy-model, shark, pet-persistence, and elephant fixes and investigation.
+
+See [CREDITS.md](CREDITS.md) for contribution details and source links,
+and [CHANGELOG.md](CHANGELOG.md) for integrated fixes.

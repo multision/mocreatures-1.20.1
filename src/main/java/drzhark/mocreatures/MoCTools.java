@@ -265,35 +265,16 @@ public class MoCTools {
     }
 
     public static JukeboxBlockEntity nearJukeBoxRecord(Entity entity, double dist) {
-    AABB aabb = entity.getBoundingBox().inflate(dist, dist / 2D, dist);
-
-    try {
-        BlockPos.betweenClosedStream(
+        AABB aabb = entity.getBoundingBox().inflate(dist, dist / 2D, dist);
+        for (BlockPos pos : BlockPos.betweenClosed(
                 Mth.floor(aabb.minX), Mth.floor(aabb.minY), Mth.floor(aabb.minZ),
-                Mth.floor(aabb.maxX + 1.0D), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ + 1.0D)
-        ).forEach(pos -> {
-            BlockState state = entity.level().getBlockState(pos);
-            if (!state.isAir() && state.getBlock() instanceof JukeboxBlock) {
-                BlockEntity be = entity.level().getBlockEntity(pos);
-                if (be instanceof JukeboxBlockEntity jukebox) {
-                    throw new JukeboxFound(jukebox); // escape
-                }
+                Mth.floor(aabb.maxX + 1.0D), Mth.floor(aabb.maxY), Mth.floor(aabb.maxZ + 1.0D))) {
+            if (entity.level().getBlockState(pos).getBlock() instanceof JukeboxBlock
+                    && entity.level().getBlockEntity(pos) instanceof JukeboxBlockEntity jukebox) {
+                return jukebox;
             }
-        });
-    } catch (JukeboxFound found) {
-        return found.jukebox; // RETURN IT HERE
-    }
-
-    return null;
-}
-
-    // Helper exception to return early from the stream
-    private static class JukeboxFound extends RuntimeException {
-        final JukeboxBlockEntity jukebox;
-
-        JukeboxFound(JukeboxBlockEntity jukebox) {
-            this.jukebox = jukebox;
         }
+        return null;
     }
 
     public static void checkForTwistedEntities(Level level) {

@@ -45,7 +45,7 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     public MoCEntityTurtle(EntityType<? extends MoCEntityTurtle> type, Level world) {
         super(type, world);
         //setSize(0.6F, 0.425F);
-        setAdult(true);
+        setAdult(false);
         // TODO: Make hitboxes adjust depending on size
         //setAge(60 + this.random.nextInt(50));
         setMoCAge(90);
@@ -303,6 +303,8 @@ public class MoCEntityTurtle extends MoCEntityTameableAnimal {
     @Override
     public void readAdditionalSaveData(CompoundTag nbttagcompound) {
         super.readAdditionalSaveData(nbttagcompound);
+        // Older turtles were marked adult at age 90 and could never reach max age.
+        if (getMoCAge() < getMoCMaxAge()) setAdult(false);
         setIsUpsideDown(nbttagcompound.getBoolean("UpsideDown"));
     }
 

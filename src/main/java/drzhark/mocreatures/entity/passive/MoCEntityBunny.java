@@ -87,7 +87,7 @@ public class MoCEntityBunny extends MoCEntityTameableAnimal {
 
     @Override
     public boolean removeWhenFarAway(double distanceToClosestPlayer) {
-        return this.level().dimension() != MoCreatures.proxy.wyvernDimension;
+        return !getIsTamed() && this.level().dimension() != MoCreatures.proxy.wyvernDimension;
     }
 
     public boolean getHasEaten() {

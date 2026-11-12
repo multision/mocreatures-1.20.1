@@ -462,18 +462,7 @@ public class MoCEntityBird extends MoCEntityTameableAnimal {
         return (new int[]{0, 0, 0});
     }
 
-    @Override
-    public void remove(Entity.RemovalReason reason) {
-        if (reason == Entity.RemovalReason.DISCARDED) {
-            super.remove(reason);
-            return;
-        }
 
-        if (!this.level().isClientSide && getIsTamed() && (this.getHealth() > 0)) {
-        } else {
-            super.remove(reason);
-        }
-    }
 
     private void WingFlap() {
         this.setDeltaMovement(this.getDeltaMovement().add(0.0D, 0.05D, 0.0D));

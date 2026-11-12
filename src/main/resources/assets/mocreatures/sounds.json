@@ -3,31 +3,36 @@
     "category": "neutral",
     "sounds": [
       "mocreatures:appear"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.appear"
   },
   "appearmagic": {
     "category": "neutral",
     "sounds": [
       "mocreatures:appear_magic"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.appearmagic"
   },
   "armoroff": {
     "category": "neutral",
     "sounds": [
       "mocreatures:armor_off"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.armoroff"
   },
   "armorput": {
     "category": "neutral",
     "sounds": [
       "mocreatures:armor_put"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.armorput"
   },
   "beardeath": {
     "category": "neutral",
     "sounds": [
       "mocreatures:bear_death"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.beardeath"
   },
   "beargrunt": {
     "category": "neutral",
@@ -37,14 +42,16 @@
       "mocreatures:bear_grunt3",
       "mocreatures:bear_grunt4",
       "mocreatures:bear_grunt5"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.beargrunt"
   },
   "bearhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:bear_hurt1",
       "mocreatures:bear_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.bearhurt"
   },
   "bee": {
     "category": "neutral",
@@ -52,19 +59,22 @@
       "mocreatures:bee_buzz1",
       "mocreatures:bee_buzz2",
       "mocreatures:bee_buzz3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.bee"
   },
   "beehurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:bee_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.beehurt"
   },
   "beeupset": {
     "category": "neutral",
     "sounds": [
       "mocreatures:bee_upset"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.beeupset"
   },
   "birdblack": {
     "category": "neutral",
@@ -72,7 +82,8 @@
       "mocreatures:bird_black1",
       "mocreatures:bird_black2",
       "mocreatures:bird_black3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.birdblack"
   },
   "birdblue": {
     "category": "neutral",
@@ -81,7 +92,8 @@
       "mocreatures:bird_blue2",
       "mocreatures:bird_blue3",
       "mocreatures:bird_blue4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.birdblue"
   },
   "birdgreen": {
     "category": "neutral",
@@ -89,7 +101,8 @@
       "mocreatures:bird_green1",
       "mocreatures:bird_green2",
       "mocreatures:bird_green3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.birdgreen"
   },
   "birdred": {
     "category": "neutral",
@@ -99,13 +112,15 @@
       "mocreatures:bird_red3",
       "mocreatures:bird_red4",
       "mocreatures:bird_red5"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.birdred"
   },
   "birdwhite": {
     "category": "neutral",
     "sounds": [
       "mocreatures:bird_white1"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.birdwhite"
   },
   "birdyellow": {
     "category": "neutral",
@@ -115,13 +130,15 @@
       "mocreatures:bird_yellow3",
       "mocreatures:bird_yellow4",
       "mocreatures:bird_yellow5"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.birdyellow"
   },
   "cricketambient": {
     "category": "neutral",
     "sounds": [
       "mocreatures:cricket_ambient"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.cricketambient"
   },
   "cricketchirp": {
     "category": "neutral",
@@ -129,19 +146,22 @@
       "mocreatures:cricket_chirp1",
       "mocreatures:cricket_chirp2",
       "mocreatures:cricket_chirp3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.cricketchirp"
   },
   "crickethurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:cricket_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.crickethurt"
   },
   "crocdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:croc_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.crocdying"
   },
   "crocgrunt": {
     "category": "neutral",
@@ -149,7 +169,8 @@
       "mocreatures:croc_grunt1",
       "mocreatures:croc_grunt2",
       "mocreatures:croc_grunt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.crocgrunt"
   },
   "crochurt": {
     "category": "neutral",
@@ -157,39 +178,45 @@
       "mocreatures:croc_hurt1",
       "mocreatures:croc_hurt2",
       "mocreatures:croc_hurt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.crochurt"
   },
   "crocjawsnap": {
     "category": "neutral",
     "sounds": [
       "mocreatures:croc_jaw_snap1",
       "mocreatures:croc_jaw_snap2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.crocjawsnap"
   },
   "crocresting": {
     "category": "neutral",
     "sounds": [
       "mocreatures:croc_resting1",
       "mocreatures:croc_resting2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.crocresting"
   },
   "crocroll": {
     "category": "neutral",
     "sounds": [
       "mocreatures:croc_roll"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.crocroll"
   },
   "cub": {
     "category": "neutral",
     "sounds": [
       "mocreatures:cub"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.cub"
   },
   "cubdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:cub_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.cubdying"
   },
   "cubgrunt": {
     "category": "neutral",
@@ -199,7 +226,8 @@
       "mocreatures:cub_grunt3",
       "mocreatures:cub_grunt4",
       "mocreatures:cub_grunt5"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.cubgrunt"
   },
   "cubhurt": {
     "category": "neutral",
@@ -207,37 +235,43 @@
       "mocreatures:cub_hurt1",
       "mocreatures:cub_hurt2",
       "mocreatures:cub_hurt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.cubhurt"
   },
   "deerbgrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:deer_fawn_grunt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.deerbgrunt"
   },
   "deerdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:deer_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.deerdying"
   },
   "deerfgrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:deer_grunt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.deerfgrunt"
   },
   "deerhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:deer_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.deerhurt"
   },
   "destroy": {
     "category": "hostile",
     "sounds": [
       "mocreatures:destroy"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.destroy"
   },
   "dolphin": {
     "category": "neutral",
@@ -248,7 +282,8 @@
       "mocreatures:dolphin_call4",
       "mocreatures:dolphin_call5",
       "mocreatures:dolphin_call6"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.dolphin"
   },
   "dolphindying": {
     "category": "neutral",
@@ -256,57 +291,66 @@
       "mocreatures:dolphin_dying1",
       "mocreatures:dolphin_dying2",
       "mocreatures:dolphin_dying3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.dolphindying"
   },
   "dolphinhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:dolphin_hurt1",
       "mocreatures:dolphin_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.dolphinhurt"
   },
   "dolphinupset": {
     "category": "neutral",
     "sounds": [
       "mocreatures:dolphin_upset"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.dolphinupset"
   },
   "donkeydying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:donkey_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.donkeydying"
   },
   "donkeygrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:donkey_grunt1",
       "mocreatures:donkey_grunt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.donkeygrunt"
   },
   "donkeyhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:donkey_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.donkeyhurt"
   },
   "dragonfly": {
     "category": "neutral",
     "sounds": [
       "mocreatures:dragonfly_buzz"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.dragonfly"
   },
   "dragonflyhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:dragonfly_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.dragonflyhurt"
   },
   "drinking": {
     "category": "neutral",
     "sounds": [
       "mocreatures:drinking"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.drinking"
   },
   "duck": {
     "category": "neutral",
@@ -314,39 +358,45 @@
       "mocreatures:duck_quack1",
       "mocreatures:duck_quack2",
       "mocreatures:duck_quack3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.duck"
   },
   "duckhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:duck_hurt1",
       "mocreatures:duck_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.duckhurt"
   },
   "duckplop": {
     "category": "neutral",
     "sounds": [
       "mob/chicken/plop"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.duckplop"
   },
   "eating": {
     "category": "neutral",
     "sounds": [
       "mocreatures:eating"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.eating"
   },
   "elephantcalf": {
     "category": "neutral",
     "sounds": [
       "mocreatures:elephant_calf1",
       "mocreatures:elephant_calf2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.elephantcalf"
   },
   "elephantdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:elephant_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.elephantdying"
   },
   "elephantgrunt": {
     "category": "neutral",
@@ -359,26 +409,30 @@
       "mocreatures:elephant_grunt6",
       "mocreatures:elephant_grunt7",
       "mocreatures:elephant_grunt8"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.elephantgrunt"
   },
   "elephanthurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:elephant_hurt1",
       "mocreatures:elephant_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.elephanthurt"
   },
   "fly": {
     "category": "neutral",
     "sounds": [
       "mocreatures:fly_buzz"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.fly"
   },
   "flyhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:fly_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.flyhurt"
   },
   "foxcall": {
     "category": "neutral",
@@ -388,118 +442,137 @@
       "mocreatures:fox_call3",
       "mocreatures:fox_call4",
       "mocreatures:fox_call5"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.foxcall"
   },
   "foxdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:fox_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.foxdying"
   },
   "foxhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:fox_hurt1",
       "mocreatures:fox_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.foxhurt"
   },
   "goatdigg": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_dig"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goatdigg"
   },
   "goatdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goatdying"
   },
   "goateating": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_eating"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goateating"
   },
   "goatfemale": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_grunt_female"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goatfemale"
   },
   "goatgrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_grunt_male"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goatgrunt"
   },
   "goathurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goathurt"
   },
   "goatkid": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_grunt_baby"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goatkid"
   },
   "goatsmack": {
     "category": "neutral",
     "sounds": [
       "mocreatures:goat_smack"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.goatsmack"
   },
   "golemattach": {
     "category": "hostile",
     "sounds": [
       "mocreatures:golem_attach"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.golemattach"
   },
   "golemdying": {
     "category": "hostile",
     "sounds": [
       "mocreatures:golem_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.golemdying"
   },
   "golemexplode": {
     "category": "hostile",
     "sounds": [
       "mocreatures:golem_explode"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.golemexplode"
   },
   "golemgrunt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:golem_grunt1",
       "mocreatures:golem_grunt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.golemgrunt"
   },
   "golemhurt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:golem_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.golemhurt"
   },
   "golemshoot": {
     "category": "hostile",
     "sounds": [
       "mocreatures:golem_shoot1",
       "mocreatures:golem_shoot2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.golemshoot"
   },
   "golemwalk": {
     "category": "hostile",
     "sounds": [
       "mocreatures:golem_step"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.golemwalk"
   },
   "grasshopperambient": {
     "category": "neutral",
     "sounds": [
       "mocreatures:grasshopper_ambient"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.grasshopperambient"
   },
   "grasshopperchirp": {
     "category": "neutral",
@@ -507,25 +580,29 @@
       "mocreatures:grasshopper_chirp1",
       "mocreatures:grasshopper_chirp2",
       "mocreatures:grasshopper_chirp3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.grasshopperchirp"
   },
   "grasshopperfly": {
     "category": "neutral",
     "sounds": [
       "mocreatures:grasshopper_fly"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.grasshopperfly"
   },
   "grasshopperhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:grasshopper_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.grasshopperhurt"
   },
   "hellratdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:hell_rat_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.hellratdying"
   },
   "hellratgrunt": {
     "category": "neutral",
@@ -534,32 +611,37 @@
       "mocreatures:hell_rat_grunt2",
       "mocreatures:hell_rat_grunt3",
       "mocreatures:hell_rat_grunt4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.hellratgrunt"
   },
   "hellrathurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:hell_rat_hurt1",
       "mocreatures:hell_rat_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.hellrathurt"
   },
   "horsedying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsedying"
   },
   "horsedyingghost": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_dying_ghost"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsedyingghost"
   },
   "horsedyingundead": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_dying_undead"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsedyingundead"
   },
   "horsegrunt": {
     "category": "neutral",
@@ -567,7 +649,8 @@
       "mocreatures:horse_grunt1",
       "mocreatures:horse_grunt2",
       "mocreatures:horse_grunt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsegrunt"
   },
   "horsegruntghost": {
     "category": "neutral",
@@ -575,89 +658,103 @@
       "mocreatures:horse_grunt_ghost1",
       "mocreatures:horse_grunt_ghost2",
       "mocreatures:horse_grunt_ghost3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsegruntghost"
   },
   "horsegruntundead": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_grunt_undead1",
       "mocreatures:horse_grunt_undead2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsegruntundead"
   },
   "horsehurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_hurt1",
       "mocreatures:horse_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsehurt"
   },
   "horsehurtghost": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_hurt_ghost"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsehurtghost"
   },
   "horsehurtundead": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_hurt_undead"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsehurtundead"
   },
   "horsemad": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_mad"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsemad"
   },
   "horsemadghost": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_mad_ghost"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsemadghost"
   },
   "horsemadundead": {
     "category": "neutral",
     "sounds": [
       "mocreatures:horse_mad_undead"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.horsemadundead"
   },
   "kittendying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_baby_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittendying"
   },
   "kittengrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_baby_grunt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittengrunt"
   },
   "kittenhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_baby_hurt1",
       "mocreatures:kitty_baby_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittenhurt"
   },
   "kittydying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_dying1",
       "mocreatures:kitty_dying2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittydying"
   },
   "kittyeatingf": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_eating_fish"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittyeatingf"
   },
   "kittyeatingm": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_eating"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittyeatingm"
   },
   "kittyfood": {
     "category": "neutral",
@@ -666,14 +763,16 @@
       "mocreatures:kitty_food2",
       "mocreatures:kitty_food3",
       "mocreatures:kitty_food4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittyfood"
   },
   "kittygrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_grunt1",
       "mocreatures:kitty_grunt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittygrunt"
   },
   "kittyhurt": {
     "category": "neutral",
@@ -681,20 +780,23 @@
       "mocreatures:kitty_hurt1",
       "mocreatures:kitty_hurt2",
       "mocreatures:kitty_hurt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittyhurt"
   },
   "kittypurr": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_purr1",
       "mocreatures:kitty_purr2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittypurr"
   },
   "kittytrapped": {
     "category": "neutral",
     "sounds": [
       "mocreatures:kitty_trapped"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittytrapped"
   },
   "kittyupset": {
     "category": "neutral",
@@ -702,13 +804,15 @@
       "mocreatures:kitty_upset1",
       "mocreatures:kitty_upset2",
       "mocreatures:kitty_upset3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.kittyupset"
   },
   "liondeath": {
     "category": "neutral",
     "sounds": [
       "mocreatures:lion_death"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.liondeath"
   },
   "liongrunt": {
     "category": "neutral",
@@ -716,7 +820,8 @@
       "mocreatures:lion_grunt1",
       "mocreatures:lion_grunt2",
       "mocreatures:lion_grunt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.liongrunt"
   },
   "lionhurt": {
     "category": "neutral",
@@ -725,14 +830,16 @@
       "mocreatures:lion_hurt2",
       "mocreatures:lion_hurt3",
       "mocreatures:lion_hurt4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.lionhurt"
   },
   "micedying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:mice_dying1",
       "mocreatures:mice_dying2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.micedying"
   },
   "micegrunt": {
     "category": "neutral",
@@ -740,7 +847,8 @@
       "mocreatures:mice_grunt1",
       "mocreatures:mice_grunt2",
       "mocreatures:mice_grunt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.micegrunt"
   },
   "micehurt": {
     "category": "neutral",
@@ -748,7 +856,8 @@
       "mocreatures:mice_hurt1",
       "mocreatures:mice_hurt2",
       "mocreatures:mice_hurt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.micehurt"
   },
   "ogre": {
     "category": "hostile",
@@ -756,94 +865,109 @@
       "mocreatures:ogre_grunt1",
       "mocreatures:ogre_grunt2",
       "mocreatures:ogre_grunt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ogre"
   },
   "ogredying": {
     "category": "hostile",
     "sounds": [
       "mocreatures:ogre_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ogredying"
   },
   "ogrehurt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:ogre_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ogrehurt"
   },
   "ostrichchick": {
     "category": "neutral",
     "sounds": [
       "mocreatures:ostrich_grunt_chick"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ostrichchick"
   },
   "ostrichdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:ostrich_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ostrichdying"
   },
   "ostrichgrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:ostrich_grunt1",
       "mocreatures:ostrich_grunt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ostrichgrunt"
   },
   "ostrichhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:ostrich_hurt1",
       "mocreatures:ostrich_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ostrichhurt"
   },
   "pegasus": {
     "category": "neutral",
     "sounds": [
       "mocreatures:pegasus"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.pegasus"
   },
   "pouringfood": {
     "category": "neutral",
     "sounds": [
       "mocreatures:pouring_food"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.pouringfood"
   },
   "pouringmilk": {
     "category": "neutral",
     "sounds": [
       "mocreatures:pouring_milk"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.pouringmilk"
   },
   "rabbitdeath": {
     "category": "neutral",
     "sounds": [
       "mocreatures:rabbit_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.rabbitdeath"
   },
   "rabbithurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:rabbit_hurt1",
       "mocreatures:rabbit_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.rabbithurt"
   },
   "rabbitland": {
     "category": "neutral",
     "sounds": [
       "mocreatures:rabbit_land"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.rabbitland"
   },
   "rabbitlift": {
     "category": "neutral",
     "sounds": [
       "mocreatures:rabbit_lift"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.rabbitlift"
   },
   "raccoondying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:raccoon_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.raccoondying"
   },
   "raccoongrunt": {
     "category": "neutral",
@@ -852,26 +976,30 @@
       "mocreatures:raccoon_grunt2",
       "mocreatures:raccoon_grunt3",
       "mocreatures:raccoon_grunt4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.raccoongrunt"
   },
   "raccoonhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:raccoon_hurt1",
       "mocreatures:raccoon_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.raccoonhurt"
   },
   "ratdyinglegacy": {
     "category": "neutral",
     "sounds": [
       "mocreatures:rat_dying_legacy"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ratdyinglegacy"
   },
   "ratdying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:rat_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ratdying"
   },
   "ratgrunt": {
     "category": "neutral",
@@ -880,32 +1008,37 @@
       "mocreatures:rat_grunt2",
       "mocreatures:rat_grunt3",
       "mocreatures:rat_grunt4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.ratgrunt"
   },
   "rathurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:rat_hurt1",
       "mocreatures:rat_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.rathurt"
   },
   "roping": {
     "category": "neutral",
     "sounds": [
       "mocreatures:roping"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.roping"
   },
   "scorpionclaw": {
     "category": "hostile",
     "sounds": [
       "mocreatures:scorpion_claw"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.scorpionclaw"
   },
   "scorpiondying": {
     "category": "hostile",
     "sounds": [
       "mocreatures:scorpion_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.scorpiondying"
   },
   "scorpiongrunt": {
     "category": "hostile",
@@ -914,20 +1047,23 @@
       "mocreatures:scorpion_grunt2",
       "mocreatures:scorpion_grunt3",
       "mocreatures:scorpion_grunt4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.scorpiongrunt"
   },
   "scorpionhurt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:scorpion_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.scorpionhurt"
   },
   "scorpionsting": {
     "category": "hostile",
     "sounds": [
       "mocreatures:scorpion_sting1",
       "mocreatures:scorpion_sting2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.scorpionsting"
   },
   "shuffling": {
     "category": "record",
@@ -936,109 +1072,126 @@
         "name": "mocreatures:music/shuffling",
         "stream": true
       }
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.shuffling"
   },
   "snakedying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:snake_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.snakedying"
   },
   "snakehiss": {
     "category": "neutral",
     "sounds": [
       "mocreatures:snake_hiss1",
       "mocreatures:snake_hiss2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.snakehiss"
   },
   "snakehurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:snake_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.snakehurt"
   },
   "snakerattle": {
     "category": "neutral",
     "sounds": [
       "mocreatures:snake_rattle1",
       "mocreatures:snake_rattle2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.snakerattle"
   },
   "snakesnap": {
     "category": "neutral",
     "sounds": [
       "mocreatures:snake_snap"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.snakesnap"
   },
   "snakeswim": {
     "category": "neutral",
     "sounds": [
       "mocreatures:snake_swim"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.snakeswim"
   },
   "snakeupset": {
     "category": "neutral",
     "sounds": [
       "mocreatures:snake_upset1",
       "mocreatures:snake_upset2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.snakeupset"
   },
   "transform": {
     "category": "hostile",
     "sounds": [
       "mocreatures:transform"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.transform"
   },
   "turkey": {
     "category": "neutral",
     "sounds": [
       "mocreatures:turkey_gobble1",
       "mocreatures:turkey_gobble2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.turkey"
   },
   "turkeyhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:turkey_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.turkeyhurt"
   },
   "turtledying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:turtle_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.turtledying"
   },
   "turtlehissing": {
     "category": "neutral",
     "sounds": [
       "mocreatures:turtle_hissing"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.turtlehissing"
   },
   "turtlehurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:clang"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.turtlehurt"
   },
   "vanish": {
     "category": "neutral",
     "sounds": [
       "mocreatures:vanish"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.vanish"
   },
   "werehumandying": {
     "category": "hostile",
     "sounds": [
       "mocreatures:werehuman_dying_legacy1",
       "mocreatures:werehuman_dying_legacy2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.werehumandying"
   },
   "werehumanhurt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:werehuman_hurt_legacy1",
       "mocreatures:werehuman_hurt_legacy2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.werehumanhurt"
   },
   "werehumantransform": {
     "category": "hostile",
@@ -1046,7 +1199,8 @@
       "mocreatures:werewolf_transform_legacy1",
       "mocreatures:werewolf_transform_legacy2",
       "mocreatures:werewolf_transform_legacy3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.werehumantransform"
   },
   "weretransform": {
     "category": "hostile",
@@ -1054,14 +1208,16 @@
       "mocreatures:werewolf_transform1",
       "mocreatures:werewolf_transform2",
       "mocreatures:werewolf_transform3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.weretransform"
   },
   "werewolfdying": {
     "category": "hostile",
     "sounds": [
       "mocreatures:werewolf_dying1",
       "mocreatures:werewolf_dying2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.werewolfdying"
   },
   "werewolfgrunt": {
     "category": "hostile",
@@ -1070,32 +1226,37 @@
       "mocreatures:werewolf_grunt2",
       "mocreatures:werewolf_grunt3",
       "mocreatures:werewolf_grunt4"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.werewolfgrunt"
   },
   "werewolfhurt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:werewolf_hurt1",
       "mocreatures:werewolf_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.werewolfhurt"
   },
   "whip": {
     "category": "neutral",
     "sounds": [
       "mocreatures:whip"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.whip"
   },
   "wingflap": {
     "category": "neutral",
     "sounds": [
       "mocreatures:wing_flap"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wingflap"
   },
   "wolfdeath": {
     "category": "hostile",
     "sounds": [
       "mocreatures:wild_wolf_death"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wolfdeath"
   },
   "wolfgrunt": {
     "category": "hostile",
@@ -1103,14 +1264,16 @@
       "mocreatures:wild_wolf_grunt1",
       "mocreatures:wild_wolf_grunt2",
       "mocreatures:wild_wolf_grunt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wolfgrunt"
   },
   "wolfhurt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:wild_wolf_hurt1",
       "mocreatures:wild_wolf_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wolfhurt"
   },
   "wraith": {
     "category": "hostile",
@@ -1118,20 +1281,23 @@
       "mocreatures:wraith_haunt1",
       "mocreatures:wraith_haunt2",
       "mocreatures:wraith_haunt3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wraith"
   },
   "wraithdying": {
     "category": "hostile",
     "sounds": [
       "mocreatures:wraith_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wraithdying"
   },
   "wraithhurt": {
     "category": "hostile",
     "sounds": [
       "mocreatures:wraith_hurt1",
       "mocreatures:wraith_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wraithhurt"
   },
   "wraithlegacy": {
     "category": "hostile",
@@ -1139,27 +1305,31 @@
       "mocreatures:wraith_haunt_legacy1",
       "mocreatures:wraith_haunt_legacy2",
       "mocreatures:wraith_haunt_legacy3"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wraithlegacy"
   },
   "wraithdyinglegacy": {
     "category": "hostile",
     "sounds": [
       "mocreatures:wraith_dying_legacy1",
       "mocreatures:wraith_dying_legacy2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wraithdyinglegacy"
   },
   "wraithhurtlegacy": {
     "category": "hostile",
     "sounds": [
       "mocreatures:wraith_hurt_legacy1",
       "mocreatures:wraith_hurt_legacy2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wraithhurtlegacy"
   },
   "wyverndying": {
     "category": "neutral",
     "sounds": [
       "mocreatures:wyvern_dying"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wyverndying"
   },
   "wyverngrunt": {
     "category": "neutral",
@@ -1169,38 +1339,44 @@
       "mocreatures:wyvern_grunt3",
       "mocreatures:wyvern_grunt4",
       "mocreatures:wyvern_grunt5"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wyverngrunt"
   },
   "wyvernhurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:wyvern_hurt1",
       "mocreatures:wyvern_hurt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wyvernhurt"
   },
   "wyvernpoisoning": {
     "category": "neutral",
     "sounds": [
       "mocreatures:wyvern_poison"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wyvernpoisoning"
   },
   "wyvernwingflap": {
     "category": "neutral",
     "sounds": [
       "mocreatures:wyvern_wing_flap"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.wyvernwingflap"
   },
   "zebragrunt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:zebra_grunt1",
       "mocreatures:zebra_grunt2"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.zebragrunt"
   },
   "zebrahurt": {
     "category": "neutral",
     "sounds": [
       "mocreatures:zebra_hurt"
-    ]
+    ],
+    "subtitle": "subtitles.mocreatures.zebrahurt"
   }
 }

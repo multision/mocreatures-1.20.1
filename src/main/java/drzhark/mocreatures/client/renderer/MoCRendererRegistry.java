@@ -225,6 +225,8 @@ public class MoCRendererRegistry {
             new MoCRenderMoC(ctx, new MoCModelKomodo<>(ctx.bakeLayer(MoCModelRegistry.KOMODO)), 0.3F));
         event.registerEntityRenderer(MoCEntities.WYVERN.get(), ctx ->
             new MoCRenderMoC(ctx, new MoCModelWyvern<>(ctx.bakeLayer(MoCModelRegistry.WYVERN)), 0.5F));
+        event.registerEntityRenderer(MoCEntities.OGRE.get(), ctx ->
+            new MoCRenderMoC(ctx, new MoCModelOgre<>(ctx.bakeLayer(MoCModelRegistry.OGRE)), 0.6F));
         event.registerEntityRenderer(MoCEntities.GREEN_OGRE.get(), ctx ->
             new MoCRenderMoC(ctx, new MoCModelOgre<>(ctx.bakeLayer(MoCModelRegistry.OGRE)), 0.6F));
         event.registerEntityRenderer(MoCEntities.CAVE_OGRE.get(), ctx ->
@@ -248,7 +250,9 @@ public class MoCRendererRegistry {
         event.registerEntityRenderer(MoCEntities.MOLE.get(), ctx ->
             new MoCRenderMoC(ctx, new MoCModelMole<>(ctx.bakeLayer(MoCModelRegistry.MOLE)), 0F));
 
-        // Manticores
+        // Manticores, including the legacy generic summon ID.
+        event.registerEntityRenderer(MoCEntities.MANTICORE.get(), ctx ->
+            new MoCRenderMoC(ctx, new MoCModelManticore<>(ctx.bakeLayer(MoCModelRegistry.MANTICORE)), 0.7F));
         event.registerEntityRenderer(MoCEntities.DARK_MANTICORE.get(), ctx ->
             new MoCRenderMoC(ctx, new MoCModelManticore<>(ctx.bakeLayer(MoCModelRegistry.MANTICORE)), 0.7F));
         event.registerEntityRenderer(MoCEntities.FIRE_MANTICORE.get(), ctx ->

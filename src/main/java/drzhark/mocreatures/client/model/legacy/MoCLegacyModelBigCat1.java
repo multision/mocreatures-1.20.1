@@ -23,7 +23,7 @@ public class MoCLegacyModelBigCat1<T extends MoCEntityBigCat> extends EntityMode
 
     @SuppressWarnings("removal")
     public static final ModelLayerLocation LAYER_LOCATION =
-            new ModelLayerLocation(new ResourceLocation("mocreatures", "legacy_bigcat1"), "main");
+            new ModelLayerLocation(new ResourceLocation("mocreatures", "legacy_big_cat1"), "main");
 
     private final ModelPart head;
     private final ModelPart body;
@@ -87,6 +87,10 @@ public class MoCLegacyModelBigCat1<T extends MoCEntityBigCat> extends EntityMode
                           float netHeadYaw, float headPitch) {
         this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
         this.head.xRot = headPitch * ((float)Math.PI / 180F);
+    }
+
+    public void copyPoseFrom(MoCLegacyModelBigCat2<T> model) {
+        model.copyManePose(this.head, this.body);
     }
 
     @Override

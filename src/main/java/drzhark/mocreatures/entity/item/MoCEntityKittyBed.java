@@ -142,36 +142,47 @@ public class MoCEntityKittyBed extends Mob {
 
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
-        final ItemStack stack = player.getItemInHand(hand);
-        if (!stack.isEmpty() && !getHasFood() && !getHasMilk()) {
-            if (stack.is(MoCItems.PET_FOOD.get())) {
-                if (!player.isCreative()) stack.shrink(1);
-                MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_KITTYBED_POURINGFOOD.get());
-                setHasMilk(false);
-                setHasFood(true);
-            } else if (stack.is(Items.MILK_BUCKET)) {
-                player.setItemInHand(hand, new ItemStack(Items.BUCKET, 1));
-                MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_KITTYBED_POURINGMILK.get());
-                setHasMilk(true);
-                setHasFood(false);
+        if (player.isShiftKeyDown() && this.getVehicle() == null) {
+            if (!this.level().isClientSide()) {
+                giveOrDrop(player, new ItemStack(MoCItems.KITTYBED[getSheetColor()].get()));
+                if (getHasFood()) giveOrDrop(player, new ItemStack(MoCItems.PET_FOOD.get()));
+                else if (getHasMilk()) giveOrDrop(player, new ItemStack(Items.MILK_BUCKET));
+                MoCTools.playCustomSound(this, SoundEvents.ITEM_PICKUP, 0.2F);
+                this.discard();
             }
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
+        }
+        ItemStack stack = player.getItemInHand(hand);
+        if (!getHasFood() && !getHasMilk()) {
+            if (stack.is(MoCItems.PET_FOOD.get())) {
+                if (!this.level().isClientSide()) {
+                    if (!player.isCreative()) stack.shrink(1);
+                    setHasFood(true);
+                    MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_KITTYBED_POURINGFOOD.get());
+                }
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
+            }
+            if (stack.is(Items.MILK_BUCKET)) {
+                if (!this.level().isClientSide()) {
+                    if (!player.isCreative()) player.setItemInHand(hand, new ItemStack(Items.BUCKET));
+                    setHasMilk(true);
+                    MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_KITTYBED_POURINGMILK.get());
+                }
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
+            }
         }
         if (this.getVehicle() == null) {
-            if (player.isCrouching()) {
-                final int color = getSheetColor();
-                player.getInventory().add(new ItemStack(MoCItems.KITTYBED[color].get(), 1));
-                if (getHasFood()) player.getInventory().add(new ItemStack(MoCItems.PET_FOOD.get(), 1));
-                else if (getHasMilk()) player.getInventory().add(new ItemStack(Items.MILK_BUCKET, 1));
-                MoCTools.playCustomSound(this, SoundEvents.ITEM_PICKUP, 0.2F);
-                this.remove(RemovalReason.DISCARDED);
-            } else {
+            if (!this.level().isClientSide()) {
                 setYHeadRot((float) MoCTools.roundToNearest90Degrees(this.getYHeadRot()) + 90.0F);
                 MoCTools.playCustomSound(this, SoundEvents.ITEM_FRAME_ROTATE_ITEM);
             }
-            return InteractionResult.SUCCESS;
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
-        return InteractionResult.SUCCESS;
+        return InteractionResult.PASS;
+    }
+
+    private void giveOrDrop(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) player.drop(stack, false);
     }
 
     @Override

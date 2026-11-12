@@ -389,6 +389,9 @@ public class MoCEntityGolem extends MoCEntityMob {
 
     @Override
     public boolean hurt(DamageSource damagesource, float i) {
+        if (damagesource.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            return super.hurt(damagesource, i);
+        }
         if (getGolemState() == 4) return false;
 
         List<Integer> missingChestBlocks = missingChestCubes();

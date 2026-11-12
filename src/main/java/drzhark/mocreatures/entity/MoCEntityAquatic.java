@@ -394,7 +394,9 @@ public boolean isPushedByFluid(FluidType type) {
 
     @Override
     public void makeEntityJump() {
-        // Default no-op; override if your mob needs special behavior
+        if (this.isVehicle() && this.isInWater()) {
+            this.jumpPending = true;
+        }
     }
 
     public void riding() {
@@ -579,6 +581,11 @@ public boolean isPushedByFluid(FluidType type) {
 
     @Override
     public void checkDespawn() {
+        if (this.isPersistenceRequired() || this.requiresCustomPersistence()
+                || (this instanceof IMoCTameable pet && pet.getIsTamed())) {
+            this.noActionTime = 0;
+            return;
+        }
         Player player = this.level().getNearestPlayer(this, -1.0D);
         if (player != null) {
             double d0 = player.distanceToSqr(this);
@@ -827,9 +834,14 @@ public boolean isPushedByFluid(FluidType type) {
             passenger.zza * 0.4F   // reduced forward speed
         );
         
+        // Prevent sinking when idle in water
+        if (this.getDeltaMovement().y < 0D && isSwimming() && movementInput.z == 0) {
+            this.setDeltaMovement(this.getDeltaMovement().x, 0D, this.getDeltaMovement().z);
+        }
+
         // Handle jumping
         if (this.jumpPending) {
-            if (this.isSwimming()) {
+            if (this.isInWater()) {
                 this.setDeltaMovement(this.getDeltaMovement().add(0.0, getCustomJump(), 0.0));
                 // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} jumping in water", this.getType().getDescription().getString());
             }
@@ -841,11 +853,6 @@ public boolean isPushedByFluid(FluidType type) {
             this.divePending = false;
             this.setDeltaMovement(this.getDeltaMovement().subtract(0.0, 0.3, 0.0));
             // MoCreatures.LOGGER.info("MOVE_WITH_RIDER: {} diving", this.getType().getDescription().getString());
-        }
-        
-        // Prevent sinking when idle in water
-        if (this.getDeltaMovement().y < 0D && isSwimming() && movementInput.z == 0) {
-            this.setDeltaMovement(this.getDeltaMovement().x, 0D, this.getDeltaMovement().z);
         }
         
         // Aquatic-specific movement
@@ -1074,7 +1081,7 @@ public boolean isPushedByFluid(FluidType type) {
     @Nullable
     @Override
     public LivingEntity getControllingPassenger() {
-        return this.getPassengers().isEmpty() ? null : this.getPassengers().get(0).getControllingPassenger();
+        return this.getFirstPassenger() instanceof LivingEntity passenger ? passenger : null;
     }
 
     @Override

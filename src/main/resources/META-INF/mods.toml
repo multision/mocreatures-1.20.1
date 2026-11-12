@@ -27,7 +27,7 @@ displayURL="https://multision.dev/mocreatures/" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
 logoFile="moclogo.png" #optional
 # A text field displayed in the mod UI
-#credits="Thanks for this example mod goes to Java" #optional
+credits="""Community fixes: Lollizaczek/Lollizak (horse animation and zebra shuffle); Dinocraft-cz/Vaniron (zebra-fix integration); ItsFadedMaybe/Faded (elephant riding); Clickibait/ClickLarp and Pug (legacy models, shark, pet persistence, and elephant fixes). Full attribution and source links: CREDITS.md inside this mod."""
 # A text field displayed in the mod UI
 authors = "multision, Mo' Creatures Extended Team, Dr. Zhark" #optional
 # The description text for the mod (multi line!) (#mandatory)

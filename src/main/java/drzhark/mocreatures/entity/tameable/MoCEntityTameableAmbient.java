@@ -104,6 +104,19 @@ public class MoCEntityTameableAmbient extends MoCEntityAmbient implements IMoCTa
     }
 
     @Override
+    public boolean canAttack(LivingEntity target) {
+        return !(getIsTamed() && target.getUUID().equals(getOwnerId())) && super.canAttack(target);
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        if (target instanceof LivingEntity living && !canAttack(living)) {
+            return false;
+        }
+        return super.doHurtTarget(target);
+    }
+
+    @Override
     public boolean hurt(DamageSource damagesource, float i) {
         Entity entity = damagesource.getEntity();
         //this avoids damage done by Players to a tamed creature that is not theirs
@@ -270,16 +283,13 @@ public class MoCEntityTameableAmbient extends MoCEntityAmbient implements IMoCTa
     }
 
     @Override
-    public void remove(Entity.RemovalReason reason) {
-        if (reason == Entity.RemovalReason.DISCARDED) {
-            super.remove(reason);
-            return;
-        }
+    public boolean requiresCustomPersistence() {
+        return getIsTamed() || super.requiresCustomPersistence();
+    }
 
-        if (!this.level().isClientSide() && getIsTamed() && getHealth() > 0 && !isRiderDisconnecting()) {
-            return;
-        }
-        super.remove(reason);
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return !getIsTamed() && super.removeWhenFarAway(distanceToClosestPlayer);
     }
 
     /**

@@ -340,6 +340,14 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
         this.discard();
     }
 
+    /** Fairy breeding consumes a parent, but its equipment belongs to the player. */
+    public void disappearAfterBreeding() {
+        if (!this.level().isClientSide() && !this.isRemoved()) {
+            this.dropMyStuff();
+            this.discard();
+        }
+    }
+
     private void drinkingHorse() {
         openMouth();
         MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GENERIC_DRINKING.get());
@@ -1515,7 +1523,7 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
 
         if (!stack.isEmpty() && ((stack.getItem() == Items.APPLE) || (stack.getItem() == Items.GOLDEN_APPLE)) && !isMagicHorse() && !isUndead()) {
             if (!player.getAbilities().instabuild) stack.shrink(1);
-            if (!this.level().isClientSide) MoCTools.tameWithName(player, this);
+            if (!this.level().isClientSide && !getIsTamed()) MoCTools.tameWithName(player, this);
             this.setHealth(getMaxHealth());
             eatingHorse();
             if (!getIsAdult() && (getMoCAge() < getMoCMaxAge()) && !this.level().isClientSide) setMoCAge(getMoCAge() + 1);
@@ -1572,7 +1580,7 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
         }
 
         if (!stack.isEmpty()
-                && ((stack.getItem() == Item.byBlock(Blocks.CARVED_PUMPKIN)) || (stack.getItem() == Items.MUSHROOM_STEW)
+                && ((stack.getItem() == Item.byBlock(Blocks.CARVED_PUMPKIN)) || (stack.getItem() == Items.PUMPKIN) || (stack.getItem() == Items.MUSHROOM_STEW)
                 || (stack.getItem() == Items.CAKE) || (stack.getItem() == Items.GOLDEN_CARROT))) {
             if (!getIsAdult() || isMagicHorse() || isUndead()) return InteractionResult.FAIL;
             if (!player.getAbilities().instabuild) stack.shrink(1);
@@ -2061,8 +2069,11 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
                 if (l == 50 || l == 54) // fairy horse!
                 {
                     MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GENERIC_MAGIC_APPEAR.get());
-                    if (!flag) ((MoCEntityHorse) horsemate).dissapearHorse();
-                    this.dissapearHorse();
+                    if (!flag) {
+                        MoCEntityHorse parent = (MoCEntityHorse) horsemate;
+                        parent.disappearAfterBreeding();
+                    }
+                    this.disappearAfterBreeding();
                 }
                 baby.setOwnerId(this.getOwnerId());
                 baby.setTamed(true);
@@ -2169,13 +2180,15 @@ public class MoCEntityHorse extends MoCEntityTameableAnimal {
 
     @Override
     public void selectType() {
-        checkSpawningBiome();
+        if (getTypeMoC() == 0) {
+            checkSpawningBiome();
+        }
         if (getTypeMoC() == 0) {
             if (this.random.nextInt(5) == 0) setAdult(false);
             int j = this.random.nextInt(100);
             if (j <= (33)) setTypeMoC(6);
             else if (j <= (66)) setTypeMoC(7);
-            else if (j <= (99)) setTypeMoC(8);
+            else if (j <= (98)) setTypeMoC(8);
             else setTypeMoC(60);// zebra
         }
     }

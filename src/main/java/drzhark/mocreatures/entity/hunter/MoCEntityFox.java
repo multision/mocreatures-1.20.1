@@ -109,7 +109,7 @@ public class MoCEntityFox extends MoCEntityTameableAnimal {
             if (!player.isCreative()) stack.shrink(1);
 
             if (!this.level().isClientSide()) {
-                MoCTools.tameWithName(player, this);
+                if (!getIsTamed()) MoCTools.tameWithName(player, this);
             }
             this.setHealth(getMaxHealth());
 

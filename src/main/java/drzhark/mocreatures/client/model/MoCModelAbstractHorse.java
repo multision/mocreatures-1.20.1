@@ -13,7 +13,6 @@ import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -299,7 +298,7 @@ public abstract class MoCModelAbstractHorse<T extends Entity> extends EntityMode
         float HeadXRot = headPitch * (1F / 57.29578F);
 
         if (entityIn instanceof MoCEntityHorse horse) {
-            this.type = horse.getTypeMoC(); // or whatever your getter is
+            this.type = horse.getTypeMoC();
             this.shuffling = (this.type == 60) && horse.shuffleCounter > 0;
         } else {
             this.shuffling = false;

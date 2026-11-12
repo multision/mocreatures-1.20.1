@@ -371,6 +371,13 @@ public class BiomeSpawnConfig {
         return data;
     }
     
+    /** Whether this creature has explicit JSON lighting limits. */
+    public static boolean hasLightLevelOverride(EntityType<?> entityType) {
+        String name = drzhark.mocreatures.world.MoCSpawnRegistryCache.getCreatureName(entityType);
+        CreatureSpawnData data = name == null ? null : getSpawnData(name);
+        return data != null && (data.minLightLevel != -1 || data.maxLightLevel != -1);
+    }
+
     /**
      * Check if the light level at the given position meets the spawn requirements
      * @param level The world level

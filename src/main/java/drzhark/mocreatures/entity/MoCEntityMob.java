@@ -188,44 +188,20 @@ public abstract class MoCEntityMob extends Monster implements IMoCEntity {
     }
 
     public static boolean getCanSpawnHere(EntityType<? extends MoCEntityMob> type, ServerLevel world, MobSpawnType reason, BlockPos pos, Random randomIn) {
-        boolean willSpawn = Monster.checkAnyLightMonsterSpawnRules(type, world, reason, pos, (RandomSource) randomIn);
-        
-        // Add light level check from BiomeSpawnConfig
-        if (willSpawn) {
-            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity(world, pos, type);
-        }
-        
-        boolean debug = MoCreatures.proxy.debug;
-        if (willSpawn && debug) {
-            MoCreatures.LOGGER.info("Mob: {} at: {} State: {} biome: {}", type.getDescription(), pos,
-                    world.getBlockState(pos), MoCTools.biomeName(world, pos));
-        }
-        return willSpawn;
+        return checkMobSpawnRules(type, world, reason, pos, world.getRandom());
     }
 
-    /**
-     * Vanilla-style mob spawn rules with light level check integration
-     */
+    /** Explicit JSON light limits override vanilla darkness, but never difficulty/surface rules. */
     public static boolean checkMobSpawnRules(EntityType<? extends MoCEntityMob> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource random) {
-        // Always allow spawn eggs
         if (reason == MobSpawnType.SPAWN_EGG) {
             return true;
         }
-        
-        // Use vanilla monster spawn rules
-        boolean willSpawn = Mob.checkMobSpawnRules(type, world, reason, pos, random);
-        
-        // Add light level check from BiomeSpawnConfig if this is a Level (not just LevelAccessor)
-        if (willSpawn && world.getLevel() instanceof Level) {
-            willSpawn = drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity((Level) world.getLevel(), pos, type);
+        boolean override = drzhark.mocreatures.config.biome.BiomeSpawnConfig.hasLightLevelOverride(type);
+        if (!override) {
+            return Monster.checkMonsterSpawnRules(type, world, reason, pos, random);
         }
-        
-        if (MoCreatures.proxy.debug && willSpawn) {
-            MoCreatures.LOGGER.info("Mob: {} at: {} State: {} biome: {}", type.getDescription(), pos,
-                    world.getBlockState(pos), MoCTools.biomeName((Level) world.getLevel(), pos));
-        }
-        
-        return willSpawn;
+        return Monster.checkAnyLightMonsterSpawnRules(type, world, reason, pos, random)
+                && drzhark.mocreatures.config.biome.BiomeSpawnConfig.checkLightLevelForEntity(world.getLevel(), pos, type);
     }
 
     public boolean entitiesToIgnore(Entity entity) {
@@ -390,12 +366,13 @@ public abstract class MoCEntityMob extends Monster implements IMoCEntity {
     }
 
     @Override
-    public void remove(RemovalReason reason) {
-        // Prevent tamed entities from being duplicated on the client
-        if (!this.level().isClientSide && getIsTamed() && this.getHealth() > 0) {
-            return;
-        }
-        super.remove(reason);
+    public boolean requiresCustomPersistence() {
+        return getIsTamed() || super.requiresCustomPersistence();
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double distance) {
+        return !getIsTamed() && super.removeWhenFarAway(distance);
     }
 
     @Override

@@ -214,34 +214,6 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
     public void aiStep() {
         super.aiStep();
         
-        // Custom rider positioning since we can't override positionRider in 1.20.1
-        if (!this.getPassengers().isEmpty()) {
-            Entity passenger = this.getPassengers().get(0);
-            double dist = 0.0D;
-            
-            switch (getTypeMoC()) {
-                case 1:
-                    dist = 1.0D;
-                    break;
-                case 2:
-                case 5:
-                    dist = 0.75D;
-                    break;
-                case 3:
-                    dist = 1.2D;
-                    break;
-                case 4:
-                    dist = 1.5D;
-                    break;
-            }
-
-            double cosYaw = Math.cos((MoCTools.realAngle(this.getYRot() - 90F)) / 57.29578F);
-            double sinYaw = Math.sin((MoCTools.realAngle(this.getYRot() - 90F)) / 57.29578F);
-            double newPosX = this.getX() - (dist * cosYaw);
-            double newPosZ = this.getZ() - (dist * sinYaw);
-            passenger.setPos(newPosX, this.getY() + getPassengersRidingOffset() + passenger.getPassengersRidingOffset(), newPosZ);
-        }
-        
         if (!this.level().isClientSide()) {
             if ((this.sprintCounter > 0 && this.sprintCounter < 150) && (this.isVehicle()) && random.nextInt(15) == 0) {
                 MoCTools.buckleMobsNotPlayers(this, 3D, this.level());
@@ -251,7 +223,7 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
                 this.sprintCounter = 0;
             }
 
-            if (getIsTamed() && (!this.isVehicle()) && getArmorType() >= 1 && this.random.nextInt(20) == 0) {
+            if (getIsTamed() && getIsAdult() && !this.isVehicle() && this.sitCounter == 0 && getArmorType() >= 1 && this.random.nextInt(20) == 0) {
                 Player ep = this.level().getNearestPlayer(this, 3D);
                 if (ep != null && (!MoCreatures.proxy.enableOwnership || ep.getUUID().equals(this.getOwnerId())) && ep.isCrouching()) {
                     sit();
@@ -295,7 +267,7 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
             }
         }
 
-        if (this.sitCounter != 0 && ++this.sitCounter > 300) {
+        if (this.sitCounter != 0 && ++this.sitCounter > 100) {
             this.sitCounter = 0;
         }
     }
@@ -316,7 +288,7 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
     private void sit() {
         this.sitCounter = 1;
         if (!this.level().isClientSide()) {
-            MoCMessageHandler.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> this), new MoCMessageAnimation(this.getId(), 1));
+            MoCMessageHandler.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> this), new MoCMessageAnimation(this.getId(), 0));
         }
         this.getNavigation().stop();
     }
@@ -326,6 +298,8 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
         if (animationType == 0) {
             this.sitCounter = 1;
             this.getNavigation().stop();
+        } else if (animationType == 1) {
+            this.sitCounter = 0;
         }
     }
 
@@ -362,7 +336,17 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
             return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
 
-        if (getIsTamed() && stack.isEmpty() && !player.isShiftKeyDown() && getStorage() > 0) {
+        // Growth behavior reported in Clickibait and Pug's 1.0.5 community fix.
+        if (getIsTamed() && !getIsAdult() && stack.is(MoCItems.SUGAR_LUMP.get())) {
+            if (!this.level().isClientSide()) {
+                setMoCAge(Math.min(getMoCAge() + 1, getMoCMaxAge()));
+                if (!player.getAbilities().instabuild) stack.shrink(1);
+                MoCTools.playCustomSound(this, MoCSoundEvents.ENTITY_GENERIC_EATING.get());
+            }
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
+        }
+
+        if (getIsTamed() && stack.isEmpty() && !player.isShiftKeyDown() && getStorage() > 0 && this.sitCounter == 0) {
             // Open inventory
             if (!this.level().isClientSide()) {
                 if (this.localelephantchest == null) {
@@ -516,6 +500,7 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
                 player.setYRot(this.getYRot());
                 player.setXRot(this.getXRot());
                 this.sitCounter = 0;
+                MoCMessageHandler.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> this), new MoCMessageAnimation(this.getId(), 1));
             }
             return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
@@ -794,6 +779,27 @@ public class MoCEntityElephant extends MoCEntityTameableAnimal {
     @Override
     public boolean isPushable() {
         return !this.isVehicle();
+    }
+
+    // Adapted from ItsFadedMaybe's elephant riding fix: use Minecraft's rider
+    // positioning callback so the normal tick cannot move the passenger back.
+    @Override
+    protected void positionRider(Entity passenger, Entity.MoveFunction moveFunction) {
+        if (!this.hasPassenger(passenger)) {
+            return;
+        }
+        double distance = switch (getTypeMoC()) {
+            case 1, 3 -> 0.8D;
+            case 2, 5 -> 0.1D;
+            case 4 -> 1.2D;
+            default -> 1.0D;
+        };
+        double yaw = Math.toRadians(this.getYRot() - 90F);
+        moveFunction.accept(passenger,
+                this.getX() - distance * Math.cos(yaw),
+                this.getY() + getPassengersRidingOffset() + passenger.getMyRidingOffset(),
+                this.getZ() - distance * Math.sin(yaw));
+        passenger.setYRot(this.getYRot());
     }
 
     @Override

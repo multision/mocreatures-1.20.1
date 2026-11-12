@@ -24,7 +24,7 @@ public class MoCLegacyModelBigCat2<T extends MoCEntityBigCat> extends EntityMode
 
     @SuppressWarnings("removal")
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-            new ResourceLocation("mocreatures", "legacy_bigcat2"), "main"
+            new ResourceLocation("mocreatures", "legacy_big_cat2"), "main"
     );
 
     // Public flags (set externally, e.g. in EntityRenderer or via setLivingAnimations):
@@ -342,6 +342,11 @@ public class MoCLegacyModelBigCat2<T extends MoCEntityBigCat> extends EntityMode
             this.tail.xRot = -0.1745329F; // ≈ –10°
             this.tail.yRot = 0.0F;        // no wag
         }
+    }
+
+    public void copyManePose(ModelPart maneHead, ModelPart maneBody) {
+        maneHead.copyFrom(this.head);
+        maneBody.copyFrom(this.body);
     }
 
     @Override
